@@ -1,0 +1,326 @@
+Event [![Build Status](https://secure.travis-ci.org/ICanBoogie/Event.png?branch=master)](http://travis-ci.org/ICanBoogie/Event)
+=====
+
+The API provided by the Event package allows developers to provide hooks which other developers
+may hook into, to be notified when certain events occur inside the application and take action.
+
+Inside [ICanBoogie](http://icanboogie.org/), events are often used to alter initial parameters,
+take action before/after an operation is processed or when it fails, take action before/after a
+request is dispatched or to rescue an exception.
+
+
+
+
+### Feature highlights
+
+* Easily implementable.
+* Events are typed.
+* Events are fired as they are instantiated.
+* Events usually have a target object, but simpler event types can also be emitted.
+* Event hooks are attached to classes rather than objects, and they are inherited.
+* Event hooks can be added to a _finish chain_ that is executed after the event hooks chain. 
+* Execution of the event chain can be stopped.
+
+
+
+
+## Requirement
+
+PHP 5.3+ is required.
+
+
+
+
+## Installation
+
+The easiest way to install the package is to use [composer](http://getcomposer.org/).
+Just create a `composer.json` file and run the `php composer.phar install` command.
+
+```json
+{
+	"minium-stability": "dev",
+	"require":
+	{
+		"icanboogie/event": "1.0.*"
+	}
+}
+```
+
+
+
+
+## Testing
+
+You need [PHPUnit](http://www.phpunit.de/manual/current/en/) to run the test suite:
+
+	$ make test
+
+Note that the package is continuously integrated by [Travis-CI](https://travis-ci.org/#!/ICanBoogie/Event).
+
+
+
+
+## A twist on the Observer pattern
+
+The pattern used by the API is similar to the [Observer pattern](http://en.wikipedia.org/wiki/Observer_pattern),
+although instead of attaching event hooks to objects they are attached to their class. When an
+event is fired upon a target object, the hierarchy of its class is used to filter event
+hooks.
+
+Consider the following class hierarchy:
+
+	ICanBoogie\Operation
+	└─ ICanBoogie\SaveOperation
+	   └─ Icybee\SaveOperation
+	      └─ Icybee\Modules\Node\SaveOperation
+	         └─ Icybee\Modules\Content\SaveOperation
+	            └─ Icybee\Modules\News\SaveOperation
+
+
+When the `process` event is fired upon a `Icybee\Modules\News\SaveOperation` instance, all event
+hooks attached to the classes for this event are called, starting from the event hooks attached
+to the instance class (`Icybee\Modules\News\SaveOperation`) all the way up to those attached
+to its root class.
+
+Thus, event hooks attached to the `Icybee\Modules\Node\SaveOperation` class are called
+when the `process` event is fired upon a `Icybee\Modules\News\SaveOperation` instance. One could
+consider that event hooks are _inherited_.
+
+
+
+
+## Events are typed
+
+An instance of an `Event` subclass is used to provide contextual information
+about an event to the event hooks processing it. It is passed as the first argument, with the
+target object as second argument (if any). This instance contain information
+directly relating to the type of event they accompany.
+
+For example, a `process` event is usually accompanied by a `ProcessEvent` instance, and a
+`process:before` event—fired before a `process` event—is usually accompanied by
+a `BeforeProcessEvent` instance. Here after is the definition of the `ProcessEvent` class for the
+`process` event type, which is fired on `ICanBoogie\Operation` instances:
+
+```php
+<?php
+
+namespace ICanBoogie\Operation;
+
+/**
+ * Event class for the `ICanBoogie\Operation::process` event.
+ */
+class ProcessEvent extends \ICanBoogie\Event
+{
+	/**
+	 * Reference to the response result property.
+	 *
+	 * @var mixed
+	 */
+	public $rc;
+
+	/**
+	 * The response object of the operation.
+	 *
+	 * @var \ICanBoogie\HTTP\Response
+	 */
+	public $response;
+
+	/**
+	 * The request that triggered the operation.
+	 *
+	 * @var \ICanBoogie\HTTP\Request
+	 */
+	public $request;
+
+	/**
+	 * The event is constructed with the type `process`.
+	 *
+	 * @param \ICanBoogie\Operation $target
+	 * @param array $payload
+	 */
+	public function __construct(\ICanBoogie\Operation $target, array $payload)
+	{
+		parent::__construct($target, 'process', $payload);
+	}
+}
+```
+
+
+
+
+### Event types
+
+The event type is usually the name of an associated method. For example, the `process` event
+type is fired after the `ICanBoogie\Operation::process` method was called, and the `process:before`
+event type is fired before.
+
+
+
+
+### Namespacing and naming
+
+Event classes should be defined in a namespace unique to their target object. Events
+targeting `ICanBoogie\Operation` instances should be defined in the `ICanBoogie\Operation`
+namespace.
+
+The class name should match the event type. `ProcessEvent` for the `process` event type,
+`BeforeProcessEvent` for the `process:before` event.
+
+
+
+
+## Firing events
+
+Events are fired simply by instantiating an event class.
+
+The following example demonstrates how the `process` event is fired upon an
+`ICanBoogie\Operation` instance:
+
+```php
+<?php
+
+namespace ICanBoogie;
+
+class Operation
+{
+	// …
+	
+	public function __invoke()
+	{
+		// …
+		
+		$response->rc = $this->process();
+	
+		new Operation\ProcessEvent($this, array('rc' => &$response->rc, 'response' => $response, 'request' => $request)); 
+	
+		// …
+	}
+	
+	// …
+}
+```
+
+
+
+
+## Attaching event hooks
+
+Event hooks are attached using the `Events::attach()` method.
+
+```php
+<?php
+
+use ICanBoogie\Events;
+use ICanBoogie\Operation;
+
+Events::attach('ICanBoogie\Operation::process', function(Operation\ProcessEvent $event, Operation $operation) {
+
+	// …
+	
+}); 
+```
+
+
+
+
+### Attaching event hooks using the `hooks` config
+
+With [ICanBoogie](http://icanboogie.org/), the `hooks` config can be used to define event hooks.
+
+The following example demonstrate how a website can attach hooks to be notified when nodes are
+saved (or nodes subclasses), and when an authentication exception is thrown during the dispatch
+of a request.
+
+```php
+<?php
+
+// config/hooks.php
+
+return array
+(
+	'events' => array
+	(
+		'Icybee\Modules\Nodes\SaveOperation::process' => 'Website\Hooks::on_nodes_save',
+		'ICanBoogie\AuthenticationRequired::rescue' => 'Website\Hooks::on_authentication_required_rescue'
+	)
+);
+```
+
+
+
+### Attaching event hooks to the _finish chain_
+
+The _finish chain_ is executed after the event chain was traversed without being stopped.
+
+The following example demonstrates how an event hook can be added to the _finish chain_ of
+the `count` event to obtain the string "0123". If the third event hook was defined like the
+others we would obtain "0312".
+
+
+```php
+<?php
+
+use ICanBoogie\Events;
+
+class CountEvent extends \ICanBoogie\Event
+{
+	public $count;
+
+	public function __construct($count)
+	{
+		$this->count = $count;
+
+		parent::__construct(null, 'count', array());
+	}
+}
+
+Events::attach('count', function(CountEvent $event) {
+
+	$event->count .= 2;
+
+});
+
+Events::attach('count', function(CountEvent $event) {
+
+	$event->count .= 1;
+
+});
+
+Events::attach('count', function(CountEvent $event) {
+
+	$event->chain(function(CountEvent $event) {
+
+		$event->count .= 3;
+
+	});
+});
+
+$event = new CountEvent(0);
+
+echo $event->count; // 0123
+```
+
+
+
+## Breacking an event hooks chain
+
+The processing of an event hooks chain can be broken by an event hook using the `stop()` method:
+
+```php
+<?php
+
+use ICanBoogie\Operation;
+
+function on_event(Operation\ProcessEvent $event, Operation $operation)
+{
+	$event->rc = true;
+	$event->stop();
+}
+```
+
+
+
+
+## License
+
+ICanBoogie/Event is licensed under the New BSD License - See the LICENSE file for details.
