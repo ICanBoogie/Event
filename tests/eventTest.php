@@ -94,6 +94,22 @@ class ProcessEvent extends Event
 	}
 }
 
+class TmpSimpleEvent extends Event
+{
+	public function __construct()
+	{
+		parent::__construct(null, 'tmp', array());
+	}
+}
+
+class TmpEvent extends Event
+{
+	public function __construct(A $target)
+	{
+		parent::__construct($target, 'tmp', array());
+	}
+}
+
 class EventTest extends \PHPUnit_Framework_TestCase
 {
 	public function testEventCallbacks()
@@ -169,5 +185,61 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertEquals(array('one' => 10, 'two' => 20, 'three' => 30, 'four' => 40, 'five' => 50), $b_processed);
 		$this->assertEquals('one,two,three,four,five', implode(',', array_keys($b_processed)));
+	}
+
+	/**
+	 * Are event hooks are correctly detached ?
+	 */
+	public function testSimpleDetach()
+	{
+		$done = null;
+
+		$callback = function(Event $event) use (&$done)
+		{
+			$done = true;
+		};
+
+		Events::attach('tmp', $callback);
+
+		new TmpSimpleEvent;
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		Events::detach('tmp', $callback);
+
+		new TmpSimpleEvent;
+
+		$this->assertNull($done);
+	}
+
+	/**
+	 * Are event hooks attached to classes are correctly detached ?
+	 */
+	public function testDetach()
+	{
+		$a = new A;
+
+		$done = null;
+
+		$callback = function(Event $event) use (&$done)
+		{
+			$done = true;
+		};
+
+		Events::attach(__NAMESPACE__ . '\A::tmp', $callback);
+
+		new TmpEvent($a);
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		Events::detach(__NAMESPACE__ . '\A::tmp', $callback);
+
+		new TmpEvent($a);
+
+		$this->assertNull($done);
 	}
 }

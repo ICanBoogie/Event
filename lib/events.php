@@ -264,11 +264,16 @@ class Events implements \IteratorAggregate, \ArrayAccess
 
 				unset($events->events[$ns][$type][$key]);
 
+				if ($ns != '::')
+				{
+					$events->events_by_class = array();
+				}
+
 				return;
 			}
 		}
 
-		throw new Exception('Unknown event callback: \1', array($callback));
+		throw new \Exception("Unknown event hook: {$type}.");
 	}
 
 	/**

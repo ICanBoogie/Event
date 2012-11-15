@@ -34,3 +34,5 @@ phar:
 clean:
 	@rm -fR docs
 	@rm -fR vendor
+	@rm -f composer.lock
+	@rm -f composer.phar
