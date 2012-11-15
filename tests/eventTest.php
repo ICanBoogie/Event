@@ -215,6 +215,31 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Are event hooks are correctly detached ?
+	 */
+	public function testSimpleDetachUseInterface()
+	{
+		$done = null;
+
+		$he = Events::attach('tmp', function(Event $event) use (&$done)
+		{
+			$done = true;
+		});
+
+		new TmpSimpleEvent;
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		$he->detach();
+
+		new TmpSimpleEvent;
+
+		$this->assertNull($done);
+	}
+
+	/**
 	 * Are event hooks attached to classes are correctly detached ?
 	 */
 	public function testDetach()
@@ -237,6 +262,33 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		$done = null;
 
 		Events::detach(__NAMESPACE__ . '\A::tmp', $callback);
+
+		new TmpEvent($a);
+
+		$this->assertNull($done);
+	}
+
+	/**
+	 * Are event hooks attached to classes are correctly detached ?
+	 */
+	public function testDetachWidthInterface()
+	{
+		$a = new A;
+
+		$done = null;
+
+		$he = Events::attach(__NAMESPACE__ . '\A::tmp', function(Event $event) use (&$done)
+		{
+			$done = true;
+		});
+
+		new TmpEvent($a);
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		$he->detach();
 
 		new TmpEvent($a);
 

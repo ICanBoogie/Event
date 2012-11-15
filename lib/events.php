@@ -197,6 +197,9 @@ class Events implements \IteratorAggregate, \ArrayAccess
 	 * @param string $type
 	 * @param callable $callback
 	 *
+	 * @return EventHook An {@link EventHook} instance that can be used to easily detach the event
+	 * hook.
+	 *
 	 * @throws \InvalidArgumentException when $callback is not a callable.
 	 */
 	static public function attach($type, $callback)
@@ -216,6 +219,7 @@ class Events implements \IteratorAggregate, \ArrayAccess
 		$events = static::get();
 		$events->skippable = array();
 		$ns = '::';
+		$fulltype = $type;
 
 		if (strpos($type, '::'))
 		{
@@ -230,6 +234,8 @@ class Events implements \IteratorAggregate, \ArrayAccess
 		}
 
 		array_unshift($events->events[$ns][$type], $callback);
+
+		return new EventHook($events, $fulltype, $callback);
 	}
 
 	/**
@@ -309,4 +315,44 @@ class Events implements \IteratorAggregate, \ArrayAccess
 	}
 
 	protected $events_by_class = array();
+}
+
+/**
+ * An event hook.
+ *
+ * An {@link EventHook} instance is created when an event hook is attached to the events. The
+ * purpose of this instance is to ease detaching:
+ *
+ * <pre>
+ * <?php
+ *
+ * $eh = Events::attach('ICanBoogie\HTTP\Dispatcher::collect', function(ICanBoogie\HTTP\Dispatcher\CollectEvent $event) {
+ *
+ *     // …
+ *
+ * });
+ *
+ * $eh->detach();
+ * </pre>
+ */
+class EventHook
+{
+	private $events;
+	private $type;
+	private $callback;
+
+	public function __construct(Events $events, $type, $callback)
+	{
+		$this->events = $events;
+		$this->type = $type;
+		$this->callback = $callback;
+	}
+
+	/**
+	 * Detaches the event hook from the events.
+	 */
+	public function detach()
+	{
+		Events::detach($this->type, $this->callback);
+	}
 }
