@@ -22,6 +22,6 @@
         "icanboogie/common": "1.0.*"
     },
     "autoload": {
-        "classmap": ["lib/"]
+        "classmap": [ "lib/" ]
     }
 }

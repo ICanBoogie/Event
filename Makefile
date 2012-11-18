@@ -26,9 +26,6 @@ doc:
 	--exclude "*/tests/*" \
 	--exclude "*/composer/*" \
 	--template-config /usr/share/php/data/ApiGen/templates/bootstrap/config.neon
-
-phar:
-	@php -d phar.readonly=0 ./build/phar.php;
 	
 clean:
 	@rm -fR docs
