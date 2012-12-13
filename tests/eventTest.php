@@ -12,7 +12,6 @@
 namespace ICanBoogie\Event\Tests;
 
 use ICanBoogie\Event;
-use ICanBoogie\Events;
 
 class A
 {
@@ -50,6 +49,21 @@ class B extends A
 	protected function process(array $values)
 	{
 		return parent::process($values + array('five' => 5));
+	}
+}
+
+use ICanBoogie\HTTP\Dispatcher;
+
+function hook_callback(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target)
+{
+
+}
+
+class Attach
+{
+	static public function hook_callback(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target)
+	{
+
 	}
 }
 
@@ -94,30 +108,151 @@ class ProcessEvent extends Event
 	}
 }
 
-class TmpSimpleEvent extends Event
-{
-	public function __construct()
-	{
-		parent::__construct(null, 'tmp', array());
-	}
-}
-
-class TmpEvent extends Event
-{
-	public function __construct(A $target)
-	{
-		parent::__construct($target, 'tmp', array());
-	}
-}
-
 class EventTest extends \PHPUnit_Framework_TestCase
 {
-	public function testEventCallbacks()
+	public function tearDown()
+	{
+// 		var_dump(\ICanBoogie\Events::get());
+	}
+
+	public function testAttachFunction()
+	{
+		$eh = Event\attach(__NAMESPACE__ . '\hook_callback');
+
+		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
+	}
+
+	public function testAttachMethod()
+	{
+		$eh = Event\attach(__NAMESPACE__ . '\Attach::hook_callback');
+
+		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
+	}
+
+	public function testAttachClosure()
+	{
+		$eh = Event\attach(function(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target) { });
+
+		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
+	}
+
+	/**
+	 * Are event hooks are correctly detached ?
+	 */
+	public function testDetach()
+	{
+		$done = null;
+
+		$hook = function(Event $event) use (&$done)
+		{
+			$done = true;
+		};
+
+		Event\attach('tmp', $hook);
+
+		new Event(null, 'tmp');
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		Event\detach('tmp', $hook);
+
+		new Event(null, 'tmp');
+
+		$this->assertNull($done);
+	}
+
+	/**
+	 * Are event hooks are correctly detached ?
+	 */
+	public function testDetachUsingInterface()
+	{
+		$done = null;
+
+		$he = Event\attach('tmp', function(Event $event) use (&$done)
+		{
+			$done = true;
+		});
+
+		new Event(null, 'tmp');
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		$he->detach();
+
+		new Event(null, 'tmp');
+
+		$this->assertNull($done);
+	}
+
+	/**
+	 * Are event hooks attached to classes are correctly detached ?
+	 */
+	public function testDetachTypedEvent()
+	{
+		$a = new A;
+
+		$done = null;
+
+		$hook = function(Event $event) use (&$done)
+		{
+			$done = true;
+		};
+
+		Event\attach(__NAMESPACE__ . '\A::tmp', $hook);
+
+		new Event($a, 'tmp');
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		Event\detach(__NAMESPACE__ . '\A::tmp', $hook);
+
+		new Event($a, 'tmp');
+
+		$this->assertNull($done);
+	}
+
+	/**
+	 * Are event hooks attached to classes are correctly detached ?
+	 */
+	public function testDetachTypedEventUsingInterface()
+	{
+		$a = new A;
+
+		$done = null;
+
+		$he = Event\attach(__NAMESPACE__ . '\A::tmp', function(Event $event) use (&$done)
+		{
+			$done = true;
+		});
+
+		new Event($a, 'tmp');
+
+		$this->assertTrue($done);
+
+		$done = null;
+
+		$he->detach();
+
+		new Event($a, 'tmp');
+
+		$this->assertNull($done);
+	}
+
+	/**
+	 * The big test, with reflection and chains.
+	 */
+	public function testEventHooks()
 	{
 		/*
-		 * The A::validate() method would return false if the following callback wasn't called.
+		 * The A::validate() method would return false if the following hook wasn't called.
 		 */
-		Events::attach(__NAMESPACE__ . '\A::validate', function(ValidateEvent $event, A $target) {
+		Event\attach(function(ValidateEvent $event, A $target) {
 
 			$event->valid = true;
 		});
@@ -125,18 +260,18 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		/*
 		 * We add "three" to the values of A instances before they are processed.
 		 */
-		Events::attach(__NAMESPACE__ . '\A::process:before', function(BeforeProcessEvent $event, A $target) {
+		Event\attach(function(BeforeProcessEvent $event, A $target) {
 
 			$event->values['three'] = 3;
 		});
 
 		/*
-		 * This callback is called before any callback set on the A class, because we want "four" to be
-		 * after "three", which is added by the callback above, we use the _chain_ feature of the event.
+		 * This hook is called before any hook set on the A class, because we want "four" to be
+		 * after "three", which is added by the hook above, we use the _chain_ feature of the event.
 		 *
-		 * Callbacks pushed by the chain() method are executed after the even chain was processed.
+		 * Hooks pushed by the chain() method are executed after the even chain was processed.
 		 */
-		Events::attach(__NAMESPACE__ . '\B::process:before', function(BeforeProcessEvent $event, B $target) {
+		Event\attach(function(BeforeProcessEvent $event, B $target) {
 
 			$event->chain(function($event) {
 
@@ -147,7 +282,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		/*
 		 * 10 is added to all processed values of A instances.
 		 */
-		Events::attach(__NAMESPACE__ . '\A::process', function(ProcessEvent $event, A $target) {
+		Event\attach(function(ProcessEvent $event, A $target) {
 
 			array_walk($event->values, function(&$v) {
 
@@ -159,10 +294,10 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		 * We want processed values to be mutiplied by 10 for B instances, because 10 is already added to
 		 * values of A instances we need to stop the event from propagating.
 		 *
-		 * The stop() method of the event breaks the event chain, so our callback will be the last
+		 * The stop() method of the event breaks the event chain, so our hook will be the last
 		 * called in the chain.
 		 */
-		Events::attach(__NAMESPACE__ . '\B::process', function(ProcessEvent $event, B $target) {
+		Event\attach(function(ProcessEvent $event, B $target) {
 
 			array_walk($event->values, function(&$v) {
 
@@ -185,113 +320,5 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertEquals(array('one' => 10, 'two' => 20, 'three' => 30, 'four' => 40, 'five' => 50), $b_processed);
 		$this->assertEquals('one,two,three,four,five', implode(',', array_keys($b_processed)));
-	}
-
-	/**
-	 * Are event hooks are correctly detached ?
-	 */
-	public function testSimpleDetach()
-	{
-		$done = null;
-
-		$callback = function(Event $event) use (&$done)
-		{
-			$done = true;
-		};
-
-		Events::attach('tmp', $callback);
-
-		new TmpSimpleEvent;
-
-		$this->assertTrue($done);
-
-		$done = null;
-
-		Events::detach('tmp', $callback);
-
-		new TmpSimpleEvent;
-
-		$this->assertNull($done);
-	}
-
-	/**
-	 * Are event hooks are correctly detached ?
-	 */
-	public function testSimpleDetachUseInterface()
-	{
-		$done = null;
-
-		$he = Events::attach('tmp', function(Event $event) use (&$done)
-		{
-			$done = true;
-		});
-
-		new TmpSimpleEvent;
-
-		$this->assertTrue($done);
-
-		$done = null;
-
-		$he->detach();
-
-		new TmpSimpleEvent;
-
-		$this->assertNull($done);
-	}
-
-	/**
-	 * Are event hooks attached to classes are correctly detached ?
-	 */
-	public function testDetach()
-	{
-		$a = new A;
-
-		$done = null;
-
-		$callback = function(Event $event) use (&$done)
-		{
-			$done = true;
-		};
-
-		Events::attach(__NAMESPACE__ . '\A::tmp', $callback);
-
-		new TmpEvent($a);
-
-		$this->assertTrue($done);
-
-		$done = null;
-
-		Events::detach(__NAMESPACE__ . '\A::tmp', $callback);
-
-		new TmpEvent($a);
-
-		$this->assertNull($done);
-	}
-
-	/**
-	 * Are event hooks attached to classes are correctly detached ?
-	 */
-	public function testDetachWidthInterface()
-	{
-		$a = new A;
-
-		$done = null;
-
-		$he = Events::attach(__NAMESPACE__ . '\A::tmp', function(Event $event) use (&$done)
-		{
-			$done = true;
-		});
-
-		new TmpEvent($a);
-
-		$this->assertTrue($done);
-
-		$done = null;
-
-		$he->detach();
-
-		new TmpEvent($a);
-
-		$this->assertNull($done);
 	}
 }

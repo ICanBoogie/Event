@@ -1,5 +1,4 @@
-Event [![Build Status](https://secure.travis-ci.org/ICanBoogie/Event.png?branch=master)](http://travis-ci.org/ICanBoogie/Event)
-=====
+# Event [![Build Status](https://secure.travis-ci.org/ICanBoogie/Event.png?branch=master)](http://travis-ci.org/ICanBoogie/Event)
 
 The API provided by the Event package allows developers to provide hooks which other developers
 may hook into, to be notified when certain events occur inside the application and take action.
@@ -7,6 +6,7 @@ may hook into, to be notified when certain events occur inside the application a
 Inside [ICanBoogie](http://icanboogie.org/), events are often used to alter initial parameters,
 take action before/after an operation is processed or when it fails, take action before/after a
 request is dispatched or to rescue an exception.
+
 
 
 
@@ -24,9 +24,11 @@ request is dispatched or to rescue an exception.
 
 
 
+
 ## Requirement
 
 PHP 5.3+ is required.
+
 
 
 
@@ -49,13 +51,13 @@ Just create a `composer.json` file and run the `php composer.phar install` comma
 
 
 
+
 ## Testing
 
-You need [PHPUnit](http://www.phpunit.de/manual/current/en/) to run the test suite:
+The test suite is ran with the `make test` command. [Composer](http://getcomposer.org/) is
+automatically installed as well as all dependencies required to run the suite. You can later
+clean the directory with the `make clean` command.
 
-	$ make test
-
-Note that the package is continuously integrated by [Travis-CI](https://travis-ci.org/#!/ICanBoogie/Event).
 
 
 
@@ -85,6 +87,7 @@ to its root class.
 Thus, event hooks attached to the `Icybee\Modules\Node\SaveOperation` class are called
 when the `process` event is fired upon a `Icybee\Modules\News\SaveOperation` instance. One could
 consider that event hooks are _inherited_.
+
 
 
 
@@ -148,11 +151,13 @@ class ProcessEvent extends \ICanBoogie\Event
 
 
 
+
 ### Event types
 
 The event type is usually the name of an associated method. For example, the `process` event
 type is fired after the `ICanBoogie\Operation::process` method was called, and the `process:before`
 event type is fired before.
+
 
 
 
@@ -165,6 +170,7 @@ namespace.
 
 The class name should match the event type. `ProcessEvent` for the `process` event type,
 `BeforeProcessEvent` for the `process:before` event.
+
 
 
 
@@ -203,22 +209,27 @@ class Operation
 
 
 
+
 ## Attaching event hooks
 
-Event hooks are attached using the `Events::attach()` method.
+Event hooks are attached using the `Event\attach()` helper or the `attach()` method of an
+event collection. The `attach()` method is smart enough to create the event type from the
+parameters type. In the following example, the event hook is attached to the
+`ICanBoogie\Operation::process:before` event type.
 
 ```php
 <?php
 
-use ICanBoogie\Events;
+use ICanBoogie\Event;
 use ICanBoogie\Operation;
 
-Events::attach('ICanBoogie\Operation::process', function(Operation\ProcessEvent $event, Operation $operation) {
+Event\attach(function(Operation\BeforeProcessEvent $event, Operation $operation) {
 
 	// …
 	
 }); 
 ```
+
 
 
 
@@ -248,6 +259,8 @@ return array
 
 
 
+
+
 ### Attaching event hooks to the _finish chain_
 
 The _finish chain_ is executed after the event chain was traversed without being stopped.
@@ -256,11 +269,10 @@ The following example demonstrates how an event hook can be added to the _finish
 the `count` event to obtain the string "0123". If the third event hook was defined like the
 others we would obtain "0312".
 
-
 ```php
 <?php
 
-use ICanBoogie\Events;
+use ICanBoogie\Event;
 
 class CountEvent extends \ICanBoogie\Event
 {
@@ -274,19 +286,19 @@ class CountEvent extends \ICanBoogie\Event
 	}
 }
 
-Events::attach('count', function(CountEvent $event) {
+Event\attach('count', function(CountEvent $event) {
 
 	$event->count .= 2;
 
 });
 
-Events::attach('count', function(CountEvent $event) {
+Event\attach('count', function(CountEvent $event) {
 
 	$event->count .= 1;
 
 });
 
-Events::attach('count', function(CountEvent $event) {
+Event\attach('count', function(CountEvent $event) {
 
 	$event->chain(function(CountEvent $event) {
 
@@ -302,7 +314,9 @@ echo $event->count; // 0123
 
 
 
-## Breacking an event hooks chain
+
+
+## Breaking an event hooks chain
 
 The processing of an event hooks chain can be broken by an event hook using the `stop()` method:
 
@@ -317,6 +331,7 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 	$event->stop();
 }
 ```
+
 
 
 

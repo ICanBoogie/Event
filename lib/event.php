@@ -18,7 +18,7 @@ namespace ICanBoogie;
  * @property-read $used int The {@link $used} property is readable.
  * @property-read $target mixed The {@link $target} property is readable.
  */
-abstract class Event
+class Event
 {
 	/**
 	 * The reserved properties that cannot be used to provide event properties.
@@ -34,7 +34,7 @@ abstract class Event
 	 */
 	static public $profiling = array
 	(
-		'callbacks' => array(),
+		'hooks' => array(),
 		'unused' => array()
 	);
 
@@ -46,7 +46,7 @@ abstract class Event
 	private $stopped = false;
 
 	/**
-	 * The number of callbacks called.
+	 * The number of hooks called.
 	 *
 	 * @var int
 	 */
@@ -60,7 +60,7 @@ abstract class Event
 	private $target;
 
 	/**
-	 * Chain of callbacks to execute once the event has been fired.
+	 * Chain of hooks to execute once the event has been fired.
 	 *
 	 * @var array
 	 */
@@ -69,112 +69,104 @@ abstract class Event
 	/**
 	 * Creates an event and fires it immediately.
 	 *
-	 * If `$target` is provided the callbacks are narrowed to classes events and callbacks are
-	 * called with `$target` as second parameter.
+	 * If the event's target is specified its class is used to prefix the event type. For example,
+	 * if the event's target is an instance of `ICanBoogie\Operation` and the event type is
+	 * `process` the final event type will be `ICanBoogie\Operation::process`.
 	 *
 	 * @param mixed $target The target of the event.
 	 * @param string $type The event type.
 	 * @param array $payload Event payload.
 	 *
-	 * @throws PropertyIsReserved in attempt to specify a reserved property.
+	 * @throws PropertyIsReserved in attempt to specify a reserved property with the payload.
 	 */
-	public function __construct($target, $type, array $payload)
+	public function __construct($target, $type, array $payload=array())
 	{
-		$this->target = $target;
-
-		$events = Events::get();
-
-		#
-		# filters events according to the target.
-		#
-
 		if ($target)
 		{
 			$class = get_class($target);
-			$complete_type = $class . '::' . $type;
-			$filtered_events = $events->get_class_events($class);
-		}
-		else
-		{
-			$complete_type = $type;
-			$filtered_events = $events['::'];
+			$type = $class . '::' . $type;
 		}
 
-		if ($events->is_skippable($complete_type))
+		$events = Events::get();
+
+		if ($events->is_skippable($type))
 		{
 			return;
 		}
 
-		$prepared = false;
+		$hooks = $events->get_hooks($type);
 
-		foreach ($filtered_events as $pattern => $callbacks)
+		if (!$hooks)
 		{
-			if ($pattern != $type)
+			self::$profiling['unused'][] = array(microtime(true), $type);
+
+			$events->skip($type);
+
+			return;
+		}
+
+		$this->target = $target;
+
+		#
+		# copy payload to the event's properties.
+		#
+
+		foreach ($payload as $property => &$value)
+		{
+			if (isset(self::$reserved[$property]))
 			{
-				continue;
+				throw new PropertyIsReserved($property);
 			}
 
-			if (!$prepared)
+			#
+			# we need to set the property to null before we set its value by reference
+			# otherwise if the property doesn't exists the magic method `__get()` is
+			# invoked and throws an exception because we try to get the value of a
+			# property that do not exists.
+			#
+
+			$this->$property = null;
+			$this->$property = &$value;
+		}
+
+		#
+		# process event hooks chain
+		#
+
+		foreach ($hooks as $hook)
+		{
+			++$this->used;
+
+			$time = microtime(true);
+
+			call_user_func($hook, $this, $target);
+
+			self::$profiling['hooks'][] = array($time, $type, $hook, microtime(true) - $time);
+
+			if ($this->stopped)
 			{
-				foreach ($payload as $property => &$value)
-				{
-					if (isset(self::$reserved[$property]))
-					{
-						throw new PropertyIsReserved($property);
-					}
-
-					#
-					# we need to set the property to null before we set its value by reference
-					# otherwise if the property doesn't exists the magic method {@link __get()} is
-					# invoked and throws an exception because we try to get the value of a
-					# property that does not exists.
-					#
-
-					$this->$property = null;
-					$this->$property = &$value;
-				}
-
-				$prepared = true;
-			}
-
-			foreach ($callbacks as $callback)
-			{
-				++$this->used;
-
-				$time = microtime(true);
-
-				call_user_func($callback, $this, $target);
-
-				self::$profiling['callbacks'][] = array($time, $complete_type, $callback, microtime(true) - $time);
-
-				if ($this->stopped)
-				{
-					return;
-				}
-			}
-
-			foreach ($this->chain as $callback)
-			{
-				++$this->used;
-
-				$time = microtime(true);
-
-				call_user_func($callback, $this, $target);
-
-				self::$profiling['callbacks'][] = array($time, $type, $callback, microtime(true) - $time);
-
-				if ($this->stopped)
-				{
-					return;
-				}
+				return;
 			}
 		}
 
-		if (!$this->used)
-		{
-			self::$profiling['unused'][] = array(microtime(true), $complete_type);
+		#
+		# process finish chain hooks
+		#
 
-			$events->skip($complete_type);
+		foreach ($this->chain as $hook)
+		{
+			++$this->used;
+
+			$time = microtime(true);
+
+			call_user_func($hook, $this, $target);
+
+			self::$profiling['hooks'][] = array($time, $type, $hook, microtime(true) - $time);
+
+			if ($this->stopped)
+			{
+				return;
+			}
 		}
 	}
 
@@ -208,10 +200,9 @@ abstract class Event
 	}
 
 	/**
-	 * Stops the callbacks chain.
+	 * Stops the hooks chain.
 	 *
-	 * After the `stop()` method is called the callback chain is broken and no other callback
-	 * is called.
+	 * After the `stop()` method is called the hooks chain is broken and no other hook is called.
 	 */
 	public function stop()
 	{
@@ -219,17 +210,17 @@ abstract class Event
 	}
 
 	/**
-	 * Add a callback to the finish chain.
+	 * Add an event hook to the finish chain.
 	 *
 	 * The finish chain is executed after the event chain was traversed without being stopped.
 	 *
-	 * @param callable $callback
+	 * @param callable $hook
 	 *
 	 * @return \ICanBoogie\Event
 	 */
-	public function chain($callback)
+	public function chain($hook)
 	{
-		$this->chain[] = $callback;
+		$this->chain[] = $hook;
 
 		return $this;
 	}
