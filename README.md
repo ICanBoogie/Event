@@ -27,7 +27,7 @@ request is dispatched or to rescue an exception.
 
 ## Requirement
 
-PHP 5.3+ is required.
+The package requires PHP 5.3 or later.
 
 
 
@@ -40,10 +40,10 @@ Just create a `composer.json` file and run the `php composer.phar install` comma
 
 ```json
 {
-	"minium-stability": "dev",
+	"minimum-stability": "dev",
 	"require":
 	{
-		"icanboogie/event": "1.0.*"
+		"icanboogie/event": "*"
 	}
 }
 ```
@@ -52,11 +52,44 @@ Just create a `composer.json` file and run the `php composer.phar install` comma
 
 
 
+### Cloning the repository
+
+The package is [available on GitHub](https://github.com/ICanBoogie/Event), its repository can be
+cloned with the following command line:
+
+	$ git clone git://github.com/ICanBoogie/Event.git
+
+
+
+
+
+## Documentation
+
+The package is documented as part of the [ICanBoogie](http://icanboogie.org/) framework
+[documentation](http://icanboogie.org/docs/). The documentation for the package and its
+dependencies can be generated with the `make doc` command. The documentation is generated in
+the `docs` directory using [ApiGen](http://apigen.org/). The package directory can later by
+cleaned with the `make clean` command.
+
+The following classes are documented: 
+
+- [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html)
+- [EventHook](http://icanboogie.org/docs/class-ICanBoogie.EventHook.html)
+- [Events](http://icanboogie.org/docs/class-ICanBoogie.Events.html)
+
+
+
+
+
 ## Testing
 
 The test suite is ran with the `make test` command. [Composer](http://getcomposer.org/) is
-automatically installed as well as all dependencies required to run the suite. You can later
-clean the directory with the `make clean` command.
+automatically installed as well as all the dependencies required to run the suite. The package
+directory can later be cleaned with the `make clean` command.
+
+The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
+
+[![Build Status](https://travis-ci.org/ICanBoogie/Event.png?branch=master)](https://travis-ci.org/ICanBoogie/Event)
 
 
 
@@ -338,4 +371,4 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 
 ## License
 
-ICanBoogie/Event is licensed under the New BSD License - See the LICENSE file for details.
+ICanBoogie/Event is licensed under the New BSD License - See the [LICENSE](https://raw.github.com/ICanBoogie/Event/master/LICENSE) file for details.
