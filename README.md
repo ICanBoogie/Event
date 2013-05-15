@@ -25,76 +25,6 @@ request is dispatched or to rescue an exception.
 
 
 
-## Requirement
-
-The package requires PHP 5.3 or later.
-
-
-
-
-
-## Installation
-
-The easiest way to install the package is to use [composer](http://getcomposer.org/).
-Just create a `composer.json` file and run the `php composer.phar install` command.
-
-```json
-{
-	"minimum-stability": "dev",
-	"require":
-	{
-		"icanboogie/event": "*"
-	}
-}
-```
-
-
-
-
-
-### Cloning the repository
-
-The package is [available on GitHub](https://github.com/ICanBoogie/Event), its repository can be
-cloned with the following command line:
-
-	$ git clone git://github.com/ICanBoogie/Event.git
-
-
-
-
-
-## Documentation
-
-The package is documented as part of the [ICanBoogie](http://icanboogie.org/) framework
-[documentation](http://icanboogie.org/docs/). The documentation for the package and its
-dependencies can be generated with the `make doc` command. The documentation is generated in
-the `docs` directory using [ApiGen](http://apigen.org/). The package directory can later by
-cleaned with the `make clean` command.
-
-The following classes are documented: 
-
-- [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html)
-- [EventHook](http://icanboogie.org/docs/class-ICanBoogie.EventHook.html)
-- [Events](http://icanboogie.org/docs/class-ICanBoogie.Events.html)
-
-
-
-
-
-## Testing
-
-The test suite is ran with the `make test` command. [Composer](http://getcomposer.org/) is
-automatically installed as well as all the dependencies required to run the suite. The package
-directory can later be cleaned with the `make clean` command.
-
-The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
-
-[![Build Status](https://travis-ci.org/ICanBoogie/Event.png?branch=master)](https://travis-ci.org/ICanBoogie/Event)
-
-
-
-
-
 ## A twist on the Observer pattern
 
 The pattern used by the API is similar to the [Observer pattern](http://en.wikipedia.org/wiki/Observer_pattern),
@@ -104,12 +34,11 @@ hooks.
 
 Consider the following class hierarchy:
 
-	ICanBoogie\Operation
-	└─ ICanBoogie\SaveOperation
-	   └─ Icybee\SaveOperation
-	      └─ Icybee\Modules\Node\SaveOperation
-	         └─ Icybee\Modules\Content\SaveOperation
-	            └─ Icybee\Modules\News\SaveOperation
+    ICanBoogie\Operation
+    └─ ICanBoogie\SaveOperation
+        └─ Icybee\Modules\Node\SaveOperation
+            └─ Icybee\Modules\Content\SaveOperation
+                └─ Icybee\Modules\News\SaveOperation
 
 
 When the `process` event is fired upon a `Icybee\Modules\News\SaveOperation` instance, all event
@@ -127,10 +56,10 @@ consider that event hooks are _inherited_.
 
 ## Events are typed
 
-An instance of an `Event` subclass is used to provide contextual information
-about an event to the event hooks processing it. It is passed as the first argument, with the
-target object as second argument (if any). This instance contain information
-directly relating to the type of event they accompany.
+An instance of an [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html) subclass is used
+to provide contextual information about an event to the event hooks processing it. It is passed as
+the first argument, with the target object as second argument (if any). This instance contain
+information directly relating to the type of event they accompany.
 
 For example, a `process` event is usually accompanied by a `ProcessEvent` instance, and a
 `process:before` event—fired before a `process` event—is usually accompanied by
@@ -239,24 +168,45 @@ class Operation
 }
 ```
 
+Note that before events can be emitted the event collection to use must be defined. This is done
+by patching the `get()` method of the [Events](http://icanboogie.org/docs/class-ICanBoogie.Events.html) class:
+
+```php
+<?php
+
+use ICanBoogie\Events:
+
+$events = new Events(array(
+
+	'ICanBoogie\Operation::process' => array
+	(
+		'my_callback'
+	)
+
+));
+
+Events::patch('get', function() use($events) { return $events; });
+```
+
+Using this technique you could also patch the `get()` method and create the collection just in
+time. 
+
 
 
 
 
 ## Attaching event hooks
 
-Event hooks are attached using the `Event\attach()` helper or the `attach()` method of an
-event collection. The `attach()` method is smart enough to create the event type from the
-parameters type. In the following example, the event hook is attached to the
-`ICanBoogie\Operation::process:before` event type.
+Event hooks are attached using the `attach()` method of an event collection. The `attach()` method
+is smart enough to create the event type from the parameters type. In the following example, the
+event hook is attached to the `ICanBoogie\Operation::process:before` event type.
 
 ```php
 <?php
 
-use ICanBoogie\Event;
 use ICanBoogie\Operation;
 
-Event\attach(function(Operation\BeforeProcessEvent $event, Operation $operation) {
+$events->attach(function(Operation\BeforeProcessEvent $event, Operation $operation) {
 
 	// …
 	
@@ -305,8 +255,6 @@ others we would obtain "0312".
 ```php
 <?php
 
-use ICanBoogie\Event;
-
 class CountEvent extends \ICanBoogie\Event
 {
 	public $count;
@@ -319,19 +267,19 @@ class CountEvent extends \ICanBoogie\Event
 	}
 }
 
-Event\attach('count', function(CountEvent $event) {
+$events->attach('count', function(CountEvent $event) {
 
 	$event->count .= 2;
 
 });
 
-Event\attach('count', function(CountEvent $event) {
+$events->attach('count', function(CountEvent $event) {
 
 	$event->count .= 1;
 
 });
 
-Event\attach('count', function(CountEvent $event) {
+$events->attach('count', function(CountEvent $event) {
 
 	$event->chain(function(CountEvent $event) {
 
@@ -364,6 +312,76 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 	$event->stop();
 }
 ```
+
+
+
+
+
+## Requirement
+
+The package requires PHP 5.3 or later.
+
+
+
+
+
+## Installation
+
+The easiest way to install the package is to use [composer](http://getcomposer.org/).
+Just create a `composer.json` file and run the `php composer.phar install` command.
+
+```json
+{
+	"minimum-stability": "dev",
+	"require":
+	{
+		"icanboogie/event": "*"
+	}
+}
+```
+
+
+
+
+
+### Cloning the repository
+
+The package is [available on GitHub](https://github.com/ICanBoogie/Event), its repository can be
+cloned with the following command line:
+
+	$ git clone git://github.com/ICanBoogie/Event.git
+
+
+
+
+
+## Documentation
+
+The package is documented as part of the [ICanBoogie](http://icanboogie.org/) framework
+[documentation](http://icanboogie.org/docs/). The documentation for the package and its
+dependencies can be generated with the `make doc` command. The documentation is generated in
+the `docs` directory using [ApiGen](http://apigen.org/). The package directory can later by
+cleaned with the `make clean` command.
+
+The following classes are documented: 
+
+- [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html)
+- [EventHook](http://icanboogie.org/docs/class-ICanBoogie.EventHook.html)
+- [Events](http://icanboogie.org/docs/class-ICanBoogie.Events.html)
+
+
+
+
+
+## Testing
+
+The test suite is ran with the `make test` command. [Composer](http://getcomposer.org/) is
+automatically installed as well as all the dependencies required to run the suite. The package
+directory can later be cleaned with the `make clean` command.
+
+The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
+
+[![Build Status](https://travis-ci.org/ICanBoogie/Event.png?branch=master)](https://travis-ci.org/ICanBoogie/Event)
 
 
 

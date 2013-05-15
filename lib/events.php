@@ -16,26 +16,50 @@ namespace ICanBoogie;
  */
 class Events implements \IteratorAggregate
 {
+	static private $jumptable = array
+	(
+		'get' => array(__CLASS__, 'get')
+	);
+
 	/**
-	 * Singleton instance of the class.
+	 * Calls the callback of a patchable function.
 	 *
-	 * @var Events
+	 * @param string $name Name of the function.
+	 * @param array $arguments Arguments.
+	 *
+	 * @return mixed
 	 */
-	static protected $instance;
+	static public function __callstatic($name, array $arguments)
+	{
+		return call_user_func_array(self::$jumptable[$name], $arguments);
+	}
+
+	/**
+	 * Patches a patchable function.
+	 *
+	 * @param string $name Name of the function.
+	 * @param collable $callback Callback.
+	 *
+	 * @throws \RuntimeException is attempt to patch an undefined function.
+	 */
+	static public function patch($name, $callback)
+	{
+		if (empty(self::$jumptable[$name]))
+		{
+			throw new \RuntimeException("Undefined patchable: $name.");
+		}
+
+		self::$jumptable[$name] = $callback;
+	}
 
 	/**
 	 * Returns the singleton instance of the class.
 	 *
 	 * @return Events
 	 */
-	static public function get()
+	static private function get()
 	{
-		if (!self::$instance)
-		{
-			self::$instance = new static();
-		}
-
-		return self::$instance;
+		throw new \RuntimeException("The method get() must be patched.");
 	}
 
 	/**
@@ -58,6 +82,11 @@ class Events implements \IteratorAggregate
 	 * @var array[string]bool
 	 */
 	protected $skippable = array();
+
+	public function __construct(array $hooks=array())
+	{
+		$this->hooks = $hooks;
+	}
 
 	/**
 	 * Returns an iterator for event hooks.
@@ -329,7 +358,7 @@ class Events implements \IteratorAggregate
  *
  * use ICanBoogie\HTTP\Dispatcher;
  *
- * $eh = Event\attach(function(Dispatcher\CollectEvent $event, Dispatcher $target) {
+ * $eh = $events->attach(function(Dispatcher\CollectEvent $event, Dispatcher $target) {
  *
  *     // …
  *
