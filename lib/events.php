@@ -59,7 +59,14 @@ class Events implements \IteratorAggregate
 	 */
 	static private function get()
 	{
-		throw new \RuntimeException("The method get() must be patched.");
+		static $events;
+
+		if (!$events)
+		{
+			$events = new static;
+		}
+
+		return $events;
 	}
 
 	/**
