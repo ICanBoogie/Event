@@ -54,7 +54,7 @@ consider that event hooks are _inherited_.
 
 
 
-## Events are typed
+## Typed events
 
 An instance of an [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html) subclass is used
 to provide contextual information about an event to the event hooks processing it. It is passed as
@@ -152,18 +152,18 @@ namespace ICanBoogie;
 class Operation
 {
 	// …
-	
+
 	public function __invoke()
 	{
 		// …
-		
+
 		$response->rc = $this->process();
-	
+
 		new Operation\ProcessEvent($this, array('rc' => &$response->rc, 'response' => $response, 'request' => $request)); 
-	
+
 		// …
 	}
-	
+
 	// …
 }
 ```
@@ -209,7 +209,7 @@ use ICanBoogie\Operation;
 $events->attach(function(Operation\BeforeProcessEvent $event, Operation $operation) {
 
 	// …
-	
+
 }); 
 ```
 

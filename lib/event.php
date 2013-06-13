@@ -14,9 +14,10 @@ namespace ICanBoogie;
 /**
  * An event.
  *
- * @property-read $stopped bool The {@link $stopped} property is readable.
- * @property-read $used int The {@link $used} property is readable.
- * @property-read $target mixed The {@link $target} property is readable.
+ * @property-read $stopped bool `true` when the event was stopped, `false` otherwise.
+ * @property-read $used int The number of event hooks that were invoked while dispatching the event.
+ * @property-read $used_by array Event hooks that were invoked while dispatching the event.
+ * @property-read $target mixed The object the event is dispatched on.
  */
 class Event
 {
@@ -25,7 +26,7 @@ class Event
 	 *
 	 * @var array[string]bool
 	 */
-	static private $reserved = array('chain' => true, 'stopped' => true, 'target' => true, 'used' => true);
+	static private $reserved = array('chain' => true, 'stopped' => true, 'target' => true, 'used' => true, 'used_by' => true);
 
 	/**
 	 * Profiling information about events.
@@ -39,21 +40,21 @@ class Event
 	);
 
 	/**
-	 * `true` when the event was stopped.
+	 * `true` when the event was stopped, `false` otherwise.
 	 *
 	 * @var bool
 	 */
 	private $stopped = false;
 
 	/**
-	 * The number of hooks called.
+	 * Event hooks that were invoked while dispatching the event.
 	 *
-	 * @var int
+	 * @var array
 	 */
-	private $used = 0;
+	private $used_by = array();
 
 	/**
-	 * The object target of the event.
+	 * The object the event is dispatched on.
 	 *
 	 * @var mixed
 	 */
@@ -135,7 +136,7 @@ class Event
 
 		foreach ($hooks as $hook)
 		{
-			++$this->used;
+			$this->used_by[] = $hook;
 
 			$time = microtime(true);
 
@@ -155,7 +156,7 @@ class Event
 
 		foreach ($this->chain as $hook)
 		{
-			++$this->used;
+			$this->used_by[] = $hook;
 
 			$time = microtime(true);
 
@@ -171,7 +172,8 @@ class Event
 	}
 
 	/**
-	 * Returns the read-only properties {@link $stopped}, {@link $used} and {@link $target}.
+	 * Handles the read-only properties {@link $stopped}, {@link $used}, {@link $used_by}
+	 * and {@link $target}.
 	 *
 	 * @param string $property The read-only property to return.
 	 *
@@ -182,9 +184,13 @@ class Event
 	 */
 	public function __get($property)
 	{
-		static $readers = array('stopped', 'used', 'target');
+		static $readers = array('stopped', 'used_by', 'target');
 
-		if (in_array($property, $readers))
+		if ($property === 'used')
+		{
+			return count($this->used_by);
+		}
+		else if (in_array($property, $readers))
 		{
 			return $this->$property;
 		}
