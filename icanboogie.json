@@ -1,0 +1,8 @@
+{
+	"config-path": "config/",
+	"config-constructor": {
+
+		"events": "ICanBoogie\\Event\\Hooks::synthesize_config#hooks"
+
+	}
+}

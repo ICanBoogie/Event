@@ -18,7 +18,7 @@ request is dispatched or to rescue an exception.
 * Events are fired as they are instantiated.
 * Events usually have a target object, but simpler event types can also be emitted.
 * Event hooks are attached to classes rather than objects, and they are inherited.
-* Event hooks can be added to a _finish chain_ that is executed after the event hooks chain. 
+* Event hooks can be attached to a _finish chain_ that is executed after the event hooks chain. 
 * Execution of the event chain can be stopped.
 
 
@@ -248,7 +248,7 @@ return array
 
 The _finish chain_ is executed after the event chain was traversed without being stopped.
 
-The following example demonstrates how an event hook can be added to the _finish chain_ of
+The following example demonstrates how an event hook can be attached to the _finish chain_ of
 the `count` event to obtain the string "0123". If the third event hook was defined like the
 others we would obtain "0312".
 
@@ -312,6 +312,31 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 	$event->stop();
 }
 ```
+
+
+
+
+
+## ICanBoogie auto-config
+
+The package supports the auto-config feature of the framework [ICanBoogie][] and provides a
+config constructor as well as a lazy getter for the `events` property:
+
+```<?php
+
+$core = new ICanBoogie\Core($auto_config);
+
+$core->configs['events']; // obtain the "events" config.
+$core->events;            // obtain an Events instance created with the "events" config.
+```
+
+Note: This feature is only available for [ICanBoogie][] 2.x.
+
+
+
+
+
+----------
 
 
 
@@ -389,4 +414,9 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 ## License
 
-ICanBoogie/Event is licensed under the New BSD License - See the [LICENSE](https://raw.github.com/ICanBoogie/Event/master/LICENSE) file for details.
+ICanBoogie/Event is licensed under the New BSD License - See the [LICENSE](LICENSE) file for details.
+
+
+
+
+[ICanBoogie]: http://icanboogie.org/
