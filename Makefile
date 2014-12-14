@@ -1,21 +1,20 @@
 # customization
 
-MODULE_NAME = "ICanBoogie/Event"
+PACKAGE_NAME = "ICanBoogie/Event"
 
 # do not edit the following lines
 
 usage:
 	@echo "test:  Runs the test suite.\ndoc:   Creates the documentation.\nclean: Removes the documentation, the dependencies and the Composer files."
 
-composer.phar:
-	@echo "Installing composer..."
-	@curl -s https://getcomposer.org/installer | php
-
-vendor: composer.phar
-	@php composer.phar install --prefer-source --dev
+vendor:
+	@composer install --dev
 
 update:
-	@php composer.phar update --prefer-source --dev
+	@composer update --dev
+
+autoload: vendor
+	@composer dump-autoload
 
 test: vendor
 	@phpunit
@@ -25,7 +24,7 @@ doc: vendor
 
 	@apigen \
 	--source ./ \
-	--destination docs/ --title $(MODULE_NAME) \
+	--destination docs/ --title $(PACKAGE_NAME) \
 	--exclude "*/composer/*" \
 	--exclude "*/tests/*" \
 	--template-config /usr/share/php/data/ApiGen/templates/bootstrap/config.neon
