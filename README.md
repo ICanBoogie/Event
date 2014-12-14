@@ -1,4 +1,4 @@
-# Event [![Build Status](https://secure.travis-ci.org/ICanBoogie/Event.png?branch=master)](http://travis-ci.org/ICanBoogie/Event)
+# Event [![Build Status](https://secure.travis-ci.org/ICanBoogie/Event.svg?branch=master)](http://travis-ci.org/ICanBoogie/Event)
 
 The API provided by the Event package allows developers to provide hooks which other developers
 may hook into, to be notified when certain events occur inside the application and take action.
@@ -378,17 +378,10 @@ The package requires PHP 5.3 or later.
 
 ## Installation
 
-The easiest way to install the package is to use [composer](http://getcomposer.org/).
-Just create a `composer.json` file and run the `php composer.phar install` command.
+The recommended way to install this package is through [Composer](http://getcomposer.org/):
 
-```json
-{
-	"minimum-stability": "dev",
-	"require":
-	{
-		"icanboogie/event": "*"
-	}
-}
+```
+$ composer require icanboogie/event
 ```
 
 
@@ -432,7 +425,7 @@ directory can later be cleaned with the `make clean` command.
 
 The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
-[![Build Status](https://travis-ci.org/ICanBoogie/Event.png?branch=master)](https://travis-ci.org/ICanBoogie/Event)
+[![Build Status](https://travis-ci.org/ICanBoogie/Event.svg?branch=master)](https://travis-ci.org/ICanBoogie/Event)
 
 
 

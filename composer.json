@@ -2,7 +2,7 @@
 	"name": "icanboogie/event",
 	"type": "library",
 	"description": "Provides an event API",
-	"keywords": ["toolkit"],
+	"keywords": ["event"],
 	"homepage": "http://icanboogie.org/",
 	"license": "BSD-3-Clause",
 	"authors": [
