@@ -217,6 +217,32 @@ $events->attach(function(Operation\BeforeProcessEvent $event, Operation $operati
 
 
 
+### Attaching an event hook that is be used once
+
+The `once()` method attaches event hooks that are automatically detached after they have been used.
+
+```php
+<?php
+
+$n = 0;
+
+$events->once('flash', function() use(&n) {
+
+	$n++;
+
+});
+
+new Event(null, 'flash');
+new Event(null, 'flash');
+new Event(null, 'flash');
+
+echo $n;   // 1
+```
+
+
+
+
+
 ### Attaching event hooks using the `hooks` config
 
 With [ICanBoogie](http://icanboogie.org/), the `hooks` config can be used to define event hooks.

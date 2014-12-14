@@ -237,6 +237,51 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(array('one' => 10, 'two' => 20, 'three' => 30, 'four' => 40, 'five' => 50), $b_processed);
 		$this->assertEquals('one,two,three,four,five', implode(',', array_keys($b_processed)));
 	}
+
+	public function test_once()
+	{
+		$n = 0;
+		$m = 0;
+
+		$once = function() use(&$n) {
+
+			$n++;
+
+		};
+
+		self::$events->once('once', $once);
+
+		$eh = self::$events->attach('once', function() use(&$m) {
+
+			$m++;
+
+		});
+
+		new Event(null, 'once');
+		new Event(null, 'once');
+		new Event(null, 'once');
+
+		$this->assertEquals(1, $n);
+		$this->assertEquals(3, $m);
+
+		$eh->detach();
+
+		self::$events->once('once', $once);
+
+		new Event(null, 'once');
+		new Event(null, 'once');
+		new Event(null, 'once');
+
+		$this->assertEquals(2, $n);
+
+		self::$events->attach('once', $once);
+
+		new Event(null, 'once');
+		new Event(null, 'once');
+		new Event(null, 'once');
+
+		$this->assertEquals(5, $n);
+	}
 }
 
 namespace ICanBoogie\EventTest;

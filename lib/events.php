@@ -90,6 +90,8 @@ class Events implements \IteratorAggregate
 	 */
 	protected $skippable = array();
 
+	private $once_collection = array();
+
 	public function __construct(array $hooks=array())
 	{
 		$this->hooks = $hooks;
@@ -121,9 +123,10 @@ class Events implements \IteratorAggregate
 	 *
 	 * The hook will be attached to the `ICanBoogie\SaveOperation::process:before` event.
 	 *
-	 * @param callable $hook The event hook.
+	 * @param string $name Event type or closure.
+	 * @param callable $hook The event hook, or nothing if $name is a closure.
 	 *
-	 * @return EventHook An {@link EventHook} instance that can be used to easily detach the event
+	 * @return EventHook An event hook reference that can be used to easily detach the event
 	 * hook.
 	 *
 	 * @throws \InvalidArgumentException when `$hook` is not a callable.
@@ -172,6 +175,22 @@ class Events implements \IteratorAggregate
 		}
 
 		return new EventHook($this, $name, $hook);
+	}
+
+	/**
+	 * Attach an event hook that is detached once used.
+	 *
+	 * @see attach()
+	 *
+	 * @return EventHook
+	 */
+	public function once($name, $hook = null)
+	{
+		$event_hook = $this->attach($name, $hook);
+
+		$this->once_collection[$event_hook->type][] = $event_hook;
+
+		return $event_hook;
 	}
 
 	/**
@@ -255,7 +274,7 @@ class Events implements \IteratorAggregate
 	 *
 	 * @return void
 	 *
-	 * @throws Exception when the event hook is not attached to the event name.
+	 * @throws \Exception when the event hook is not attached to the event name.
 	 */
 	public function detach($name, $hook)
 	{
@@ -280,6 +299,25 @@ class Events implements \IteratorAggregate
 				if (strpos($name, '::') !== false)
 				{
 					$this->consolidated_hooks = array();
+				}
+
+				#
+				# Remove the event from the once collection.
+				#
+
+				$once = &$this->once_collection;
+
+				if (isset($once[$name]))
+				{
+					foreach ($once[$name] as $k => $event_hook)
+					{
+						if ($hook !== $event_hook->hook)
+						{
+							continue;
+						}
+
+						unset($once[$name][$k]);
+					}
 				}
 
 				return;
@@ -309,6 +347,33 @@ class Events implements \IteratorAggregate
 	public function is_skippable($name)
 	{
 		return isset($this->skippable[$name]);
+	}
+
+	/**
+	 * Declare an event hook as _used_ by an event type, if the hook has been attached using {@link once()}
+	 * it is removed.
+	 *
+	 * @param $type
+	 * @param $hook
+	 */
+	public function used($type, $hook)
+	{
+		if (empty($this->once_collection[$type]))
+		{
+			return;
+		}
+
+		foreach ($this->once_collection[$type] as $k => $event_hook)
+		{
+			if ($hook !== $event_hook->hook)
+			{
+				continue;
+			}
+
+			$event_hook->detach();
+
+			break;
+		}
 	}
 
 	/**

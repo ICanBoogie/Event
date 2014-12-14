@@ -137,6 +137,7 @@ class Event
 		foreach ($hooks as $hook)
 		{
 			$this->used_by[] = $hook;
+			$events->used($type, $hook);
 
 			$time = microtime(true);
 
@@ -157,6 +158,7 @@ class Event
 		foreach ($this->chain as $hook)
 		{
 			$this->used_by[] = $hook;
+			$events->used($type, $hook);
 
 			$time = microtime(true);
 
