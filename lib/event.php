@@ -108,17 +108,39 @@ class Event
 
 		$this->target = $target;
 
-		#
-		# copy payload to the event's properties.
-		#
+		if ($payload)
+		{
+			$this->map_payload($payload);
+		}
+
+		$this->process_chain($hooks, $events, $type, $target);
+
+		if ($this->stopped || !$this->chain)
+		{
+			return;
+		}
+
+		$this->process_chain($this->chain, $events, $type, $target);
+	}
+
+	/**
+	 * Maps the payload to the event's properties.
+	 *
+	 * @param array $payload
+	 *
+	 * @throws PropertyIsReserved if a reserved property is used in the payload.
+	 */
+	private function map_payload(array $payload)
+	{
+		$reserved = array_intersect_key($payload, self::$reserved);
+
+		if ($reserved)
+		{
+			throw new PropertyIsReserved(key($reserved));
+		}
 
 		foreach ($payload as $property => &$value)
 		{
-			if (isset(self::$reserved[$property]))
-			{
-				throw new PropertyIsReserved($property);
-			}
-
 			#
 			# we need to set the property to null before we set its value by reference
 			# otherwise if the property doesn't exists the magic method `__get()` is
@@ -129,33 +151,19 @@ class Event
 			$this->$property = null;
 			$this->$property = &$value;
 		}
+	}
 
-		#
-		# process event hooks chain
-		#
-
-		foreach ($hooks as $hook)
-		{
-			$this->used_by[] = $hook;
-			$events->used($type, $hook);
-
-			$time = microtime(true);
-
-			call_user_func($hook, $this, $target);
-
-			self::$profiling['hooks'][] = array($time, $type, $hook, microtime(true) - $time);
-
-			if ($this->stopped)
-			{
-				return;
-			}
-		}
-
-		#
-		# process finish chain hooks
-		#
-
-		foreach ($this->chain as $hook)
+	/**
+	 * Process an event chain.
+	 *
+	 * @param array $chain
+	 * @param Events $events
+	 * @param string $type
+	 * @param object|null $target
+	 */
+	private function process_chain(array $chain, Events $events, $type, $target)
+	{
+		foreach ($chain as $hook)
 		{
 			$this->used_by[] = $hook;
 			$events->used($type, $hook);

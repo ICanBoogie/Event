@@ -38,7 +38,7 @@ class Hooks
 			{
 				if (!is_callable($callback, true))
 				{
-					throw new \InvalidArgumentException(format
+					throw new \InvalidArgumentException(\ICanBoogie\format
 					(
 						'Event callback must be a string, %type given: :callback in %path.', [
 

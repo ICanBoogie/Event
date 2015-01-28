@@ -282,6 +282,35 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertEquals(5, $n);
 	}
+
+	/**
+	 * @dataProvider provide_test_reserved
+	 * @expectedException \ICanBoogie\PropertyIsReserved
+	 */
+	public function test_reserved(array $payload)
+	{
+		$type = "event" . uniqid();
+
+		self::$events->attach($type, function() { });
+
+		new Event(null, $type, $payload);
+	}
+
+	public function provide_test_reserved()
+	{
+		return [
+
+			[ [ 'chain' => 123 ] ],
+			[ [ 'stopped' => 123 ] ],
+			[ [ 'target' => 123 ] ],
+			[ [ 'used' => 123 ] ],
+			[ [ 'used_by' => 123 ] ],
+			[ [ 'ok' => "ok", 'chain' => 123 ] ],
+			[ [ 'chain' => 123, 'ok' => "ok" ] ],
+			[ [ 'ok1' => "ok", 'chain' => 123, 'ok2' => "ok" ] ],
+
+		];
+	}
 }
 
 namespace ICanBoogie\EventTest;

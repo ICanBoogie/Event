@@ -1,9 +1,11 @@
-# Event [![Build Status](https://secure.travis-ci.org/ICanBoogie/Event.svg?branch=master)](http://travis-ci.org/ICanBoogie/Event)
+# Event
+
+[![Build Status][]](http://travis-ci.org/ICanBoogie/Event) [![Scrutinizer Code Quality][]](https://scrutinizer-ci.com/g/ICanBoogie/Event/?branch=master)
 
 The API provided by the Event package allows developers to provide hooks which other developers
 may hook into, to be notified when certain events occur inside the application and take action.
 
-Inside [ICanBoogie](http://icanboogie.org/), events are often used to alter initial parameters,
+Inside [ICanBoogie][], events are often used to alter initial parameters,
 take action before/after an operation is processed or when it fails, take action before/after a
 request is dispatched or to rescue an exception.
 
@@ -56,7 +58,7 @@ consider that event hooks are _inherited_.
 
 ## Typed events
 
-An instance of an [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html) subclass is used
+An instance of an [Event][] subclass is used
 to provide contextual information about an event to the event hooks processing it. It is passed as
 the first argument, with the target object as second argument (if any). This instance contain
 information directly relating to the type of event they accompany.
@@ -169,7 +171,7 @@ class Operation
 ```
 
 Note that before events can be emitted the event collection to use must be defined. This is done
-by patching the `get()` method of the [Events](http://icanboogie.org/docs/class-ICanBoogie.Events.html) class:
+by patching the `get()` method of the [Events][] class:
 
 ```php
 <?php
@@ -245,7 +247,7 @@ echo $n;   // 1
 
 ### Attaching event hooks using the `hooks` config
 
-With [ICanBoogie](http://icanboogie.org/), the `hooks` config can be used to define event hooks.
+With [ICanBoogie][], the `hooks` config can be used to define event hooks.
 
 The following example demonstrate how a website can attach hooks to be notified when nodes are
 saved (or nodes subclasses), and when an authentication exception is thrown during the dispatch
@@ -393,7 +395,7 @@ $ composer require icanboogie/event
 The package is [available on GitHub](https://github.com/ICanBoogie/Event), its repository can be
 cloned with the following command line:
 
-	$ git clone git://github.com/ICanBoogie/Event.git
+	$ git clone https://github.com/ICanBoogie/Event.git
 
 
 
@@ -401,7 +403,7 @@ cloned with the following command line:
 
 ## Documentation
 
-The package is documented as part of the [ICanBoogie](http://icanboogie.org/) framework
+The package is documented as part of the [ICanBoogie][] framework
 [documentation](http://icanboogie.org/docs/). The documentation for the package and its
 dependencies can be generated with the `make doc` command. The documentation is generated in
 the `docs` directory using [ApiGen](http://apigen.org/). The package directory can later by
@@ -409,9 +411,9 @@ cleaned with the `make clean` command.
 
 The following classes are documented: 
 
-- [Event](http://icanboogie.org/docs/class-ICanBoogie.Event.html)
-- [EventHook](http://icanboogie.org/docs/class-ICanBoogie.EventHook.html)
-- [Events](http://icanboogie.org/docs/class-ICanBoogie.Events.html)
+- [Event][]
+- [EventHook][]
+- [Events][]
 
 
 
@@ -425,7 +427,7 @@ directory can later be cleaned with the `make clean` command.
 
 The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
-[![Build Status](https://travis-ci.org/ICanBoogie/Event.svg?branch=master)](https://travis-ci.org/ICanBoogie/Event)
+[![Build Status][]](https://travis-ci.org/ICanBoogie/Event)
 
 
 
@@ -438,4 +440,10 @@ ICanBoogie/Event is licensed under the New BSD License - See the [LICENSE](LICEN
 
 
 
-[ICanBoogie]: http://icanboogie.org/
+[Build Status]: https://secure.travis-ci.org/ICanBoogie/Event.svg?branch=master
+[Scrutinizer Code Quality]: https://scrutinizer-ci.com/g/ICanBoogie/Event/badges/quality-score.png?b=master
+
+[Event]: http://icanboogie.org/docs/class-ICanBoogie.Event.html
+[EventHook]: http://icanboogie.org/docs/class-ICanBoogie.EventHook.html
+[Events]: http://icanboogie.org/docs/class-ICanBoogie.Events.html
+[ICanBoogie]: https://github.com/ICanBoogie/ICanBoogie

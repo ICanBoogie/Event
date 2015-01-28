@@ -182,6 +182,9 @@ class Events implements \IteratorAggregate
 	 *
 	 * @see attach()
 	 *
+	 * @param mixed $name
+	 * @param mixed $hook
+	 *
 	 * @return EventHook
 	 */
 	public function once($name, $hook = null)
@@ -253,7 +256,7 @@ class Events implements \IteratorAggregate
 	{
 		if (!preg_match('#\[\s*(<[^>]+>)?\s*([^\s]+)#', $param, $matches))
 		{
-			return;
+			return null;
 		}
 
 		return $matches[2];
@@ -362,6 +365,8 @@ class Events implements \IteratorAggregate
 		{
 			return;
 		}
+
+		/* @var $event_hook EventHook */
 
 		foreach ($this->once_collection[$type] as $k => $event_hook)
 		{
