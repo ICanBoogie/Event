@@ -11,6 +11,8 @@
 
 namespace ICanBoogie;
 
+use ICanBoogie\Accessor\AccessorTrait;
+
 /**
  * An event.
  *
@@ -21,23 +23,26 @@ namespace ICanBoogie;
  */
 class Event
 {
+	use AccessorTrait;
+
 	/**
 	 * The reserved properties that cannot be used to provide event properties.
 	 *
 	 * @var array[string]bool
 	 */
-	static private $reserved = array('chain' => true, 'stopped' => true, 'target' => true, 'used' => true, 'used_by' => true);
+	static private $reserved = [ 'chain' => true, 'stopped' => true, 'target' => true, 'used' => true, 'used_by' => true ];
 
 	/**
 	 * Profiling information about events.
 	 *
 	 * @var array
 	 */
-	static public $profiling = array
-	(
-		'hooks' => array(),
-		'unused' => array()
-	);
+	static public $profiling = [
+
+		'hooks' => [],
+		'unused' => []
+
+	];
 
 	/**
 	 * `true` when the event was stopped, `false` otherwise.
@@ -46,12 +51,27 @@ class Event
 	 */
 	private $stopped = false;
 
+	protected function get_stopped()
+	{
+		return $this->stopped;
+	}
+
 	/**
 	 * Event hooks that were invoked while dispatching the event.
 	 *
 	 * @var array
 	 */
-	private $used_by = array();
+	private $used_by = [];
+
+	protected function get_used_by()
+	{
+		return $this->used_by;
+	}
+
+	protected function get_used()
+	{
+		return count($this->used_by);
+	}
 
 	/**
 	 * The object the event is dispatched on.
@@ -60,12 +80,17 @@ class Event
 	 */
 	private $target;
 
+	protected function get_target()
+	{
+		return $this->target;
+	}
+
 	/**
 	 * Chain of hooks to execute once the event has been fired.
 	 *
 	 * @var array
 	 */
-	private $chain = array();
+	private $chain = [];
 
 	/**
 	 * Creates an event and fires it immediately.
@@ -80,7 +105,7 @@ class Event
 	 *
 	 * @throws PropertyIsReserved in attempt to specify a reserved property with the payload.
 	 */
-	public function __construct($target, $type, array $payload=array())
+	public function __construct($target, $type, array $payload = [])
 	{
 		if ($target)
 		{
@@ -99,7 +124,7 @@ class Event
 
 		if (!$hooks)
 		{
-			self::$profiling['unused'][] = array(microtime(true), $type);
+			self::$profiling['unused'][] = [ microtime(true), $type ];
 
 			$events->skip($type);
 
@@ -172,47 +197,13 @@ class Event
 
 			call_user_func($hook, $this, $target);
 
-			self::$profiling['hooks'][] = array($time, $type, $hook, microtime(true) - $time);
+			self::$profiling['hooks'][] = [ $time, $type, $hook, microtime(true) - $time ];
 
 			if ($this->stopped)
 			{
 				return;
 			}
 		}
-	}
-
-	/**
-	 * Handles the read-only properties {@link $stopped}, {@link $used}, {@link $used_by}
-	 * and {@link $target}.
-	 *
-	 * @param string $property The read-only property to return.
-	 *
-	 * @throws PropertyNotReadable if the property exists but is not readable.
-	 * @throws PropertyNotDefined if the property doesn't exists.
-	 *
-	 * @return mixed
-	 */
-	public function __get($property)
-	{
-		static $readers = array('stopped', 'used_by', 'target');
-
-		if ($property === 'used')
-		{
-			return count($this->used_by);
-		}
-		else if (in_array($property, $readers))
-		{
-			return $this->$property;
-		}
-
-		$properties = get_object_vars($this);
-
-		if (array_key_exists($property, $properties))
-		{
-			throw new PropertyNotReadable(array($property, $this));
-		}
-
-		throw new PropertyNotDefined(array($property, $this));
 	}
 
 	/**

@@ -22,6 +22,9 @@ use ICanBoogie\EventTest\ValidateEvent;
 
 class EventTest extends \PHPUnit_Framework_TestCase
 {
+	/**
+	 * @var Events
+	 */
 	static private $events;
 
 	static public function setUpBeforeClass()
@@ -223,7 +226,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 			$event->stop();
 		});
 
-		$initial_array = array('one' => 1, 'two' => 2);
+		$initial_array = [ 'one' => 1, 'two' => 2 ];
 
 		$a = new A;
 		$b = new B;
@@ -231,10 +234,10 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		$a_processed = $a($initial_array);
 		$b_processed = $b($initial_array);
 
-		$this->assertEquals(array('one' => 11, 'two' => 12, 'three' => 13), $a_processed);
+		$this->assertEquals([ 'one' => 11, 'two' => 12, 'three' => 13 ], $a_processed);
 		$this->assertEquals('one,two,three', implode(',', array_keys($a_processed)));
 
-		$this->assertEquals(array('one' => 10, 'two' => 20, 'three' => 30, 'four' => 40, 'five' => 50), $b_processed);
+		$this->assertEquals([ 'one' => 10, 'two' => 20, 'three' => 30, 'four' => 40, 'five' => 50 ], $b_processed);
 		$this->assertEquals('one,two,three,four,five', implode(',', array_keys($b_processed)));
 	}
 
@@ -327,7 +330,7 @@ class A
 			throw new \Exception("Values validation failed.");
 		}
 
-		new BeforeProcessEvent($this, array('values' => &$values));
+		new BeforeProcessEvent($this, [ 'values' => &$values ]);
 
 		return $this->process($values);
 	}
@@ -336,14 +339,14 @@ class A
 	{
 		$valid = false;
 
-		new ValidateEvent($this, array('values' => $values, 'valid' => &$valid));
+		new ValidateEvent($this, [ 'values' => $values, 'valid' => &$valid ]);
 
 		return $valid;
 	}
 
 	protected function process(array $values)
 	{
-		new ProcessEvent($this, array('values' => &$values));
+		new ProcessEvent($this, [ 'values' => &$values ]);
 
 		return $values;
 	}
@@ -353,7 +356,7 @@ class B extends A
 {
 	protected function process(array $values)
 	{
-		return parent::process($values + array('five' => 5));
+		return parent::process($values + [ 'five' => 5 ]);
 	}
 }
 

@@ -16,10 +16,11 @@ namespace ICanBoogie;
  */
 class Events implements \IteratorAggregate
 {
-	static private $jumptable = array
-	(
-		'get' => array(__CLASS__, 'get')
-	);
+	static private $jumptable = [
+
+		'get' => [ __CLASS__, 'get' ]
+
+	];
 
 	/**
 	 * Calls the callback of a patchable function.
@@ -74,25 +75,25 @@ class Events implements \IteratorAggregate
 	 *
 	 * @var array[string]array
 	 */
-	protected $hooks = array();
+	protected $hooks = [];
 
 	/**
 	 * Event hooks consolidated by class and type.
 	 *
 	 * @var array[string]array
 	 */
-	protected $consolidated_hooks = array();
+	protected $consolidated_hooks = [];
 
 	/**
 	 * Lists of skippable events.
 	 *
 	 * @var array[string]bool
 	 */
-	protected $skippable = array();
+	protected $skippable = [];
 
-	private $once_collection = array();
+	private $once_collection = [];
 
-	public function __construct(array $hooks=array())
+	public function __construct(array $hooks = [])
 	{
 		$this->hooks = $hooks;
 	}
@@ -131,7 +132,7 @@ class Events implements \IteratorAggregate
 	 *
 	 * @throws \InvalidArgumentException when `$hook` is not a callable.
 	 */
-	public function attach($name, $hook=null)
+	public function attach($name, $hook = null)
 	{
 		if ($hook === null)
 		{
@@ -143,11 +144,12 @@ class Events implements \IteratorAggregate
 		{
 			throw new \InvalidArgumentException(format
 			(
-				'The event hook must be a callable, %type given: :hook', array
-				(
+				'The event hook must be a callable, %type given: :hook', [
+
 					'type' => gettype($hook),
 					'hook' => $hook
-				)
+
+				]
 			));
 		}
 
@@ -158,7 +160,7 @@ class Events implements \IteratorAggregate
 
 		if (!isset($this->hooks[$name]))
 		{
-			$this->hooks[$name] = array();
+			$this->hooks[$name] = [];
 		}
 
 		array_unshift($this->hooks[$name], $hook);
@@ -167,11 +169,11 @@ class Events implements \IteratorAggregate
 		# If the event is a targeted event, we reset the skippable and consolidated hooks arrays.
 		#
 
-		$this->skippable = array();
+		$this->skippable = [];
 
 		if (strpos($name, '::') !== false)
 		{
-			$this->consolidated_hooks = array();
+			$this->consolidated_hooks = [];
 		}
 
 		return new EventHook($this, $name, $hook);
@@ -265,8 +267,8 @@ class Events implements \IteratorAggregate
 	public function batch_attach(array $definitions)
 	{
 		$this->hooks = \array_merge_recursive($this->hooks, $definitions);
-		$this->skippable = array();
-		$this->consolidated_hooks = array();
+		$this->skippable = [];
+		$this->consolidated_hooks = [];
 	}
 
 	/**
@@ -301,7 +303,7 @@ class Events implements \IteratorAggregate
 
 				if (strpos($name, '::') !== false)
 				{
-					$this->consolidated_hooks = array();
+					$this->consolidated_hooks = [];
 				}
 
 				#
@@ -395,7 +397,7 @@ class Events implements \IteratorAggregate
 	{
 		if (!strpos($name, '::'))
 		{
-			return isset($this->hooks[$name]) ? $this->hooks[$name] : array();
+			return isset($this->hooks[$name]) ? $this->hooks[$name] : [];
 		}
 
 		if (isset($this->consolidated_hooks[$name]))
@@ -405,7 +407,7 @@ class Events implements \IteratorAggregate
 
 		list($class, $type) = explode('::', $name);
 
-		$hooks = array();
+		$hooks = [];
 		$c = $class;
 
 		while ($c)
@@ -463,14 +465,14 @@ class EventHook
 
 	public function __get($property)
 	{
-		static $readers = array('events', 'type', 'hook');
+		static $readers = [ 'events', 'type', 'hook' ];
 
 		if (in_array($property, $readers))
 		{
 			return $this->$property;
 		}
 
-		throw new PropertyNotDefined(array($property, $this));
+		throw new PropertyNotDefined([ $property, $this ]);
 	}
 
 	/**
