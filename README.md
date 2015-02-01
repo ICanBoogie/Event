@@ -1,6 +1,11 @@
 # Event
 
-[![Build Status][]](http://travis-ci.org/ICanBoogie/Event) [![Scrutinizer Code Quality][]](https://scrutinizer-ci.com/g/ICanBoogie/Event/?branch=master)
+[![Release](https://img.shields.io/github/release/ICanBoogie/Event.svg)](https://github.com/ICanBoogie/Event/releases)
+[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/1.3.svg)](http://travis-ci.org/ICanBoogie/Event)
+[![HHVM](https://img.shields.io/hhvm/icanboogie/event/1.3.svg)](http://hhvm.h4cc.de/package/icanboogie/event)
+[![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/1.3.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
+[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/1.3.svg)](https://coveralls.io/r/ICanBoogie/Event)
+[![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
 The API provided by the Event package allows developers to provide hooks which other developers
 may hook into, to be notified when certain events occur inside the application and take action.
@@ -372,7 +377,7 @@ Note: This feature is only available for [ICanBoogie][] 2.x.
 
 ## Requirement
 
-The package requires PHP 5.3 or later.
+The package requires PHP 5.4 or later.
 
 
 
@@ -427,7 +432,8 @@ directory can later be cleaned with the `make clean` command.
 
 The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
-[![Build Status][]](https://travis-ci.org/ICanBoogie/Event)
+[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/1.3.svg)](https://travis-ci.org/ICanBoogie/Event)
+[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/1.3.svg)](https://coveralls.io/r/ICanBoogie/Event)
 
 
 
@@ -440,8 +446,6 @@ ICanBoogie/Event is licensed under the New BSD License - See the [LICENSE](LICEN
 
 
 
-[Build Status]: https://secure.travis-ci.org/ICanBoogie/Event.svg?branch=master
-[Scrutinizer Code Quality]: https://scrutinizer-ci.com/g/ICanBoogie/Event/badges/quality-score.png?b=master
 
 [Event]: http://icanboogie.org/docs/class-ICanBoogie.Event.html
 [EventHook]: http://icanboogie.org/docs/class-ICanBoogie.EventHook.html
