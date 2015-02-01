@@ -1,10 +1,10 @@
 # Event
 
 [![Release](https://img.shields.io/github/release/ICanBoogie/Event.svg)](https://github.com/ICanBoogie/Event/releases)
-[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/1.3.svg)](http://travis-ci.org/ICanBoogie/Event)
-[![HHVM](https://img.shields.io/hhvm/icanboogie/event/1.3.svg)](http://hhvm.h4cc.de/package/icanboogie/event)
-[![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/1.3.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
-[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/1.3.svg)](https://coveralls.io/r/ICanBoogie/Event)
+[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/master.svg)](http://travis-ci.org/ICanBoogie/Event)
+[![HHVM](https://img.shields.io/hhvm/icanboogie/event.svg)](http://hhvm.h4cc.de/package/icanboogie/event)
+[![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/master.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
+[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
 [![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
 The API provided by the Event package allows developers to provide hooks which other developers
@@ -432,8 +432,8 @@ directory can later be cleaned with the `make clean` command.
 
 The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
-[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/1.3.svg)](https://travis-ci.org/ICanBoogie/Event)
-[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/1.3.svg)](https://coveralls.io/r/ICanBoogie/Event)
+[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/master.svg)](https://travis-ci.org/ICanBoogie/Event)
+[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
 
 
 

@@ -17,7 +17,6 @@
 		"issues": "https://github.com/ICanBoogie/Event/issues",
 		"source": "https://github.com/ICanBoogie/Event"
 	},
-	"minimum-stability": "dev",
 	"require": {
 		"php": ">=5.4.0",
 		"icanboogie/common": "~1.2.2",
