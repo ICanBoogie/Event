@@ -107,6 +107,38 @@ class Events implements \IteratorAggregate
 	}
 
 	/**
+	 * Adds events from a configuration.
+	 *
+	 * @param array $config
+	 */
+	public function configure(array $config)
+	{
+		$hooks = $this->hooks;
+
+		foreach ($config as $type => $type_hooks)
+		{
+			if (empty($hooks[$type]))
+			{
+				$hooks[$type] = $type_hooks;
+
+				continue;
+			}
+
+			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
+		}
+
+		$this->hooks = array_map('array_unique', $hooks);
+		$this->revoke_traces();
+	}
+
+	protected function revoke_traces()
+	{
+		$this->consolidated_hooks = [];
+		$this->once_collection = [];
+		$this->skippable = [];
+	}
+
+	/**
 	 * Attaches an event hook.
 	 *
 	 * The name of the event is resolved from the parameters of the event hook. Consider the
