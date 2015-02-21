@@ -1,6 +1,6 @@
 # Event
 
-[![Release](https://img.shields.io/github/release/ICanBoogie/Event.svg)](https://github.com/ICanBoogie/Event/releases)
+[![Release](https://img.shields.io/packagist/v/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 [![Build Status](https://img.shields.io/travis/ICanBoogie/Event/master.svg)](http://travis-ci.org/ICanBoogie/Event)
 [![HHVM](https://img.shields.io/hhvm/icanboogie/event.svg)](http://hhvm.h4cc.de/package/icanboogie/event)
 [![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/master.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
