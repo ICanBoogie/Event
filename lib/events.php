@@ -41,6 +41,8 @@ class Events implements \IteratorAggregate
 	 * @param string $name Name of the function.
 	 * @param callable $callback Callback.
 	 *
+	 * @return callable Previous callable.
+	 *
 	 * @throws \RuntimeException is attempt to patch an undefined function.
 	 */
 	static public function patch($name, $callback)
@@ -50,7 +52,10 @@ class Events implements \IteratorAggregate
 			throw new \RuntimeException("Undefined patchable: $name.");
 		}
 
+		$previous = self::$jumptable[$name];
 		self::$jumptable[$name] = $callback;
+
+		return $previous;
 	}
 
 	/**
