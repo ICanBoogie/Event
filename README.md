@@ -224,7 +224,34 @@ $events->attach(function(Operation\BeforeProcessEvent $event, Operation $operati
 
 
 
-### Attaching an event hook that is be used once
+### Attaching an event hook to a specific target
+
+Using the `attach_to()` method, an event hook can be attached to a specific target, and is only invoked for that target.
+
+```php
+<?php
+
+use ICanBoogie\Routing\Controller;
+
+…
+
+$events->attach_to($controller, function(Controller\ActionEvent $event, Controller $target) {
+
+	echo "invoked!";
+
+});
+
+$controller_clone = clone $controller;
+
+new Controller\ActionEvent($controller_clone, …);   // nothing happens
+new Controller\ActionEvent($controller, …);         // echo "invoked!"
+```
+
+
+
+
+
+### Attaching an event hook that is to be used once
 
 The `once()` method attaches event hooks that are automatically detached after they have been used.
 

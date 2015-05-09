@@ -9,7 +9,14 @@
  * file that was distributed with this source code.
  */
 
-/* @var $loader \Composer\Autoload\ClassLoader */
+namespace ICanBoogie\EventTest\AttachTo;
 
-$loader  = require __DIR__ . '/../vendor/autoload.php';
-$loader->addPsr4('ICanBoogie\\EventTest\\', __DIR__ . '/EventTest/');
+use ICanBoogie\Event;
+
+class ExampleEvent extends Event
+{
+	public function __construct($target)
+	{
+		parent::__construct($target, 'example');
+	}
+}

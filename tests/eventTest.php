@@ -14,7 +14,7 @@ namespace ICanBoogie;
 use ICanBoogie\HTTP\Dispatcher;
 
 use ICanBoogie\EventTest\A;
-use ICanBoogie\EventTest\Attach;
+use ICanBoogie\EventTest\AttachTo;
 use ICanBoogie\EventTest\B;
 use ICanBoogie\EventTest\BeforeProcessEvent;
 use ICanBoogie\EventTest\ProcessEvent;
@@ -53,6 +53,41 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		$eh = self::$events->attach(function(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target) { });
 
 		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function test_attach_to_should_throw_exception_when_target_is_not_an_object()
+	{
+		self::$events->attach_to(123, function() {});
+	}
+
+	public function test_attach_to()
+	{
+		$a = new AttachTo;
+		$b = clone $a;
+		$c = clone $a;
+		$d = clone $a;
+
+		$invoked_count = 0;
+
+		$eh = self::$events->attach_to($d, function(AttachTo\ExampleEvent $event, AttachTo $target) use ($d, &$invoked_count) {
+
+			$this->assertSame($d, $target);
+
+			$invoked_count++;
+
+		});
+
+		$this->assertInstanceOf('ICanBoogie\EventHook', $eh);
+
+		new AttachTo\ExampleEvent($a);
+		new AttachTo\ExampleEvent($b);
+		new AttachTo\ExampleEvent($c);
+		$this->assertEquals(0, $invoked_count);
+		new AttachTo\ExampleEvent($d);
+		$this->assertEquals(1, $invoked_count);
 	}
 
 	/**

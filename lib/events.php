@@ -76,6 +76,27 @@ class Events implements \IteratorAggregate
 	}
 
 	/**
+	 * @param mixed $hook
+	 *
+	 * @throws \InvalidArgumentException if `$hook` is not a callable
+	 */
+	static private function assert_callable($hook)
+	{
+		if (!is_callable($hook))
+		{
+			throw new \InvalidArgumentException(format
+			(
+				'The event hook must be a callable, %type given: :hook', [
+
+					'type' => gettype($hook),
+					'hook' => $hook
+
+				]
+			));
+		}
+	}
+
+	/**
 	 * Event collection.
 	 *
 	 * @var array[string]array
@@ -177,18 +198,7 @@ class Events implements \IteratorAggregate
 			$name = null;
 		}
 
-		if (!is_callable($hook))
-		{
-			throw new \InvalidArgumentException(format
-			(
-				'The event hook must be a callable, %type given: :hook', [
-
-					'type' => gettype($hook),
-					'hook' => $hook
-
-				]
-			));
-		}
+		self::assert_callable($hook);
 
 		if ($name === null)
 		{
@@ -214,6 +224,37 @@ class Events implements \IteratorAggregate
 		}
 
 		return new EventHook($this, $name, $hook);
+	}
+
+	/**
+	 * Attaches an event hook to a specific target.
+	 *
+	 * @param object $target
+	 * @param callable $hook
+	 *
+	 * @return EventHook
+	 */
+	public function attach_to($target, $hook)
+	{
+		if (!is_object($target))
+		{
+			throw new \InvalidArgumentException("Target must be an object");
+		}
+
+		self::assert_callable($hook);
+
+		$name = self::resolve_event_type_from_hook($hook);
+
+		return $this->attach($name, function($e, $t) use ($target, $hook) {
+
+			if ($t !== $target)
+			{
+				return;
+			}
+
+			$hook($e, $t);
+
+		});
 	}
 
 	/**
