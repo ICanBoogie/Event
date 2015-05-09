@@ -436,7 +436,7 @@ cloned with the following command line:
 ## Documentation
 
 The package is documented as part of the [ICanBoogie][] framework
-[documentation](http://icanboogie.org/docs/). You can generate the documentation for the package and its dependencies with the `make doc` command. The documentation is generated in the `build/docs` directory. [ApiGen](http://apigen.org/) is required. The directory can later be cleaned with the `make clean` command.
+[documentation](http://api.icanboogie.org/event/). You can generate the documentation for the package and its dependencies with the `make doc` command. The documentation is generated in the `build/docs` directory. [ApiGen](http://apigen.org/) is required. The directory can later be cleaned with the `make clean` command.
 
 The following classes are documented: 
 
@@ -469,7 +469,7 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
-[Event]: http://icanboogie.org/docs/class-ICanBoogie.Event.html
-[EventHook]: http://icanboogie.org/docs/class-ICanBoogie.EventHook.html
-[Events]: http://icanboogie.org/docs/class-ICanBoogie.Events.html
+[Event]: http://api.icanboogie.org/event/class-ICanBoogie.Event.html
+[EventHook]: http://api.icanboogie.org/event/class-ICanBoogie.EventHook.html
+[Events]: http://api.icanboogie.org/event/class-ICanBoogie.Events.html
 [ICanBoogie]: https://github.com/ICanBoogie/ICanBoogie
