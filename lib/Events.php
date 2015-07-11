@@ -13,12 +13,14 @@ namespace ICanBoogie;
 
 /**
  * Events collected from the "hooks" config or attached by the user.
+ *
+ * @method static Events get()
  */
 class Events implements \IteratorAggregate
 {
 	static private $jumptable = [
 
-		'get' => [ __CLASS__, 'get' ]
+		'get' => [ __CLASS__, 'patchable_get' ]
 
 	];
 
@@ -63,7 +65,7 @@ class Events implements \IteratorAggregate
 	 *
 	 * @return Events
 	 */
-	static private function get()
+	static private function patchable_get()
 	{
 		static $events;
 
