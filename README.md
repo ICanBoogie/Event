@@ -313,29 +313,11 @@ echo $n;   // 1
 
 
 
-### Attaching event hooks using the `hooks` config
+### Attaching event hooks using the `events` config
 
-With [ICanBoogie][], the `hooks` config can be used to define event hooks.
-
-The following example demonstrate how a website can attach hooks to be notified when nodes are
-saved (or nodes subclasses), and when an authentication exception is thrown during the dispatch
-of a request.
-
-```php
-<?php
-
-// config/hooks.php
-
-return [
-
-	'events' => [
-	
-		'Icybee\Modules\Nodes\SaveOperation::process' => 'Website\Hooks::on_nodes_save',
-		'ICanBoogie\AuthenticationRequired::rescue' => 'Website\Hooks::on_authentication_required_rescue'
-	
-	]
-];
-```
+When the package is bound to [ICanBoogie][] by [icanboogie/bind-event][], event hook may be
+attached from the `events` config. Have a look at the [icanboogie/bind-event][] package for
+further details.
 
 
 
@@ -487,25 +469,6 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 
 
-## ICanBoogie auto-config
-
-The package supports the auto-config feature of the framework [ICanBoogie][] and provides a
-config constructor as well as a lazy getter for the `events` property:
-
-```<?php
-
-$core = new ICanBoogie\Core($auto_config);
-
-$core->configs['events']; // obtain the "events" config.
-$core->events;            // obtain an Events instance created with the "events" config.
-```
-
-**Note:** This feature is only available for [ICanBoogie][] 2.x.
-
-
-
-
-
 ----------
 
 
@@ -576,6 +539,7 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
+[icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
 [Event]: http://api.icanboogie.org/event/class-ICanBoogie.Event.html
 [EventHook]: http://api.icanboogie.org/event/class-ICanBoogie.EventHook.html
 [EventProfiler]: http://api.icanboogie.org/event/class-ICanBoogie.EventProfiler.html
