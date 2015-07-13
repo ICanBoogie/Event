@@ -121,9 +121,12 @@ class Events implements \IteratorAggregate
 
 	private $once_collection = [];
 
-	public function __construct(array $hooks = [])
+	/**
+	 * @param array $definitions Event hooks grouped by type.
+	 */
+	public function __construct(array $definitions = [])
 	{
-		$this->hooks = $hooks;
+		$this->attach_many($definitions);
 	}
 
 	/**
@@ -132,31 +135,6 @@ class Events implements \IteratorAggregate
 	public function getIterator()
 	{
 		return new \ArrayIterator($this->hooks);
-	}
-
-	/**
-	 * Adds events from a configuration.
-	 *
-	 * @param array $config
-	 */
-	public function configure(array $config)
-	{
-		$hooks = $this->hooks;
-
-		foreach ($config as $type => $type_hooks)
-		{
-			if (empty($hooks[$type]))
-			{
-				$hooks[$type] = $type_hooks;
-
-				continue;
-			}
-
-			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
-		}
-
-		$this->hooks = array_map('array_unique', $hooks);
-		$this->revoke_traces();
 	}
 
 	protected function revoke_traces()
@@ -226,6 +204,31 @@ class Events implements \IteratorAggregate
 		}
 
 		return new EventHook($this, $name, $hook);
+	}
+
+	/**
+	 * Attaches many event hooks grouped by event type.
+	 *
+	 * @param array $definitions
+	 */
+	public function attach_many(array $definitions)
+	{
+		$hooks = $this->hooks;
+
+		foreach ($definitions as $type => $type_hooks)
+		{
+			if (empty($hooks[$type]))
+			{
+				$hooks[$type] = $type_hooks;
+
+				continue;
+			}
+
+			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
+		}
+
+		$this->hooks = array_map('array_unique', $hooks);
+		$this->revoke_traces();
 	}
 
 	/**
@@ -342,13 +345,6 @@ class Events implements \IteratorAggregate
 		}
 
 		return $matches[2];
-	}
-
-	public function batch_attach(array $definitions)
-	{
-		$this->hooks = \array_merge_recursive($this->hooks, $definitions);
-		$this->skippable = [];
-		$this->consolidated_hooks = [];
 	}
 
 	/**
