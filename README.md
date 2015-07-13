@@ -137,7 +137,9 @@ class ProcessEvent extends Event
 	 * The event is constructed with the type `process`.
 	 *
 	 * @param Operation $target
-	 * @param array $payload
+	 * @param Request $request
+	 * @param response $response
+	 * @param mixed $rc
 	 */
 	public function __construct(Operation $target, Request $request, Response $response, &$rc)
 	{
@@ -544,13 +546,10 @@ cloned with the following command line:
 ## Documentation
 
 The package is documented as part of the [ICanBoogie][] framework
-[documentation](http://api.icanboogie.org/event/). You can generate the documentation for the package and its dependencies with the `make doc` command. The documentation is generated in the `build/docs` directory. [ApiGen](http://apigen.org/) is required. The directory can later be cleaned with the `make clean` command.
-
-The following classes are documented: 
-
-- [Event][]
-- [EventHook][]
-- [Events][]
+[documentation](http://api.icanboogie.org/event/). You can generate the documentation for the
+package and its dependencies with the `make doc` command. The documentation is generated in
+the `build/docs` directory. [ApiGen](http://apigen.org/) is required. The directory can later
+be cleaned with the `make clean` command.
 
 
 
