@@ -65,7 +65,7 @@ class Events implements \IteratorAggregate
 	 *
 	 * @return Events
 	 */
-	static private function patchable_get()
+	static protected function patchable_get()
 	{
 		static $events;
 

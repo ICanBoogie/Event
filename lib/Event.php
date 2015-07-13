@@ -33,18 +33,6 @@ class Event
 	static private $reserved = [ 'chain' => true, 'stopped' => true, 'target' => true, 'used' => true, 'used_by' => true ];
 
 	/**
-	 * Profiling information about events.
-	 *
-	 * @var array
-	 */
-	static public $profiling = [
-
-		'hooks' => [],
-		'unused' => []
-
-	];
-
-	/**
 	 * Returns an unfired, initialized event.
 	 *
 	 * @see EventReflection::from
@@ -158,6 +146,9 @@ class Event
 		$this->fire();
 	}
 
+	/**
+	 * Fires the event.
+	 */
 	public function fire()
 	{
 		$target = $this->target;
@@ -174,7 +165,7 @@ class Event
 
 		if (!$hooks)
 		{
-			self::$profiling['unused'][] = [ microtime(true), $type ];
+			EventProfiler::add_unused($type);
 
 			$events->skip($type);
 
@@ -236,11 +227,11 @@ class Event
 			$this->used_by[] = $hook;
 			$events->used($type, $hook);
 
-			$time = microtime(true);
+			$started_at = microtime(true);
 
 			call_user_func($hook, $this, $target);
 
-			self::$profiling['hooks'][] = [ $time, $type, $hook, microtime(true) - $time ];
+			EventProfiler::add_call($type, $hook, $started_at);
 
 			if ($this->stopped)
 			{

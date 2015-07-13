@@ -78,41 +78,74 @@ a `BeforeProcessEvent` instance. Here after is the definition of the `ProcessEve
 
 namespace ICanBoogie\Operation;
 
+use ICanBoogie\Event;
+use ICanBoogie\HTTP\Response;
+use ICanBoogie\HTTP\Request;
+use ICanBoogie\Operation;
+
 /**
  * Event class for the `ICanBoogie\Operation::process` event.
+ *
+ * @property mixed $rc
+ * @property-read Response $response
+ * @property-read Request $request
  */
-class ProcessEvent extends \ICanBoogie\Event
+class ProcessEvent extends Event
 {
 	/**
 	 * Reference to the response result property.
 	 *
 	 * @var mixed
 	 */
-	public $rc;
+	private $rc;
+	
+	protected function get_rc()
+	{
+		return $this->rc;
+	}
+	
+	protected function set_rc($rc)
+	{
+		$this->rc = $rc;
+	}
 
 	/**
 	 * The response object of the operation.
 	 *
-	 * @var \ICanBoogie\HTTP\Response
+	 * @var Response
 	 */
-	public $response;
+	private $response;
+	
+	protected function get_response()
+	{
+		return $this->response;
+	}
 
 	/**
 	 * The request that triggered the operation.
 	 *
-	 * @var \ICanBoogie\HTTP\Request
+	 * @var Request
 	 */
-	public $request;
+	private $request;
+	
+	protected function get_request()
+	{
+		return $this->request;
+	}
 
 	/**
 	 * The event is constructed with the type `process`.
 	 *
-	 * @param \ICanBoogie\Operation $target
+	 * @param Operation $target
 	 * @param array $payload
 	 */
-	public function __construct(\ICanBoogie\Operation $target, array $payload)
+	public function __construct(Operation $target, Request $request, Response $response, &$rc)
 	{
-		parent::__construct($target, 'process', $payload);
+		$this->request = $request;
+		$this->response = $response;
+		$this->rc = &$rc;
+	
+		parent::__construct($target, 'process');
 	}
 }
 ```
@@ -166,7 +199,7 @@ class Operation
 
 		$response->rc = $this->process();
 
-		new Operation\ProcessEvent($this, array('rc' => &$response->rc, 'response' => $response, 'request' => $request)); 
+		new Operation\ProcessEvent($this, $request, $response, $response->rc); 
 
 		// …
 	}
@@ -183,14 +216,14 @@ by patching the `get()` method of the [Events][] class:
 
 use ICanBoogie\Events:
 
-$events = new Events(array(
+$events = new Events([
 
-	'ICanBoogie\Operation::process' => array
-	(
+	'ICanBoogie\Operation::process' => [
+	
 		'my_callback'
-	)
-
-));
+	
+	]
+]);
 
 Events::patch('get', function() use($events) { return $events; });
 ```
@@ -226,7 +259,8 @@ $events->attach(function(Operation\BeforeProcessEvent $event, Operation $operati
 
 ### Attaching an event hook to a specific target
 
-Using the `attach_to()` method, an event hook can be attached to a specific target, and is only invoked for that target.
+Using the `attach_to()` method, an event hook can be attached to a specific target, and is only
+invoked for that target.
 
 ```php
 <?php
@@ -290,14 +324,15 @@ of a request.
 
 // config/hooks.php
 
-return array
-(
-	'events' => array
-	(
+return [
+
+	'events' => [
+	
 		'Icybee\Modules\Nodes\SaveOperation::process' => 'Website\Hooks::on_nodes_save',
 		'ICanBoogie\AuthenticationRequired::rescue' => 'Website\Hooks::on_authentication_required_rescue'
-	)
-);
+	
+	]
+];
 ```
 
 
@@ -323,7 +358,7 @@ class CountEvent extends \ICanBoogie\Event
 	{
 		$this->count = $count;
 
-		parent::__construct(null, 'count', array());
+		parent::__construct(null, 'count');
 	}
 }
 
@@ -377,59 +412,40 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 
 
 
-## Instanciating _unfired_ events
+## Instantiating _unfired_ events
 
-Events are designed to be fired as they are instantiated, but sometimes 
-you want to be able to create an [Event][] instance without it to be 
-fired immediately, in order to test that event for instance.
+Events are designed to be fired as they are instantiated, but sometimes you want to be able to
+create an [Event][] instance without it to be fired immediately, in order to test that event for
+instance.
 
-The `EventReflection::from()` method returns a reflection of an event 
-class, which can create _unfired_ event instances. The `with()` method 
-is used to create such an instance, with _constructor_ parameters.
+The `EventReflection::from()` method returns a reflection of an event class, which can create
+_unfired_ event instances. The `with()` method is used to create such an instance,
+with _constructor_ parameters.
 
-The following example demonstrates how to create an _unfired_ instance 
-of an `ActionEvent` class:
-
-```php
-<?php
-
-namespace App\Controller;
-
-use ICanBoogie\Event;
-use ICanBoogie\HTTP\Request;
-use App\Controller;
-
-class ActionEvent extends Event
-{
-	// …
-	
-	public function __construct(Controller $target, Request $request, &$result)
-	{
-		$this->request = $request;
-		$this->result = &$result;
-		
-		parent::__construct($target, 'action');
-	}
-}
-```
+The following example demonstrates how to create an _unfired_ instance of the `ProcessEvent` class
+we saw earlier:
 
 ```php
 <?php
 
+use ICanBoogie\Operation\ProcessEvent;
 use ICanBoogie\EventReflection;
 
-$result = null;
+$rc = null;
 
-$event = EventReflection::from(ActionEvent::class)->with([
+// …
 
-	'target' => $response,
+$event = EventReflection::from(ProcessEvent::class)->with([
+
+	'target' => $operation,
 	'request' => $request,
-	'result' => &$result
+	'response' => $response
+	'rc' => &$rc
 
 ]);
 
-$event->result = "ABBA";
-echo $result;  // ABBA
+$event->rc = "ABBA";
+echo $rc;  // ABBA
 ```
 
 The event can then be fired using the `fire()` method:
@@ -438,6 +454,31 @@ The event can then be fired using the `fire()` method:
 <?php
 
 $event->fire();
+```
+
+
+
+
+
+## Profiling events
+
+The [EventProfiler][] class is used to collect timing information about unused events and event
+hook calls. All time information is measured in floating microtime.
+
+```php
+<?php
+
+use ICanBoogie\EventProfiler;
+
+foreach (EventProfiler::$unused as list($time, $type))
+{
+	// …
+}
+
+foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
+{
+	// …
+}
 ```
 
 
@@ -530,7 +571,7 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 ## License
 
-**icanBoogie/event** is licensed under the New BSD License - See the [LICENSE](LICENSE) file for details.
+**icanboogie/event** is licensed under the New BSD License - See the [LICENSE](LICENSE) file for details.
 
 
 
@@ -538,5 +579,7 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 [Event]: http://api.icanboogie.org/event/class-ICanBoogie.Event.html
 [EventHook]: http://api.icanboogie.org/event/class-ICanBoogie.EventHook.html
+[EventProfiler]: http://api.icanboogie.org/event/class-ICanBoogie.EventProfiler.html
+[EventReflection]: http://api.icanboogie.org/event/class-ICanBoogie.EventReflection.html
 [Events]: http://api.icanboogie.org/event/class-ICanBoogie.Events.html
 [ICanBoogie]: https://github.com/ICanBoogie/ICanBoogie
