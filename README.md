@@ -377,6 +377,73 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 
 
 
+## Instanciating _unfired_ events
+
+Events are designed to be fired as they are instantiated, but sometimes 
+you want to be able to create an [Event][] instance without it to be 
+fired immediately, in order to test that event for instance.
+
+The `EventReflection::from()` method returns a reflection of an event 
+class, which can create _unfired_ event instances. The `with()` method 
+is used to create such an instance, with _constructor_ parameters.
+
+The following example demonstrates how to create an _unfired_ instance 
+of an `ActionEvent` class:
+
+```php
+<?php
+
+namespace App\Controller;
+
+use ICanBoogie\Event;
+use ICanBoogie\HTTP\Request;
+use App\Controller;
+
+class ActionEvent extends Event
+{
+	// …
+	
+	public function __construct(Controller $target, Request $request, &$result)
+	{
+		$this->request = $request;
+		$this->result = &$result;
+		
+		parent::__construct($target, 'action');
+	}
+}
+```
+
+```php
+<?php
+
+use ICanBoogie\EventReflection;
+
+$result = null;
+
+$event = EventReflection::from(ActionEvent::class)->with([
+
+	'target' => $response,
+	'request' => $request,
+	'result' => &$result
+
+]);
+
+$event->result = "ABBA";
+echo $result;  // ABBA
+```
+
+The event can then be fired using the `fire()` method:
+
+```php
+<?php
+
+$event->fire();
+```
+
+
+
+
+
 ## ICanBoogie auto-config
 
 The package supports the auto-config feature of the framework [ICanBoogie][] and provides a
@@ -390,7 +457,7 @@ $core->configs['events']; // obtain the "events" config.
 $core->events;            // obtain an Events instance created with the "events" config.
 ```
 
-Note: This feature is only available for [ICanBoogie][] 2.x.
+**Note:** This feature is only available for [ICanBoogie][] 2.x.
 
 
 
@@ -404,7 +471,7 @@ Note: This feature is only available for [ICanBoogie][] 2.x.
 
 ## Requirements
 
-The package requires PHP 5.4 or later.
+The package requires PHP 5.5 or later.
 
 
 

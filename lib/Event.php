@@ -45,6 +45,22 @@ class Event
 	];
 
 	/**
+	 * Returns an unfired, initialized event.
+	 *
+	 * @see EventReflection::from
+	 *
+	 * @param array $params
+	 *
+	 * @return Event
+	 */
+	static public function from(array $params)
+	{
+		$reflection = EventReflection::from(get_called_class());
+
+		return $reflection->with($params);
+	}
+
+	/**
 	 * `true` when the event was stopped, `false` otherwise.
 	 *
 	 * @var bool
@@ -86,11 +102,25 @@ class Event
 	}
 
 	/**
+	 * Event type.
+	 *
+	 * @var string
+	 */
+	private $event_type;
+
+	/**
 	 * Chain of hooks to execute once the event has been fired.
 	 *
 	 * @var array
 	 */
 	private $chain = [];
+
+	/**
+	 * Whether the event fire should be fired immediately.
+	 *
+	 * @var bool
+	 */
+	private $no_immediate_fire = false;
 
 	/**
 	 * Creates an event and fires it immediately.
@@ -109,9 +139,29 @@ class Event
 	{
 		if ($target)
 		{
-			$class = get_class($target);
-			$type = $class . '::' . $type;
+			$type = get_class($target) . '::' . $type;
 		}
+
+		$this->target = $target;
+		$this->event_type = $type;
+
+		if ($payload)
+		{
+			$this->map_payload($payload);
+		}
+
+		if ($this->no_immediate_fire)
+		{
+			return;
+		}
+
+		$this->fire();
+	}
+
+	public function fire()
+	{
+		$target = $this->target;
+		$type = $this->event_type;
 
 		$events = Events::get();
 
@@ -129,13 +179,6 @@ class Event
 			$events->skip($type);
 
 			return;
-		}
-
-		$this->target = $target;
-
-		if ($payload)
-		{
-			$this->map_payload($payload);
 		}
 
 		$this->process_chain($hooks, $events, $type, $target);
@@ -223,7 +266,7 @@ class Event
 	 *
 	 * @param callable $hook
 	 *
-	 * @return \ICanBoogie\Event
+	 * @return Event
 	 */
 	public function chain($hook)
 	{

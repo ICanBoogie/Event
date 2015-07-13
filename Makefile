@@ -1,7 +1,7 @@
 # customization
 
 PACKAGE_NAME = ICanBoogie/Event
-PACKAGE_VERSION = 1.3.3
+PACKAGE_VERSION = 1.4.x-dev
 
 # do not edit the following lines
 
