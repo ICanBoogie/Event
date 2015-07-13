@@ -42,9 +42,7 @@ class EventReflection
 
 		foreach ($parameters_reflection as $parameter)
 		{
-			$name = $parameter->getName();
-
-			$parameters[$name] = $parameter;
+			$parameters[$parameter->name] = $parameter;
 		}
 
 		$this->class = new \ReflectionClass($class);
