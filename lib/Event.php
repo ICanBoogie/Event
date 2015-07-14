@@ -225,7 +225,6 @@ class Event
 		foreach ($chain as $hook)
 		{
 			$this->used_by[] = $hook;
-			$events->used($type, $hook);
 
 			$started_at = microtime(true);
 

@@ -119,8 +119,6 @@ class Events implements \IteratorAggregate
 	 */
 	protected $skippable = [];
 
-	private $once_collection = [];
-
 	/**
 	 * @param array $definitions Event hooks grouped by type.
 	 */
@@ -140,7 +138,6 @@ class Events implements \IteratorAggregate
 	protected function revoke_traces()
 	{
 		$this->consolidated_hooks = [];
-		$this->once_collection = [];
 		$this->skippable = [];
 	}
 
@@ -162,35 +159,24 @@ class Events implements \IteratorAggregate
 	 *
 	 * The hook will be attached to the `ICanBoogie\SaveOperation::process:before` event.
 	 *
-	 * @param string $name Event type or closure.
-	 * @param callable $hook The event hook, or nothing if $name is a closure.
+	 * @param string $type Event type or closure.
+	 * @param callable $hook The event hook, or nothing if $type is a closure.
 	 *
 	 * @return EventHook An event hook reference that can be used to easily detach the event
 	 * hook.
 	 *
 	 * @throws \InvalidArgumentException when `$hook` is not a callable.
 	 */
-	public function attach($name, $hook = null)
+	public function attach($type, $hook = null)
 	{
-		if ($hook === null)
+		list($type, $hook) = self::resolve_type_and_hook($type, $hook);
+
+		if (!isset($this->hooks[$type]))
 		{
-			$hook = $name;
-			$name = null;
+			$this->hooks[$type] = [];
 		}
 
-		self::assert_callable($hook);
-
-		if ($name === null)
-		{
-			$name = self::resolve_event_type_from_hook($hook);
-		}
-
-		if (!isset($this->hooks[$name]))
-		{
-			$this->hooks[$name] = [];
-		}
-
-		array_unshift($this->hooks[$name], $hook);
+		array_unshift($this->hooks[$type], $hook);
 
 		#
 		# If the event is a targeted event, we reset the skippable and consolidated hooks arrays.
@@ -198,12 +184,12 @@ class Events implements \IteratorAggregate
 
 		$this->skippable = [];
 
-		if (strpos($name, '::') !== false)
+		if (strpos($type, '::') !== false)
 		{
 			$this->consolidated_hooks = [];
 		}
 
-		return new EventHook($this, $name, $hook);
+		return new EventHook($this, $type, $hook);
 	}
 
 	/**
@@ -267,18 +253,51 @@ class Events implements \IteratorAggregate
 	 *
 	 * @see attach()
 	 *
-	 * @param mixed $name
+	 * @param mixed $type
 	 * @param mixed $hook
 	 *
 	 * @return EventHook
 	 */
-	public function once($name, $hook = null)
+	public function once($type, $hook = null)
 	{
-		$event_hook = $this->attach($name, $hook);
+		list($type, $hook) = self::resolve_type_and_hook($type, $hook);
 
-		$this->once_collection[$event_hook->type][] = $event_hook;
+		/* @var $eh EventHook */
 
-		return $event_hook;
+		$eh = $this->attach($type, function($e, $t) use ($hook, &$eh) {
+
+			call_user_func($hook, $e, $t);
+			$eh->detach();
+
+		});
+
+		return $eh;
+	}
+
+	/**
+	 * Resolves type and hook.
+	 *
+	 * @param string $type
+	 * @param callable|null $hook
+	 *
+	 * @return array
+	 */
+	static private function resolve_type_and_hook($type, $hook)
+	{
+		if ($hook === null)
+		{
+			$hook = $type;
+			$type = null;
+		}
+
+		self::assert_callable($hook);
+
+		if ($type === null)
+		{
+			$type = self::resolve_event_type_from_hook($hook);
+		}
+
+		return [ $type, $hook ];
 	}
 
 	/**
@@ -382,25 +401,6 @@ class Events implements \IteratorAggregate
 					$this->consolidated_hooks = [];
 				}
 
-				#
-				# Remove the event from the once collection.
-				#
-
-				$once = &$this->once_collection;
-
-				if (isset($once[$name]))
-				{
-					foreach ($once[$name] as $k => $event_hook)
-					{
-						if ($hook !== $event_hook->hook)
-						{
-							continue;
-						}
-
-						unset($once[$name][$k]);
-					}
-				}
-
 				return;
 			}
 		}
@@ -428,35 +428,6 @@ class Events implements \IteratorAggregate
 	public function is_skippable($name)
 	{
 		return isset($this->skippable[$name]);
-	}
-
-	/**
-	 * Declare an event hook as _used_ by an event type, if the hook has been attached using {@link once()}
-	 * it is removed.
-	 *
-	 * @param $type
-	 * @param $hook
-	 */
-	public function used($type, $hook)
-	{
-		if (empty($this->once_collection[$type]))
-		{
-			return;
-		}
-
-		/* @var $event_hook EventHook */
-
-		foreach ($this->once_collection[$type] as $k => $event_hook)
-		{
-			if ($hook !== $event_hook->hook)
-			{
-				continue;
-			}
-
-			$event_hook->detach();
-
-			break;
-		}
 	}
 
 	/**

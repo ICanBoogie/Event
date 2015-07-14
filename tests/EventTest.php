@@ -25,32 +25,32 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @var Events
 	 */
-	static private $events;
+	private $events;
 
-	static public function setUpBeforeClass()
+	public function setUp()
 	{
-		self::$events = $events = new Events;
+		$this->events = $events = new Events;
 
 		Events::patch('get', function() use($events) { return $events; });
 	}
 
 	public function testAttachFunction()
 	{
-		$eh = self::$events->attach('ICanBoogie\EventTest\hook_callback');
+		$eh = $this->events->attach('ICanBoogie\EventTest\hook_callback');
 
 		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
 	}
 
 	public function testAttachMethod()
 	{
-		$eh = self::$events->attach('ICanBoogie\EventTest\Attach::hook_callback');
+		$eh = $this->events->attach('ICanBoogie\EventTest\Attach::hook_callback');
 
 		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
 	}
 
 	public function testAttachClosure()
 	{
-		$eh = self::$events->attach(function(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target) { });
+		$eh = $this->events->attach(function(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target) { });
 
 		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
 	}
@@ -60,7 +60,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function test_attach_to_should_throw_exception_when_target_is_not_an_object()
 	{
-		self::$events->attach_to(123, function() {});
+		$this->events->attach_to(123, function() {});
 	}
 
 	public function test_attach_to()
@@ -72,7 +72,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$invoked_count = 0;
 
-		$eh = self::$events->attach_to($d, function(AttachTo\ExampleEvent $event, AttachTo $target) use ($d, &$invoked_count) {
+		$eh = $this->events->attach_to($d, function(AttachTo\ExampleEvent $event, AttachTo $target) use ($d, &$invoked_count) {
 
 			$this->assertSame($d, $target);
 
@@ -102,7 +102,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 			$done = true;
 		};
 
-		self::$events->attach('tmp', $hook);
+		$this->events->attach('tmp', $hook);
 
 		new Event(null, 'tmp');
 
@@ -110,7 +110,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$done = null;
 
-		self::$events->detach('tmp', $hook);
+		$this->events->detach('tmp', $hook);
 
 		new Event(null, 'tmp');
 
@@ -124,7 +124,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	{
 		$done = null;
 
-		$he = self::$events->attach('tmp', function(Event $event) use (&$done)
+		$he = $this->events->attach('tmp', function(Event $event) use (&$done)
 		{
 			$done = true;
 		});
@@ -156,7 +156,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 			$done = true;
 		};
 
-		self::$events->attach(get_class($a) . '::tmp', $hook);
+		$this->events->attach(get_class($a) . '::tmp', $hook);
 
 		new Event($a, 'tmp');
 
@@ -164,7 +164,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$done = null;
 
-		self::$events->detach(get_class($a) . '::tmp', $hook);
+		$this->events->detach(get_class($a) . '::tmp', $hook);
 
 		new Event($a, 'tmp');
 
@@ -180,7 +180,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$done = null;
 
-		$he = self::$events->attach(get_class($a) . '::tmp', function(Event $event) use (&$done)
+		$he = $this->events->attach(get_class($a) . '::tmp', function(Event $event) use (&$done)
 		{
 			$done = true;
 		});
@@ -206,7 +206,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		/*
 		 * The A::validate() method would return false if the following hook wasn't called.
 		 */
-		self::$events->attach(function(ValidateEvent $event, A $target) {
+		$this->events->attach(function(ValidateEvent $event, A $target) {
 
 			$event->valid = true;
 		});
@@ -214,7 +214,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		/*
 		 * We add "three" to the values of A instances before they are processed.
 		 */
-		self::$events->attach(function(BeforeProcessEvent $event, A $target) {
+		$this->events->attach(function(BeforeProcessEvent $event, A $target) {
 
 			$event->values['three'] = 3;
 		});
@@ -225,7 +225,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		 *
 		 * Hooks pushed by the chain() method are executed after the even chain was processed.
 		 */
-		self::$events->attach(function(BeforeProcessEvent $event, B $target) {
+		$this->events->attach(function(BeforeProcessEvent $event, B $target) {
 
 			$event->chain(function($event) {
 
@@ -236,7 +236,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		/*
 		 * 10 is added to all processed values of A instances.
 		 */
-		self::$events->attach(function(ProcessEvent $event, A $target) {
+		$this->events->attach(function(ProcessEvent $event, A $target) {
 
 			array_walk($event->values, function(&$v) {
 
@@ -251,7 +251,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		 * The stop() method of the event breaks the event chain, so our hook will be the last
 		 * called in the chain.
 		 */
-		self::$events->attach(function(ProcessEvent $event, B $target) {
+		$this->events->attach(function(ProcessEvent $event, B $target) {
 
 			array_walk($event->values, function(&$v) {
 
@@ -287,9 +287,9 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		};
 
-		self::$events->once('once', $once);
+		$this->events->once('once', $once);
 
-		$eh = self::$events->attach('once', function() use(&$m) {
+		$eh = $this->events->attach('once', function() use(&$m) {
 
 			$m++;
 
@@ -304,7 +304,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$eh->detach();
 
-		self::$events->once('once', $once);
+		$this->events->once('once', $once);
 
 		new Event(null, 'once');
 		new Event(null, 'once');
@@ -312,13 +312,43 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertEquals(2, $n);
 
-		self::$events->attach('once', $once);
+		$this->events->attach('once', $once);
 
 		new Event(null, 'once');
 		new Event(null, 'once');
 		new Event(null, 'once');
 
 		$this->assertEquals(5, $n);
+	}
+
+	public function test_once_with_closure()
+	{
+		$events = $this->events;
+		$n = 0;
+		$target = new A;
+
+		$eh = $events->once(function(ProcessEvent $event, A $target) use (&$n) {
+
+			$n++;
+
+		});
+
+		$eh->detach();
+
+		new ProcessEvent($target, []);
+		$this->assertEquals(0, $n);
+
+		$events->once(function(ProcessEvent $event, A $target) use (&$n) {
+
+			$n++;
+
+		});
+
+		new ProcessEvent($target, []);
+		$this->assertEquals(1, $n);
+
+		new ProcessEvent($target, []);
+		$this->assertEquals(1, $n);
 	}
 
 	/**
@@ -329,7 +359,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	{
 		$type = "event" . uniqid();
 
-		self::$events->attach($type, function() { });
+		$this->events->attach($type, function() { });
 
 		new Event(null, $type, $payload);
 	}
@@ -417,9 +447,9 @@ class ValidateEvent extends Event
 
 	public $valid;
 
-	public function __construct(A $target, array $properties)
+	public function __construct(A $target, array $payload)
 	{
-		parent::__construct($target, 'validate', $properties);
+		parent::__construct($target, 'validate', $payload);
 	}
 }
 
@@ -430,9 +460,9 @@ class BeforeProcessEvent extends Event
 {
 	public $values;
 
-	public function __construct(A $target, array $properties)
+	public function __construct(A $target, array $payload)
 	{
-		parent::__construct($target, 'process:before', $properties);
+		parent::__construct($target, 'process:before', $payload);
 	}
 }
 
@@ -443,8 +473,8 @@ class ProcessEvent extends Event
 {
 	public $values;
 
-	public function __construct(A $target, array $properties)
+	public function __construct(A $target, array $payload = [])
 	{
-		parent::__construct($target, 'process', $properties);
+		parent::__construct($target, 'process', $payload);
 	}
 }
