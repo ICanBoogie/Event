@@ -14,9 +14,9 @@ namespace ICanBoogie;
 /**
  * Events collected from the "hooks" config or attached by the user.
  *
- * @method static Events get()
+ * @method static EventCollection get()
  */
-class Events implements \IteratorAggregate
+class EventCollection implements \IteratorAggregate
 {
 	static private $jumptable = [
 
@@ -63,7 +63,7 @@ class Events implements \IteratorAggregate
 	/**
 	 * Returns the singleton instance of the class.
 	 *
-	 * @return Events
+	 * @return EventCollection
 	 */
 	static protected function patchable_get()
 	{

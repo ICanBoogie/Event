@@ -23,15 +23,15 @@ use ICanBoogie\EventTest\ValidateEvent;
 class EventTest extends \PHPUnit_Framework_TestCase
 {
 	/**
-	 * @var Events
+	 * @var EventCollection
 	 */
 	private $events;
 
 	public function setUp()
 	{
-		$this->events = $events = new Events;
+		$this->events = $events = new EventCollection;
 
-		Events::patch('get', function() use($events) { return $events; });
+		EventCollection::patch('get', function() use($events) { return $events; });
 	}
 
 	public function testAttachFunction()

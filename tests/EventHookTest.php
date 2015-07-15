@@ -16,11 +16,11 @@ class EventHookTest extends \PHPUnit_Framework_TestCase
 	public function test_properties()
 	{
 		$events = $this
-			->getMockBuilder(Events::class)
+			->getMockBuilder(EventCollection::class)
 			->disableOriginalConstructor()
 			->getMock();
 
-		/* @var $events Events */
+		/* @var $events EventCollection */
 
 		$type = 'type' . uniqid();
 
@@ -40,7 +40,7 @@ class EventHookTest extends \PHPUnit_Framework_TestCase
 		$hook = function() {};
 
 		$events = $this
-			->getMockBuilder(Events::class)
+			->getMockBuilder(EventCollection::class)
 			->disableOriginalConstructor()
 			->setMethods([ 'detach' ])
 			->getMock();
@@ -49,7 +49,7 @@ class EventHookTest extends \PHPUnit_Framework_TestCase
 			->method('detach')
 			->with($type, $hook);
 
-		/* @var $events Events */
+		/* @var $events EventCollection */
 
 		(new EventHook($events, $type, $hook))->detach();
 	}

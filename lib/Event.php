@@ -154,7 +154,7 @@ class Event
 		$target = $this->target;
 		$type = $this->event_type;
 
-		$events = Events::get();
+		$events = EventCollection::get();
 
 		if ($events->is_skippable($type))
 		{
@@ -216,11 +216,11 @@ class Event
 	 * Process an event chain.
 	 *
 	 * @param array $chain
-	 * @param Events $events
+	 * @param EventCollection $events
 	 * @param string $type
 	 * @param object|null $target
 	 */
-	private function process_chain(array $chain, Events $events, $type, $target)
+	private function process_chain(array $chain, EventCollection $events, $type, $target)
 	{
 		foreach ($chain as $hook)
 		{

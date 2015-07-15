@@ -33,7 +33,7 @@ use ICanBoogie\Accessor\AccessorTrait;
  * $eh->detach();
  * </pre>
  *
- * @property-read Events $events Events collection.
+ * @property-read EventCollection $events EventCollection collection.
  * @property-read string $type Event type
  * @property-read callable $hook Event hook.
  */
@@ -64,7 +64,7 @@ class EventHook
 	}
 
 	/**
-	 * @var Events
+	 * @var EventCollection
 	 */
 	private $events;
 
@@ -74,11 +74,11 @@ class EventHook
 	}
 
 	/**
-	 * @param Events $events
+	 * @param EventCollection $events
 	 * @param string $type
 	 * @param callable $hook
 	 */
-	public function __construct(Events $events, $type, $hook)
+	public function __construct(EventCollection $events, $type, $hook)
 	{
 		$this->events = $events;
 		$this->type = $type;

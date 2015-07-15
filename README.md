@@ -211,14 +211,14 @@ class Operation
 ```
 
 Note that before events can be emitted the event collection to use must be defined. This is done
-by patching the `get()` method of the [Events][] class:
+by patching the `get()` method of the [EventCollection][] class:
 
 ```php
 <?php
 
-use ICanBoogie\Events:
+use ICanBoogie\EventCollection:
 
-$events = new Events([
+$events = new EventCollection([
 
 	'ICanBoogie\Operation::process' => [
 	
@@ -227,7 +227,7 @@ $events = new Events([
 	]
 ]);
 
-Events::patch('get', function() use($events) { return $events; });
+EventCollection::patch('get', function() use($events) { return $events; });
 ```
 
 Using this technique you could also patch the `get()` method and create the collection just in
@@ -544,5 +544,5 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 [EventHook]: http://api.icanboogie.org/event/class-ICanBoogie.EventHook.html
 [EventProfiler]: http://api.icanboogie.org/event/class-ICanBoogie.EventProfiler.html
 [EventReflection]: http://api.icanboogie.org/event/class-ICanBoogie.EventReflection.html
-[Events]: http://api.icanboogie.org/event/class-ICanBoogie.Events.html
+[EventCollection]: http://api.icanboogie.org/event/class-ICanBoogie.EventCollection.html
 [ICanBoogie]: https://github.com/ICanBoogie/ICanBoogie
