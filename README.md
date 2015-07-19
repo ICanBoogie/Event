@@ -227,11 +227,15 @@ $events = new EventCollection([
 	]
 ]);
 
-EventCollection::patch('get', function() use($events) { return $events; });
+EventCollection::set_instance_provider(function () use ($events) {
+
+    return $events;
+
+});
 ```
 
-Using this technique you could also patch the `get()` method and create the collection just in
-time. 
+Using an instance provider, you could create the collection just in
+time.
 
 
 

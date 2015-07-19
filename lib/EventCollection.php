@@ -13,51 +13,22 @@ namespace ICanBoogie;
 
 /**
  * Events collected from the "hooks" config or attached by the user.
- *
- * @method static EventCollection get()
  */
 class EventCollection implements \IteratorAggregate
 {
-	static private $jumptable = [
-
-		'get' => [ __CLASS__, 'patchable_get' ]
-
-	];
+	/**
+	 * @var callable
+	 */
+	static private $instance_provider;
 
 	/**
-	 * Calls the callback of a patchable function.
+	 * Set {@link EventCollection} instance provider.
 	 *
-	 * @param string $name Name of the function.
-	 * @param array $arguments Arguments.
-	 *
-	 * @return mixed
+	 * @param callable $provider
 	 */
-	static public function __callstatic($name, array $arguments)
+	static public function set_instance_provider(callable $provider)
 	{
-		return call_user_func_array(self::$jumptable[$name], $arguments);
-	}
-
-	/**
-	 * Patches a patchable function.
-	 *
-	 * @param string $name Name of the function.
-	 * @param callable $callback Callback.
-	 *
-	 * @return callable Previous callable.
-	 *
-	 * @throws \RuntimeException is attempt to patch an undefined function.
-	 */
-	static public function patch($name, $callback)
-	{
-		if (empty(self::$jumptable[$name]))
-		{
-			throw new \RuntimeException("Undefined patchable: $name.");
-		}
-
-		$previous = self::$jumptable[$name];
-		self::$jumptable[$name] = $callback;
-
-		return $previous;
+		self::$instance_provider = $provider;
 	}
 
 	/**
@@ -65,16 +36,22 @@ class EventCollection implements \IteratorAggregate
 	 *
 	 * @return EventCollection
 	 */
-	static protected function patchable_get()
+	static public function get()
 	{
-		static $events;
+		$provider = self::$instance_provider;
 
-		if (!$events)
+		if (!$provider)
 		{
-			$events = new static;
+			self::$instance_provider = $provider = function() {
+
+				static $instance;
+
+				return $instance ?: $instance = new static;
+
+			};
 		}
 
-		return $events;
+		return $provider();
 	}
 
 	/**
