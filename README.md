@@ -513,7 +513,7 @@ cloned with the following command line:
 ## Documentation
 
 The package is documented as part of the [ICanBoogie][] framework
-[documentation](http://api.icanboogie.org/event/). You can generate the documentation for the
+[documentation][]. You can generate the documentation for the
 package and its dependencies with the `make doc` command. The documentation is generated in
 the `build/docs` directory. [ApiGen](http://apigen.org/) is required. The directory can later
 be cleaned with the `make clean` command.
@@ -543,10 +543,11 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
+[documentation]:         http://api.icanboogie.org/event/1.4/
+[Event]:                 http://api.icanboogie.org/event/1.4/class-ICanBoogie.Event.html
+[EventHook]:             http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventHook.html
+[EventProfiler]:         http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventProfiler.html
+[EventReflection]:       http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventReflection.html
+[EventCollection]:       http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventCollection.html
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
-[Event]: http://api.icanboogie.org/event/class-ICanBoogie.Event.html
-[EventHook]: http://api.icanboogie.org/event/class-ICanBoogie.EventHook.html
-[EventProfiler]: http://api.icanboogie.org/event/class-ICanBoogie.EventProfiler.html
-[EventReflection]: http://api.icanboogie.org/event/class-ICanBoogie.EventReflection.html
-[EventCollection]: http://api.icanboogie.org/event/class-ICanBoogie.EventCollection.html
-[ICanBoogie]: https://github.com/ICanBoogie/ICanBoogie
+[ICanBoogie]:            https://github.com/ICanBoogie/ICanBoogie
