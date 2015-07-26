@@ -400,18 +400,16 @@ function on_event(Operation\ProcessEvent $event, Operation $operation)
 
 
 
-## Instantiating _unfired_ events
+## Instantiating _non-firing_ events
 
 Events are designed to be fired as they are instantiated, but sometimes you want to be able to
-create an [Event][] instance without it to be fired immediately, in order to test that event for
-instance.
+create an [Event][] instance without it to be fired immediately, for instance when you
+need to test that event, or alter it before it is fired.
 
-The `EventReflection::from()` method returns a reflection of an event class, which can create
-_unfired_ event instances. The `with()` method is used to create such an instance,
-with _constructor_ parameters.
+The `from()` method creates _non-firing_ event instances from an array of parameters.
 
-The following example demonstrates how to create an _unfired_ instance of the `ProcessEvent` class
-we saw earlier:
+The following example demonstrates how to create an _non-firing_ instance of the
+`ProcessEvent` class we saw earlier:
 
 ```php
 <?php
@@ -423,7 +421,7 @@ $rc = null;
 
 // …
 
-$event = EventReflection::from(ProcessEvent::class)->with([
+$event = ProcessEvent::from([
 
 	'target' => $operation,
 	'request' => $request,
@@ -436,7 +434,7 @@ $event->rc = "ABBA";
 echo $rc;  // ABBA
 ```
 
-The event can then be fired using the `fire()` method:
+The event can later be fired using the `fire()` method:
 
 ```php
 <?php
