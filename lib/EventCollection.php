@@ -177,16 +177,11 @@ class EventCollection implements \IteratorAggregate
 	public function attach_many(array $definitions)
 	{
 		$hooks = $this->hooks;
+		$intersect = array_intersect_key($definitions, $hooks);
+		$hooks += array_diff_key($definitions, $hooks);
 
-		foreach ($definitions as $type => $type_hooks)
+		foreach ($intersect as $type => $type_hooks)
 		{
-			if (empty($hooks[$type]))
-			{
-				$hooks[$type] = $type_hooks;
-
-				continue;
-			}
-
 			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
 		}
 
