@@ -244,19 +244,44 @@ time.
 ## Attaching event hooks
 
 Event hooks are attached using the `attach()` method of an event collection. The `attach()` method
-is smart enough to create the event type from the parameters type. In the following example, the
-event hook is attached to the `ICanBoogie\Operation::process:before` event type.
+is smart enough to create the event type from the parameters type. This works with any callable: closure, invokable objects, static class methods, functions.
+
+The following example demonstrates how a closure may be attached to a `ICanBoogie\Operation::process:before` event type.
 
 ```php
 <?php
 
 use ICanBoogie\Operation;
 
-$events->attach(function(Operation\BeforeProcessEvent $event, Operation $operation) {
+$events->attach(function(Operation\BeforeProcessEvent $event, Operation $target) {
 
 	// …
 
-}); 
+});
+```
+
+The following example demonstrates how an invokable object may be attached to that same event type.
+
+```php
+
+class ValidateOperation
+{
+	private $rules;
+
+	public function __construct($rules)
+	{
+		$this->rules = $rules;
+	}
+
+	public function __invoke(Operation\BeforeProcessEvent $event, Operation $target)
+	{
+		// …
+	}
+}
+
+// …
+
+$events->attach(new ValidateOperation($rules);
 ```
 
 
@@ -380,9 +405,9 @@ echo $event->count; // 0123
 
 
 
-## Breaking an event hooks chain
+## Breaking an event hook chain
 
-The processing of an event hooks chain can be broken by an event hook using the `stop()` method:
+The processing of an event hook chain can be broken by an event hook using the `stop()` method:
 
 ```php
 <?php

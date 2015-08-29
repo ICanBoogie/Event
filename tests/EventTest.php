@@ -11,7 +11,9 @@
 
 namespace ICanBoogie;
 
-use ICanBoogie\HTTP\Dispatcher;
+use ICanBoogie\EventTest\CallableInstance;
+use ICanBoogie\EventTest\Hooks;
+use ICanBoogie\EventTest\Target;
 
 use ICanBoogie\EventTest\A;
 use ICanBoogie\EventTest\AttachTo;
@@ -34,25 +36,27 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		EventCollection::set_instance_provider(function () use ($events) { return $events; });
 	}
 
-	public function testAttachFunction()
+	/**
+	 * @dataProvider provide_test_event_resolving_from_hook
+	 *
+	 * @param mixed $hook
+	 */
+	public function test_event_resolving_from_hook($hook)
 	{
-		$eh = $this->events->attach('ICanBoogie\EventTest\hook_callback');
-
-		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
+		$this->assertEquals('ICanBoogie\EventTest\Target::practice:before', $this->events->attach($hook)->type);
 	}
 
-	public function testAttachMethod()
+	public function provide_test_event_resolving_from_hook()
 	{
-		$eh = $this->events->attach('ICanBoogie\EventTest\Attach::hook_callback');
+		return [
 
-		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
-	}
+			[ 'ICanBoogie\EventTest\before_target_practice' ],
+			[ Hooks::class . '::before_target_practice' ],
+			[ [ Hooks::class, 'before_target_practice' ] ],
+			[ function(Target\BeforePracticeEvent $event, Target $target) { } ],
+			[ new CallableInstance ]
 
-	public function testAttachClosure()
-	{
-		$eh = $this->events->attach(function(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target) { });
-
-		$this->assertEquals('ICanBoogie\HTTP\Dispatcher::dispatch:before', $eh->type);
+		];
 	}
 
 	/**
@@ -80,7 +84,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		});
 
-		$this->assertInstanceOf('ICanBoogie\EventHook', $eh);
+		$this->assertInstanceOf(EventHook::class, $eh);
 
 		new AttachTo\ExampleEvent($a);
 		new AttachTo\ExampleEvent($b);
@@ -147,7 +151,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testDetachTypedEvent()
 	{
-		$a = new \ICanBoogie\EventTest\A;
+		$a = new A;
 
 		$done = null;
 
@@ -176,7 +180,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testDetachTypedEventUsingInterface()
 	{
-		$a = new \ICanBoogie\EventTest\A;
+		$a = new A;
 
 		$done = null;
 
@@ -423,11 +427,6 @@ class B extends A
 	{
 		return parent::process($values + [ 'five' => 5 ]);
 	}
-}
-
-function hook_callback(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target)
-{
-
 }
 
 class Attach

@@ -201,7 +201,7 @@ class EventCollection implements \IteratorAggregate
 	{
 		if (!is_object($target))
 		{
-			throw new \InvalidArgumentException("Target must be an object");
+			throw new \InvalidArgumentException("attach_to() target must be an object.");
 		}
 
 		self::assert_callable($hook);
@@ -281,41 +281,57 @@ class EventCollection implements \IteratorAggregate
 	 */
 	static private function resolve_event_type_from_hook($hook)
 	{
+		list($event, $target) = self::resolve_hook_reflection($hook)->getParameters();
+
+		return self::get_parameter_class($target) . '::' . self::resolve_type_from_class(self::get_parameter_class($event));
+	}
+
+	/**
+	 * Resolves hook reflection.
+	 *
+	 * @param callable $hook
+	 *
+	 * @return \ReflectionFunction|\ReflectionMethod
+	 */
+	static private function resolve_hook_reflection($hook)
+	{
+		if (is_object($hook))
+		{
+			return new \ReflectionMethod($hook, '__invoke');
+		}
+
 		if (is_array($hook))
 		{
-			$reflection = new \ReflectionMethod($hook[0], $hook[1]);
+			return new \ReflectionMethod($hook[0], $hook[1]);
 		}
-		else if (is_string($hook) && strpos($hook, '::'))
+
+		if (is_string($hook) && strpos($hook, '::'))
 		{
 			list($class, $method) = explode('::', $hook);
 
-			$reflection = new \ReflectionMethod($class, $method);
-		}
-		else
-		{
-			$reflection = new \ReflectionFunction($hook);
+			return new \ReflectionMethod($class, $method);
 		}
 
-		list($event, $target) = $reflection->getParameters();
+		return new \ReflectionFunction($hook);
+	}
 
-		$event_class = self::get_parameter_class($event);
-		$target_class = self::get_parameter_class($target);
+	/**
+	 * Resolves event type from its class.
+	 *
+	 * @param string $class
+	 *
+	 * @return string
+	 */
+	static private function resolve_type_from_class($class)
+	{
+		$base = basename('/' . strtr($class, '\\', '/'));
 
-		$event_class_base = basename('/' . strtr($event_class, '\\', '/'));
-		$type = substr($event_class_base, 0, -5);
+		$type = substr($base, 0, -5);
+		$type = strpos($base, 'Before') === 0
+			? hyphenate(substr($type, 6)) . ':before'
+			: hyphenate($type);
 
-		if (strpos($event_class_base, 'Before') === 0)
-		{
-			$type = hyphenate(substr($type, 6)) . ':before';
-		}
-		else
-		{
-			$type = hyphenate($type);
-		}
-
-		$type = strtr($type, '-', '_');
-
-		return $target_class . '::' . $type;
+		return strtr($type, '-', '_');
 	}
 
 	/**
