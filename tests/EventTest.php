@@ -36,60 +36,57 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		EventCollection::set_instance_provider(function () use ($events) { return $events; });
 	}
 
-	/**
-	 * Are event hooks attached to classes are correctly detached ?
-	 */
-	public function testDetachTypedEvent()
+	public function test_from()
 	{
-		$a = new A;
+		$target = new Target;
+		$event = Target\BeforePracticeEvent::from([ 'target' => $target ]);
 
-		$done = null;
-
-		$hook = function(Event $event) use (&$done)
-		{
-			$done = true;
-		};
-
-		$this->events->attach(get_class($a) . '::tmp', $hook);
-
-		new Event($a, 'tmp');
-
-		$this->assertTrue($done);
-
-		$done = null;
-
-		$this->events->detach(get_class($a) . '::tmp', $hook);
-
-		new Event($a, 'tmp');
-
-		$this->assertNull($done);
+		$this->assertInstanceOf(Target\BeforePracticeEvent::class, $event);
 	}
 
-	/**
-	 * Are event hooks attached to classes are correctly detached ?
-	 */
-	public function testDetachTypedEventUsingInterface()
+	public function test_stop()
 	{
-		$a = new A;
+		$type = 'event-' . uniqid();
 
-		$done = null;
+		$this->events->attach($type, function(Event $event) {
 
-		$he = $this->events->attach(get_class($a) . '::tmp', function(Event $event) use (&$done)
-		{
-			$done = true;
+			$this->fail("Should not be invoked.");
+
 		});
 
-		new Event($a, 'tmp');
+		$this->events->attach($type, function(Event $event) {
 
-		$this->assertTrue($done);
+			$event->stop();
 
-		$done = null;
+		});
 
-		$he->detach();
+		$event = new Event(null, $type);
 
-		new Event($a, 'tmp');
+		$this->assertTrue($event->stopped);
+	}
 
-		$this->assertNull($done);
+	public function test_used_by()
+	{
+		$type = 'event-' . uniqid();
+
+		$hook1 = function(Event $event) { };
+		$hook2 = function(Event $event) { };
+
+		$this->events->attach($type, $hook1);
+		$this->events->attach($type, $hook2);
+
+		$event = new Event(null, $type);
+
+		$this->assertSame([ $hook2, $hook1 ], $event->used_by);
+		$this->assertEquals(2, $event->used);
+	}
+
+	public function test_target()
+	{
+		$target = new Target;
+		$event = new Event($target, uniqid());
+
+		$this->assertSame($target, $event->target);
 	}
 
 	/**
@@ -170,80 +167,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals('one,two,three,four,five', implode(',', array_keys($b_processed)));
 	}
 
-	public function test_once()
-	{
-		$n = 0;
-		$m = 0;
-
-		$once = function() use(&$n) {
-
-			$n++;
-
-		};
-
-		$this->events->once('once', $once);
-
-		$eh = $this->events->attach('once', function() use(&$m) {
-
-			$m++;
-
-		});
-
-		new Event(null, 'once');
-		new Event(null, 'once');
-		new Event(null, 'once');
-
-		$this->assertEquals(1, $n);
-		$this->assertEquals(3, $m);
-
-		$eh->detach();
-
-		$this->events->once('once', $once);
-
-		new Event(null, 'once');
-		new Event(null, 'once');
-		new Event(null, 'once');
-
-		$this->assertEquals(2, $n);
-
-		$this->events->attach('once', $once);
-
-		new Event(null, 'once');
-		new Event(null, 'once');
-		new Event(null, 'once');
-
-		$this->assertEquals(5, $n);
-	}
-
-	public function test_once_with_closure()
-	{
-		$events = $this->events;
-		$n = 0;
-		$target = new A;
-
-		$eh = $events->once(function(ProcessEvent $event, A $target) use (&$n) {
-
-			$n++;
-
-		});
-
-		$eh->detach();
-
-		new ProcessEvent($target, []);
-		$this->assertEquals(0, $n);
-
-		$events->once(function(ProcessEvent $event, A $target) use (&$n) {
-
-			$n++;
-
-		});
-
-		new ProcessEvent($target, []);
-		$this->assertEquals(1, $n);
-
-		new ProcessEvent($target, []);
-		$this->assertEquals(1, $n);
-	}
 
 	/**
 	 * @dataProvider provide_test_reserved

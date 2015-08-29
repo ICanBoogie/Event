@@ -56,6 +56,13 @@ class EventHookReflection
 			return implode('#', $hook);
 		}
 
+		if ($hook instanceof \Closure)
+		{
+			$reflection = new \ReflectionFunction($hook);
+
+			return $reflection->getFileName() . '#'. $reflection->getStartLine() . '#'. $reflection->getEndLine();
+		}
+
 		if (is_object($hook))
 		{
 			/* @var $hook object */

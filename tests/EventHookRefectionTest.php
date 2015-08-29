@@ -26,6 +26,14 @@ class EventHookRefectionTest extends \PHPUnit_Framework_TestCase
 		EventHookReflection::assert_valid(123);
 	}
 
+	public function test_from()
+	{
+		$hook = function(Target\PracticeEvent $event, Target $target) {};
+
+		$reflection = EventHookReflection::from($hook);
+		$this->assertSame($reflection, EventHookReflection::from($hook));
+	}
+
 	/**
 	 * @dataProvider provide_event_hooks
 	 *

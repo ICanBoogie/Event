@@ -2,8 +2,6 @@
 
 namespace ICanBoogie;
 
-use ICanBoogie\EventTest\CallableInstance;
-use ICanBoogie\EventTest\Hooks;
 use ICanBoogie\EventTest\Target;
 
 class EventCollectionTest extends \PHPUnit_Framework_TestCase
@@ -20,33 +18,59 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 		EventCollection::set_instance_provider(function () use ($events) { return $events; });
 	}
 
-	/**
-	 * @dataProvider provide_test_should_resolve_event_type_from_hook
-	 *
-	 * @param mixed $hook
-	 */
-	public function test_should_resolve_event_type_from_hook($hook)
+	public function test_get()
 	{
-		$this->assertEquals('ICanBoogie\EventTest\Target::practice:before', $this->events->attach($hook)->type);
+		$this->assertSame($this->events, EventCollection::get());
 	}
 
-	public function provide_test_should_resolve_event_type_from_hook()
+	public function test_generic_event()
 	{
-		return [
+		$type = 'type' . uniqid();
+		$invoked = false;
 
-			[ 'ICanBoogie\EventTest\before_target_practice' ],
-			[ Hooks::class . '::before_target_practice' ],
-			[ [ Hooks::class, 'before_target_practice' ] ],
-			[ function(Target\BeforePracticeEvent $event, Target $target) { } ],
-			[ new CallableInstance ]
+		$this->events->attach($type, function(Event $event) use (&$invoked) {
 
-		];
+			$invoked = true;
+
+		});
+
+		new Event(null, $type);
+
+		$this->assertTrue($invoked);
 	}
 
-	/**
-	 * @depends test_should_resolve_event_type_from_hook
-	 */
-	public function test_detach_hook()
+	public function test_detach_generic_event_hook()
+	{
+		$type = 'type' . uniqid();
+		$hook = function(Event $event) {
+
+			$this->fail("Should not be invoked");
+
+		};
+
+		$this->events->attach($type, $hook);
+		$this->events->detach($type, $hook);
+
+		new Event(null, $type);
+	}
+
+	public function test_detach_event_hook()
+	{
+		$type = 'type' . uniqid();
+
+		$hook = function(Event $event, Target $target) {
+
+			$this->fail("Should not be invoked");
+
+		};
+
+		$this->events->attach($type, $hook);
+		$this->events->detach($type, $hook);
+
+		new Event(new Target, $type);
+	}
+
+	public function test_detach_typed_event_hook()
 	{
 		$hook = function(Target\BeforePracticeEvent $event, Target $target) {
 
@@ -69,7 +93,7 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @depends test_detach_hook
+	 * @depends test_detach_typed_event_hook
 	 */
 	public function test_attach_to()
 	{
@@ -102,5 +126,26 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 	public function test_attach_to_should_throw_exception_when_target_is_not_an_object()
 	{
 		$this->events->attach_to(uniqid(), function() {});
+	}
+
+	public function test_once()
+	{
+		$invoked_count = 0;
+
+		$this->events->once(function(Target\PracticeEvent $event, Target $target) use (&$invoked_count) {
+
+			$invoked_count++;
+
+		});
+
+		$target = new Target;
+
+		new Target\PracticeEvent($target);
+		$this->assertEquals(1, $invoked_count);
+
+		new Target\PracticeEvent($target);
+		new Target\PracticeEvent($target);
+		new Target\PracticeEvent($target);
+		$this->assertEquals(1, $invoked_count);
 	}
 }
