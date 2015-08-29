@@ -55,44 +55,53 @@ class EventCollection implements \IteratorAggregate
 	}
 
 	/**
-	 * @param mixed $hook
+	 * Resolves type and hook.
 	 *
-	 * @throws \InvalidArgumentException if `$hook` is not a callable
+	 * @param string $type_or_hook
+	 * @param callable|null $hook
+	 *
+	 * @return array Returns the type and hook.
 	 */
-	static private function assert_callable($hook)
+	static private function resolve_type_and_hook($type_or_hook, $hook)
 	{
-		if (!is_callable($hook))
+		if ($hook === null)
 		{
-			throw new \InvalidArgumentException(format
-			(
-				'The event hook must be a callable, %type given: :hook', [
-
-					'type' => gettype($hook),
-					'hook' => $hook
-
-				]
-			));
+			$type = null;
+			$hook = $type_or_hook;
 		}
+		else
+		{
+			$type = $type_or_hook;
+		}
+
+		EventHookReflection::assert_valid($hook);
+
+		if ($type === null)
+		{
+			$type = EventHookReflection::from($hook)->type;
+		}
+
+		return [ $type, $hook ];
 	}
 
 	/**
-	 * Event collection.
+	 * Event hooks by type.
 	 *
-	 * @var array[string]array
+	 * @var array
 	 */
 	protected $hooks = [];
 
 	/**
-	 * Event hooks consolidated by class and type.
+	 * Event hooks by class and type.
 	 *
-	 * @var array[string]array
+	 * @var array
 	 */
 	protected $consolidated_hooks = [];
 
 	/**
-	 * Lists of skippable events.
+	 * Skippable events.
 	 *
-	 * @var array[string]bool
+	 * @var array
 	 */
 	protected $skippable = [];
 
@@ -112,6 +121,9 @@ class EventCollection implements \IteratorAggregate
 		return new \ArrayIterator($this->hooks);
 	}
 
+	/**
+	 * Revokes consolidated hooks and skippable types.
+	 */
 	protected function revoke_traces()
 	{
 		$this->consolidated_hooks = [];
@@ -136,17 +148,17 @@ class EventCollection implements \IteratorAggregate
 	 *
 	 * The hook will be attached to the `ICanBoogie\SaveOperation::process:before` event.
 	 *
-	 * @param string $type Event type or closure.
-	 * @param callable $hook The event hook, or nothing if $type is a closure.
+	 * @param string|callable $type_or_hook Event type or event hook.
+	 * @param callable $hook The event hook, or nothing if $type is the event hook.
 	 *
 	 * @return EventHook An event hook reference that can be used to easily detach the event
 	 * hook.
 	 *
 	 * @throws \InvalidArgumentException when `$hook` is not a callable.
 	 */
-	public function attach($type, $hook = null)
+	public function attach($type_or_hook, $hook = null)
 	{
-		list($type, $hook) = self::resolve_type_and_hook($type, $hook);
+		list($type, $hook) = self::resolve_type_and_hook($type_or_hook, $hook);
 
 		if (!isset($this->hooks[$type]))
 		{
@@ -170,7 +182,9 @@ class EventCollection implements \IteratorAggregate
 	}
 
 	/**
-	 * Attaches many event hooks grouped by event type.
+	 * Attaches many event hooks at once.
+	 *
+	 * **Note**: The event hooks must be grouped by event type.
 	 *
 	 * @param array $definitions
 	 */
@@ -204,11 +218,9 @@ class EventCollection implements \IteratorAggregate
 			throw new \InvalidArgumentException("attach_to() target must be an object.");
 		}
 
-		self::assert_callable($hook);
+		$type = EventHookReflection::from($hook)->type;
 
-		$name = self::resolve_event_type_from_hook($hook);
-
-		return $this->attach($name, function($e, $t) use ($target, $hook) {
+		return $this->attach($type, function($e, $t) use ($target, $hook) {
 
 			if ($t !== $target)
 			{
@@ -221,241 +233,147 @@ class EventCollection implements \IteratorAggregate
 	}
 
 	/**
-	 * Attach an event hook that is detached once used.
+	 * Attaches an event hook that is detached once used.
 	 *
-	 * @see attach()
-	 *
-	 * @param mixed $type
-	 * @param mixed $hook
+	 * @param string|callable $type_or_hook Event type or event hook.
+	 * @param callable $hook The event hook, or nothing if $type is the event hook.
 	 *
 	 * @return EventHook
+	 *
+	 * @see attach()
 	 */
-	public function once($type, $hook = null)
+	public function once($type_or_hook, $hook = null)
 	{
-		list($type, $hook) = self::resolve_type_and_hook($type, $hook);
+		list($type, $hook) = self::resolve_type_and_hook($type_or_hook, $hook);
 
-		/* @var $eh EventHook */
+		return $eh = $this->attach($type, function($e, $t) use ($hook, &$eh) {
 
-		$eh = $this->attach($type, function($e, $t) use ($hook, &$eh) {
+			/* @var $eh EventHook */
 
 			call_user_func($hook, $e, $t);
+
 			$eh->detach();
 
 		});
-
-		return $eh;
-	}
-
-	/**
-	 * Resolves type and hook.
-	 *
-	 * @param string $type
-	 * @param callable|null $hook
-	 *
-	 * @return array
-	 */
-	static private function resolve_type_and_hook($type, $hook)
-	{
-		if ($hook === null)
-		{
-			$hook = $type;
-			$type = null;
-		}
-
-		self::assert_callable($hook);
-
-		if ($type === null)
-		{
-			$type = self::resolve_event_type_from_hook($hook);
-		}
-
-		return [ $type, $hook ];
-	}
-
-	/**
-	 * Resolve an event type using the parameters of the specified hook.
-	 *
-	 * @param callable $hook
-	 *
-	 * @return string
-	 */
-	static private function resolve_event_type_from_hook($hook)
-	{
-		list($event, $target) = self::resolve_hook_reflection($hook)->getParameters();
-
-		return self::get_parameter_class($target) . '::' . self::resolve_type_from_class(self::get_parameter_class($event));
-	}
-
-	/**
-	 * Resolves hook reflection.
-	 *
-	 * @param callable $hook
-	 *
-	 * @return \ReflectionFunction|\ReflectionMethod
-	 */
-	static private function resolve_hook_reflection($hook)
-	{
-		if (is_object($hook))
-		{
-			return new \ReflectionMethod($hook, '__invoke');
-		}
-
-		if (is_array($hook))
-		{
-			return new \ReflectionMethod($hook[0], $hook[1]);
-		}
-
-		if (is_string($hook) && strpos($hook, '::'))
-		{
-			list($class, $method) = explode('::', $hook);
-
-			return new \ReflectionMethod($class, $method);
-		}
-
-		return new \ReflectionFunction($hook);
-	}
-
-	/**
-	 * Resolves event type from its class.
-	 *
-	 * @param string $class
-	 *
-	 * @return string
-	 */
-	static private function resolve_type_from_class($class)
-	{
-		$base = basename('/' . strtr($class, '\\', '/'));
-
-		$type = substr($base, 0, -5);
-		$type = strpos($base, 'Before') === 0
-			? hyphenate(substr($type, 6)) . ':before'
-			: hyphenate($type);
-
-		return strtr($type, '-', '_');
-	}
-
-	/**
-	 * Returns the class of a parameter reflection.
-	 *
-	 * Contrary of the {@link ReflectionParameter::getClass()} method, the class does not need to
-	 * be available to be successfully retrieved.
-	 *
-	 * @param \ReflectionParameter $param
-	 *
-	 * @return string|null
-	 */
-	static private function get_parameter_class(\ReflectionParameter $param)
-	{
-		if (!preg_match('#\[\s*(<[^>]+>)?\s*([^\s]+)#', $param, $matches))
-		{
-			return null;
-		}
-
-		return $matches[2];
 	}
 
 	/**
 	 * Detaches an event hook.
 	 *
-	 * @param string $name The name of the event.
+	 * @param string $type The name of the event.
 	 * @param callable $hook The event hook.
-	 *
-	 * @return void
 	 *
 	 * @throws \Exception when the event hook is not attached to the event name.
 	 */
-	public function detach($name, $hook)
+	public function detach($type, $hook)
 	{
 		$hooks = &$this->hooks;
+		$key = $this->search_hook($type, $hook);
 
-		if (isset($hooks[$name]))
+		if ($key === false)
 		{
-			foreach ($hooks[$name] as $key => $h)
-			{
-				if ($h != $hook)
-				{
-					continue;
-				}
-
-				unset($hooks[$name][$key]);
-
-				if (!count($hooks[$name]))
-				{
-					unset($hooks[$name]);
-				}
-
-				if (strpos($name, '::') !== false)
-				{
-					$this->consolidated_hooks = [];
-				}
-
-				return;
-			}
+			throw new \LogicException("The specified event hook is not attached to `{$type}`.");
 		}
 
-		throw new \Exception("The specified event hook is not attached to `{$name}`.");
+		unset($hooks[$type][$key]);
+
+		if (!count($hooks[$type]))
+		{
+			unset($hooks[$type]);
+		}
+
+		if (strpos($type, '::'))
+		{
+			$this->consolidated_hooks = [];
+		}
 	}
 
 	/**
 	 * Marks an event as skippable.
 	 *
-	 * @param string $name The event name.
+	 * @param string $type The event type.
 	 */
-	public function skip($name)
+	public function skip($type)
 	{
-		$this->skippable[$name] = true;
+		$this->skippable[$type] = true;
 	}
 
 	/**
 	 * Returns whether or not an event has been marked as skippable.
 	 *
-	 * @param string $name The event name.
+	 * @param string $type The event type.
 	 *
 	 * @return boolean `true` if the event can be skipped, `false` otherwise.
 	 */
-	public function is_skippable($name)
+	public function is_skippable($type)
 	{
-		return isset($this->skippable[$name]);
+		return isset($this->skippable[$type]);
 	}
 
 	/**
-	 * Returns the event hooks attached to the specified event name.
+	 * Returns the event hooks attached to the specified event type.
+	 *
+	 * @param string $type The event type.
+	 *
+	 * @return array
+	 */
+	public function get_hooks($type)
+	{
+		if (!strpos($type, '::'))
+		{
+			return isset($this->hooks[$type]) ? $this->hooks[$type] : [];
+		}
+
+		if (isset($this->consolidated_hooks[$type]))
+		{
+			return $this->consolidated_hooks[$type];
+		}
+
+		return $this->consolidated_hooks[$type] = $this->consolidate_hooks($type);
+	}
+
+	/**
+	 * Searches an event hook.
+	 *
+	 * @param string $type The event type.
+	 * @param callable $hook
+	 *
+	 * @return string|false The key of the event hook, or `false` if it not found.
+	 */
+	private function search_hook($type, $hook)
+	{
+		$hooks = $this->hooks;
+
+		return empty($hooks[$type]) ? false : array_search($hook, $hooks[$type], true);
+	}
+
+	/**
+	 * Consolidate hooks of a same type.
 	 *
 	 * If the class of the event's target is provided, event hooks are filtered according to
 	 * the class and its hierarchy.
 	 *
-	 * @param string $name The event name.
+	 * @param string $type The event type.
 	 *
 	 * @return array
 	 */
-	public function get_hooks($name)
+	private function consolidate_hooks($type)
 	{
-		if (!strpos($name, '::'))
-		{
-			return isset($this->hooks[$name]) ? $this->hooks[$name] : [];
-		}
-
-		if (isset($this->consolidated_hooks[$name]))
-		{
-			return $this->consolidated_hooks[$name];
-		}
-
-		list($class, $type) = explode('::', $name);
+		list($class, $type) = explode('::', $type);
 
 		$hooks = [];
-		$c = $class;
 
-		while ($c)
+		while ($class)
 		{
-			if (isset($this->hooks[$c . '::' . $type]))
+			$k = $class . '::' . $type;
+
+			if (isset($this->hooks[$k]))
 			{
-				$hooks = array_merge($hooks, $this->hooks[$c . '::' . $type]);
+				$hooks = array_merge($hooks, $this->hooks[$k]);
 			}
 
-			$c = get_parent_class($c);
+			$class = get_parent_class($class);
 		}
-
-		$this->consolidated_hooks[$name] = $hooks;
 
 		return $hooks;
 	}
