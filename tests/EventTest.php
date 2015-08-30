@@ -11,12 +11,9 @@
 
 namespace ICanBoogie;
 
-use ICanBoogie\EventTest\CallableInstance;
-use ICanBoogie\EventTest\Hooks;
 use ICanBoogie\EventTest\Target;
 
 use ICanBoogie\EventTest\A;
-use ICanBoogie\EventTest\AttachTo;
 use ICanBoogie\EventTest\B;
 use ICanBoogie\EventTest\BeforeProcessEvent;
 use ICanBoogie\EventTest\ProcessEvent;
@@ -239,14 +236,6 @@ class B extends A
 	protected function process(array $values)
 	{
 		return parent::process($values + [ 'five' => 5 ]);
-	}
-}
-
-class Attach
-{
-	static public function hook_callback(Dispatcher\BeforeDispatchEvent $event, Dispatcher $target)
-	{
-
 	}
 }
 

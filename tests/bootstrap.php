@@ -11,10 +11,8 @@
 
 namespace ICanBoogie;
 
-/* @var $loader \Composer\Autoload\ClassLoader */
-
-$loader  = require __DIR__ . '/../vendor/autoload.php';
-$loader->addPsr4('ICanBoogie\\EventTest\\', __DIR__ . '/EventTest/');
+$autoload = require __DIR__ . '/../vendor/autoload.php';
+$autoload->addPsr4('ICanBoogie\\EventTest\\', __DIR__ . '/EventTest/');
 
 namespace ICanBoogie\EventTest;
 

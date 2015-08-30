@@ -57,7 +57,7 @@ class EventCollection implements \IteratorAggregate
 	/**
 	 * Resolves type and hook.
 	 *
-	 * @param string $type_or_hook
+	 * @param string|callable $type_or_hook
 	 * @param callable|null $hook
 	 *
 	 * @return array Returns the type and hook.
@@ -139,14 +139,14 @@ class EventCollection implements \IteratorAggregate
 	 * <pre>
 	 * <?php
 	 *
-	 * $events->attach(function(ICanBoogie\Operation\BeforeProcessEvent $event, ICanBoogie\SaveOperation $target) {
+	 * $events->attach(function(ICanBoogie\Operation\BeforeProcessEvent $event, ICanBoogie\Module\Operation\SaveOperation $target) {
 	 *
 	 *     // …
 	 *
 	 * });
 	 * </pre>
 	 *
-	 * The hook will be attached to the `ICanBoogie\SaveOperation::process:before` event.
+	 * The hook will be attached to the `ICanBoogie\Module\Operation\SaveOperation::process:before` event.
 	 *
 	 * @param string|callable $type_or_hook Event type or event hook.
 	 * @param callable $hook The event hook, or nothing if $type is the event hook.
@@ -246,7 +246,7 @@ class EventCollection implements \IteratorAggregate
 	{
 		list($type, $hook) = self::resolve_type_and_hook($type_or_hook, $hook);
 
-		return $eh = $this->attach($type, function($e, $t) use ($hook, &$eh) {
+		$eh = $this->attach($type, function($e, $t) use ($hook, &$eh) {
 
 			/* @var $eh EventHook */
 
@@ -255,6 +255,8 @@ class EventCollection implements \IteratorAggregate
 			$eh->detach();
 
 		});
+
+		return $eh;
 	}
 
 	/**

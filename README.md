@@ -7,7 +7,7 @@
 [![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
 [![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
-The API provided by the Event package allows developers to provide hooks which other developers
+This package allows developers to provide hooks which other developers
 may hook into, to be notified when certain events occur inside the application and take action.
 
 Inside [ICanBoogie][], events are often used to alter initial parameters,
@@ -42,19 +42,19 @@ hooks.
 Consider the following class hierarchy:
 
     ICanBoogie\Operation
-    └─ ICanBoogie\SaveOperation
-        └─ Icybee\Modules\Node\SaveOperation
-            └─ Icybee\Modules\Content\SaveOperation
-                └─ Icybee\Modules\News\SaveOperation
+    └─ ICanBoogie\Module\Operation\SaveOperation
+        └─ Icybee\Modules\Node\Operation\SaveOperation
+            └─ Icybee\Modules\Content\Operation\SaveOperation
+                └─ Icybee\Modules\News\Operation\SaveOperation
 
 
-When the `process` event is fired upon a `Icybee\Modules\News\SaveOperation` instance, all event
+When the `process` event is fired upon a `…\News\Operation\SaveOperation` instance, all event
 hooks attached to the classes for this event are called, starting from the event hooks attached
-to the instance class (`Icybee\Modules\News\SaveOperation`) all the way up to those attached
+to the instance class (`…\News\Operation\SaveOperation`) all the way up to those attached
 to its root class.
 
-Thus, event hooks attached to the `Icybee\Modules\Node\SaveOperation` class are called
-when the `process` event is fired upon a `Icybee\Modules\News\SaveOperation` instance. One could
+Thus, event hooks attached to the `…\Node\Operation\SaveOperation` class are called
+when the `process` event is fired upon a `…\News\Operation\SaveOperation` instance. One could
 consider that event hooks are _inherited_.
 
 
@@ -68,10 +68,11 @@ to provide contextual information about an event to the event hooks processing i
 the first argument, with the target object as second argument (if any). This instance contain
 information directly relating to the type of event they accompany.
 
-For example, a `process` event is usually accompanied by a `ProcessEvent` instance, and a
-`process:before` event—fired before a `process` event—is usually accompanied by
-a `BeforeProcessEvent` instance. Here after is the definition of the `ProcessEvent` class for the
-`process` event type, which is fired on `ICanBoogie\Operation` instances:
+For example, a `process` event is usually instantiated from a `ProcessEvent` class, and a
+`process:before` event—fired before a `process` event—is usually instantiated
+from a `BeforeProcessEvent` instance.
+
+The following code demonstrates how a `ProcessEvent` class may be defined for a `process` event type:
 
 ```php
 <?php
@@ -181,7 +182,7 @@ The class name should match the event type. `ProcessEvent` for the `process` eve
 
 ## Firing events
 
-Events are fired simply by instantiating an event class.
+Events are fired as they are instantiated.
 
 The following example demonstrates how the `process` event is fired upon an
 `ICanBoogie\Operation` instance:
