@@ -30,7 +30,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->events = $events = new EventCollection;
 
-		EventCollection::set_instance_provider(function () use ($events) { return $events; });
+		EventCollectionProvider::using(function () use ($events) { return $events; });
 	}
 
 	public function test_from()

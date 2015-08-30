@@ -61,6 +61,35 @@ consider that event hooks are _inherited_.
 
 
 
+## Getting started
+
+Before you can emit events you need to specify a provider for your event collection.
+
+The following example demonstrates how to setup a provider that instantiates an event collection with event hooks provided by an application configuration:
+
+```php
+<?php
+
+use ICanBoogie\EventCollection;
+use ICanBoogie\EventCollectionProvider;
+
+EventCollectionProvider::using(function() use ($app) {
+
+	static $collection;
+	
+	return $collection ?: $collection = new EventCollection($app->configs['event']);
+
+});
+
+# Getting the event collection
+
+$events = EventCollectionProvider::provide();
+```
+
+
+
+
+
 ## Typed events
 
 An instance of an [Event][] subclass is used
@@ -210,33 +239,6 @@ class Operation
 	// …
 }
 ```
-
-Note that before events can be emitted the event collection to use must be defined. This is done
-by patching the `get()` method of the [EventCollection][] class:
-
-```php
-<?php
-
-use ICanBoogie\EventCollection:
-
-$events = new EventCollection([
-
-	'ICanBoogie\Operation::process' => [
-	
-		'my_callback'
-	
-	]
-]);
-
-EventCollection::set_instance_provider(function () use ($events) {
-
-    return $events;
-
-});
-```
-
-Using an instance provider, you could create the collection just in
-time.
 
 
 

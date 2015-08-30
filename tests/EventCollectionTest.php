@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the ICanBoogie package.
+ *
+ * (c) Olivier Laviale <olivier.laviale@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace ICanBoogie;
 
 use ICanBoogie\EventTest\Target;
@@ -15,12 +24,7 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->events = $events = new EventCollection;
 
-		EventCollection::set_instance_provider(function () use ($events) { return $events; });
-	}
-
-	public function test_get()
-	{
-		$this->assertSame($this->events, EventCollection::get());
+		EventCollectionProvider::using(function () use ($events) { return $events; });
 	}
 
 	public function test_generic_event()

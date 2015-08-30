@@ -17,44 +17,6 @@ namespace ICanBoogie;
 class EventCollection implements \IteratorAggregate
 {
 	/**
-	 * @var callable
-	 */
-	static private $instance_provider;
-
-	/**
-	 * Set {@link EventCollection} instance provider.
-	 *
-	 * @param callable $provider
-	 */
-	static public function set_instance_provider(callable $provider)
-	{
-		self::$instance_provider = $provider;
-	}
-
-	/**
-	 * Returns the singleton instance of the class.
-	 *
-	 * @return EventCollection
-	 */
-	static public function get()
-	{
-		$provider = self::$instance_provider;
-
-		if (!$provider)
-		{
-			self::$instance_provider = $provider = function() {
-
-				static $instance;
-
-				return $instance ?: $instance = new static;
-
-			};
-		}
-
-		return $provider();
-	}
-
-	/**
 	 * Resolves type and hook.
 	 *
 	 * @param string|callable $type_or_hook
