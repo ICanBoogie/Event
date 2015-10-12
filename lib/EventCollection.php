@@ -61,6 +61,11 @@ class EventCollection implements \IteratorAggregate
 	protected $consolidated_hooks = [];
 
 	/**
+	 * @var \SplObjectStorage
+	 */
+	protected $original_hooks = [];
+
+	/**
 	 * Skippable events.
 	 *
 	 * @var array
@@ -72,6 +77,8 @@ class EventCollection implements \IteratorAggregate
 	 */
 	public function __construct(array $definitions = [])
 	{
+		$this->original_hooks = new \SplObjectStorage;
+
 		$this->attach_many($definitions);
 	}
 
@@ -182,7 +189,7 @@ class EventCollection implements \IteratorAggregate
 
 		$type = EventHookReflection::from($hook)->type;
 
-		return $this->attach($type, function($e, $t) use ($target, $hook) {
+		return $this->attach($type, $this->shadow_original_hook($hook, function($e, $t) use ($target, $hook) {
 
 			if ($t !== $target)
 			{
@@ -191,7 +198,7 @@ class EventCollection implements \IteratorAggregate
 
 			$hook($e, $t);
 
-		});
+		}));
 	}
 
 	/**
@@ -208,7 +215,7 @@ class EventCollection implements \IteratorAggregate
 	{
 		list($type, $hook) = self::resolve_type_and_hook($type_or_hook, $hook);
 
-		$eh = $this->attach($type, function($e, $t) use ($hook, &$eh) {
+		$eh = $this->attach($type, $this->shadow_original_hook($hook, function($e, $t) use ($hook, &$eh) {
 
 			/* @var $eh EventHook */
 
@@ -216,7 +223,7 @@ class EventCollection implements \IteratorAggregate
 
 			$eh->detach();
 
-		});
+		}));
 
 		return $eh;
 	}
@@ -340,5 +347,37 @@ class EventCollection implements \IteratorAggregate
 		}
 
 		return $hooks;
+	}
+
+	/**
+	 * Resolves original hook.
+	 *
+	 * @param mixed $hook
+	 *
+	 * @return callable
+	 */
+	public function resolve_original_hook($hook)
+	{
+		if (!is_object($hook) || empty($this->original_hooks[$hook]))
+		{
+			return $hook;
+		}
+
+		return $this->original_hooks[$hook];
+	}
+
+	/**
+	 * Adds a reference to the original hook.
+	 *
+	 * @param callable $hook
+	 * @param \Closure $wrapper
+	 *
+	 * @return \Closure The wrapper.
+	 */
+	private function shadow_original_hook($hook, $wrapper)
+	{
+		$this->original_hooks[$wrapper] = $hook;
+
+		return $wrapper;
 	}
 }

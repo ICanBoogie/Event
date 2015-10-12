@@ -230,7 +230,7 @@ class Event
 
 			call_user_func($hook, $this, $target);
 
-			EventProfiler::add_call($type, $hook, $started_at);
+			EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
 
 			if ($this->stopped)
 			{
