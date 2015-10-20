@@ -7,8 +7,8 @@
 [![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
 [![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
-This package allows developers to provide hooks which other developers
-may hook into, to be notified when certain events occur inside the application and take action.
+This package allows developers to provide hooks which other developers can attach to, to be
+notified when certain events occur inside the application and take action.
 
 Inside [ICanBoogie][], events are often used to alter initial parameters,
 take action before/after an operation is processed or when it fails, take action before/after a
@@ -319,7 +319,7 @@ new Controller\ActionEvent($controller, …);         // echo "invoked!"
 
 
 
-### Attaching an event hook that is to be used once
+### Attaching a _one time_ event hook
 
 The `once()` method attaches event hooks that are automatically detached after they have been used.
 
@@ -347,7 +347,7 @@ echo $n;   // 1
 
 ### Attaching event hooks using the `events` config
 
-When the package is bound to [ICanBoogie][] by [icanboogie/bind-event][], event hook may be
+When the package is bound to [ICanBoogie][] by [icanboogie/bind-event][], event hooks may be
 attached from the `events` config. Have a look at the [icanboogie/bind-event][] package for
 further details.
 
@@ -359,7 +359,7 @@ further details.
 
 The _finish chain_ is executed after the event chain was traversed without being stopped.
 
-The following example demonstrates how an event hook can be attached to the _finish chain_ of
+The following example demonstrates how an event hook may be attached to the _finish chain_ of
 the `count` event to obtain the string "0123". If the third event hook was defined like the
 others we would obtain "0312".
 
@@ -461,6 +461,10 @@ $event = ProcessEvent::from([
 $event->rc = "ABBA";
 echo $rc;  // ABBA
 ```
+
+> Array keys must match construct arguments, an exception will fire otherwise. Also, if a
+> constructor argument must be passed by reference keep in mind that it must be passed by
+> reference in the array as well.
 
 The event can later be fired using the `fire()` method:
 
@@ -569,11 +573,11 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
-[documentation]:         http://api.icanboogie.org/event/1.4/
-[Event]:                 http://api.icanboogie.org/event/1.4/class-ICanBoogie.Event.html
-[EventHook]:             http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventHook.html
-[EventProfiler]:         http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventProfiler.html
-[EventReflection]:       http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventReflection.html
-[EventCollection]:       http://api.icanboogie.org/event/1.4/class-ICanBoogie.EventCollection.html
+[documentation]:         http://api.icanboogie.org/event/2.0/
+[Event]:                 http://api.icanboogie.org/event/2.0/class-ICanBoogie.Event.html
+[EventHook]:             http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventHook.html
+[EventProfiler]:         http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventProfiler.html
+[EventReflection]:       http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventReflection.html
+[EventCollection]:       http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventCollection.html
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
 [ICanBoogie]:            https://github.com/ICanBoogie/ICanBoogie
