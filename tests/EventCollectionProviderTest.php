@@ -15,13 +15,17 @@ class EventCollectionProviderTest extends \PHPUnit_Framework_TestCase
 {
 	public function test_provider()
 	{
-		EventCollectionProvider::using(function() {
+		$provider = function() {
 
 			static $collection;
 
 			return $collection ?: $collection = new EventCollection;
 
-		});
+		};
+
+		EventCollectionProvider::define($provider);
+
+		$this->assertSame($provider, EventCollectionProvider::defined());
 
 		$events = EventCollectionProvider::provide();
 
@@ -34,7 +38,9 @@ class EventCollectionProviderTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function test_should_throw_exception_when_no_provider()
 	{
-		EventCollectionProvider::clear();
+		EventCollectionProvider::define(function() {});
+		EventCollectionProvider::undefine();
+		$this->assertNull(EventCollectionProvider::defined());
 		EventCollectionProvider::provide();
 	}
 }
