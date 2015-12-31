@@ -153,8 +153,7 @@ class Event
 	{
 		$target = $this->target;
 		$type = $this->event_type;
-
-		$events = EventCollectionProvider::provide();
+		$events = get_events();
 
 		if ($events->is_skippable($type))
 		{

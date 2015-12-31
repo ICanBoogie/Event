@@ -36,7 +36,7 @@ class EventCollectionProvider
 	 *
 	 * @param callable $provider
 	 *
-	 * @return callable The previous provider, or `null` if none was defined before.
+	 * @return callable The previous provider, or `null` if none was defined.
 	 */
 	static public function define(callable $provider)
 	{
@@ -76,7 +76,7 @@ class EventCollectionProvider
 
 		if (!$provider)
 		{
-			throw new \LogicException("No provider is defined yet. Please define one with `EventCollectionProvider::using(\$provider)`.");
+			throw new \LogicException("No provider is defined yet. Please define one with `EventCollectionProvider::define(\$provider)`.");
 		}
 
 		return $provider();

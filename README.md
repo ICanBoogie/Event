@@ -7,7 +7,7 @@
 [![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
 [![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
-This package allows developers to provide hooks which other developers can attach to, to be
+The **icanboogie/event** allows you to provide hooks which other developers can attach to, to be
 notified when certain events occur inside the application and take action.
 
 Inside [ICanBoogie][], events are often used to alter initial parameters,
@@ -63,20 +63,26 @@ consider that event hooks are _inherited_.
 
 ## Getting started
 
-Before you can emit events you need to specify a provider for your event collection.
+To be emitted, events need an event collection, which holds event hooks. Because a new event
+collection is created for you when required, you don't need to setup one yourself. Still you might
+want to do so if you have a bunch of event hooks that you need to attach while creating the event
+collection. To do so, you need to define a _provider_ that will return your event collection when
+required.
 
-The following example demonstrates how to setup a provider that instantiates an event collection with event hooks provided by an application configuration:
+The following example demonstrates how to setup a provider that instantiates an event collection
+with event hooks provided by an application configuration:
 
 ```php
 <?php
 
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
+use function ICanBoogie\get_events();
 
-EventCollectionProvider::using(function() use ($app) {
+EventCollectionProvider::define(function() use ($app) {
 
 	static $collection;
-	
+
 	return $collection ?: $collection = new EventCollection($app->configs['event']);
 
 });
@@ -84,6 +90,8 @@ EventCollectionProvider::using(function() use ($app) {
 # Getting the event collection
 
 $events = EventCollectionProvider::provide();
+# or
+$events = get_events();
 ```
 
 
@@ -128,12 +136,12 @@ class ProcessEvent extends Event
 	 * @var mixed
 	 */
 	private $rc;
-	
+
 	protected function get_rc()
 	{
 		return $this->rc;
 	}
-	
+
 	protected function set_rc($rc)
 	{
 		$this->rc = $rc;
@@ -145,7 +153,7 @@ class ProcessEvent extends Event
 	 * @var Response
 	 */
 	private $response;
-	
+
 	protected function get_response()
 	{
 		return $this->response;
@@ -157,7 +165,7 @@ class ProcessEvent extends Event
 	 * @var Request
 	 */
 	private $request;
-	
+
 	protected function get_request()
 	{
 		return $this->request;
@@ -176,7 +184,7 @@ class ProcessEvent extends Event
 		$this->request = $request;
 		$this->response = $response;
 		$this->rc = &$rc;
-	
+
 		parent::__construct($target, 'process');
 	}
 }
@@ -503,6 +511,14 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 
 
+## Helpers
+
+- [`get_events`][]: Returns the current event collection. If the event collection provider is defined the method defines one that provides a new [EventCollection][] instance.
+
+
+
+
+
 ----------
 
 
@@ -573,11 +589,12 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
-[documentation]:         http://api.icanboogie.org/event/2.0/
-[Event]:                 http://api.icanboogie.org/event/2.0/class-ICanBoogie.Event.html
-[EventHook]:             http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventHook.html
-[EventProfiler]:         http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventProfiler.html
-[EventReflection]:       http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventReflection.html
-[EventCollection]:       http://api.icanboogie.org/event/2.0/class-ICanBoogie.EventCollection.html
+[documentation]:         http://api.icanboogie.org/event/2.1/
+[Event]:                 http://api.icanboogie.org/event/2.1/class-ICanBoogie.Event.html
+[EventHook]:             http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventHook.html
+[EventProfiler]:         http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventProfiler.html
+[EventReflection]:       http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventReflection.html
+[EventCollection]:       http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventCollection.html
+[`get_events()`]:        http://api.icanboogie.org/event/2.1/function-ICanBoogie.get_events.html
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
 [ICanBoogie]:            https://github.com/ICanBoogie/ICanBoogie
