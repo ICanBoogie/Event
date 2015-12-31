@@ -24,7 +24,9 @@
 		"icanboogie/inflector": "~1.3.2"
 	},
 	"autoload": {
-		"classmap": [ "lib/" ],
+		"psr-4": {
+			"ICanBoogie\\": "lib/"
+		},
 		"files": [ "helpers.php" ]
 	}
 }
