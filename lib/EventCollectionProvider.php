@@ -89,6 +89,6 @@ class EventCollectionProvider
 	 */
 	static public function clear()
 	{
-		self::$provider = null;
+		self::undefine();
 	}
 }
