@@ -218,18 +218,28 @@ class Event
 	 * @param EventCollection $events
 	 * @param string $type
 	 * @param object|null $target
+	 *
+	 * @throws \Exception, the exception of the event hook.
 	 */
 	private function process_chain(array $chain, EventCollection $events, $type, $target)
 	{
 		foreach ($chain as $hook)
 		{
-			$this->used_by[] = $hook;
-
 			$started_at = microtime(true);
 
-			call_user_func($hook, $this, $target);
-
-			EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
+			try
+			{
+				call_user_func($hook, $this, $target);
+			}
+			catch (\Exception $e)
+			{
+				throw $e;
+			}
+			finally
+			{
+				$this->used_by[] = [ $hook, $started_at, microtime(true) ];
+				EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
+			}
 
 			if ($this->stopped)
 			{

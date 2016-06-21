@@ -74,7 +74,8 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
 		$event = new Event(null, $type);
 
-		$this->assertSame([ $hook2, $hook1 ], $event->used_by);
+		$this->assertSame($hook2, $event->used_by[0][0]);
+		$this->assertSame($hook1, $event->used_by[1][0]);
 		$this->assertEquals(2, $event->used);
 	}
 
