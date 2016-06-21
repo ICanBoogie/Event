@@ -86,6 +86,8 @@ class EventCollectionProvider
 	 * Alias for {@link undefine()}.
 	 *
 	 * @deprecated
+	 *
+	 * @codeCoverageIgnore
 	 */
 	static public function clear()
 	{

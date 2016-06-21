@@ -152,4 +152,47 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 		new Target\PracticeEvent($target);
 		$this->assertEquals(1, $invoked_count);
 	}
+
+	/**
+	 * Should be able to attach many events.
+	 * A same callable should only be attached once per event.
+	 */
+	public function test_attach_many()
+	{
+		$f1 = function () {};
+		$f11 = function () {};
+		$f2 = function () {};
+		$f21 = function () {};
+		$f3 = function () {};
+
+		$events = new EventCollection([
+
+			'one' => [ $f1 ],
+			'two' => [ $f2 ]
+
+		]);
+
+		$events->attach_many([
+
+			'one' => [ $f1, $f11 ],
+			'two' => [ $f21 ],
+			'three' => [ $f3 ]
+
+		]);
+
+		$this->assertSame([
+
+			'one' => [ $f1, $f11 ],
+			'two' => [ $f2, $f21 ],
+			'three' => [ $f3 ],
+
+		], iterator_to_array($events));
+	}
+
+	public function test_iterator()
+	{
+		$events = new EventCollection;
+
+		$this->assertInstanceOf(\ArrayIterator::class, $events->getIterator());
+	}
 }

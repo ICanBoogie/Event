@@ -159,7 +159,7 @@ class EventCollection implements \IteratorAggregate
 	 */
 	public function attach_many(array $definitions)
 	{
-		$hooks = $this->hooks;
+		$hooks = &$this->hooks;
 		$intersect = array_intersect_key($definitions, $hooks);
 		$hooks += array_diff_key($definitions, $hooks);
 
@@ -168,7 +168,12 @@ class EventCollection implements \IteratorAggregate
 			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
 		}
 
-		$this->hooks = array_map('array_unique', $hooks);
+		$hooks = array_map(function ($callables) {
+
+			return array_values(array_unique($callables, SORT_REGULAR));
+
+		}, $hooks);
+
 		$this->revoke_traces();
 	}
 

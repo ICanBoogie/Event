@@ -79,6 +79,33 @@ class EventTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(2, $event->used);
 	}
 
+	public function test_used_by_with_exception()
+	{
+		$type = 'event-' . uniqid();
+		$exception = new \Exception;
+
+		$hook = function (Event $event) use ($exception) {
+
+			throw $exception;
+
+		};
+
+		$this->events->attach($type, $hook);
+
+		$event = Event::from([ 'target' => null, 'type' => $type ]);
+
+		try {
+			$event->fire();
+		} catch (\Exception $e) {
+			$this->assertSame($exception, $e);
+			$this->assertEquals(1, $event->used);
+			$this->assertSame($hook, $event->used_by[0][0]);
+			return;
+		}
+
+		$this->fail("Expected Exception");
+	}
+
 	public function test_target()
 	{
 		$target = new Target;
