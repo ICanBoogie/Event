@@ -64,7 +64,7 @@ class EventReflection
 
 		$event = $this->make_instance();
 
-		call_user_func_array([ $event, '__construct' ], $this->make_args($params));
+		$event->__construct(...$this->make_args($params));
 
 		return $event;
 	}
@@ -146,6 +146,8 @@ class EventReflection
 			$no_immediate_fire = new \ReflectionProperty(Event::class, 'no_immediate_fire');
 			$no_immediate_fire->setAccessible(true);
 		}
+
+		/* @var $event Event */
 
 		$event = $this->class->newInstanceWithoutConstructor();
 		$no_immediate_fire->setValue($event, true);

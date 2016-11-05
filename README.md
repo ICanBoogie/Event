@@ -544,7 +544,7 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 ## Requirements
 
-The package requires PHP 5.5 or later.
+The package requires PHP 5.6 or later.
 
 
 
@@ -606,12 +606,12 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
-[documentation]:         http://api.icanboogie.org/event/2.1/
-[Event]:                 http://api.icanboogie.org/event/2.1/class-ICanBoogie.Event.html
-[EventHook]:             http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventHook.html
-[EventProfiler]:         http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventProfiler.html
-[EventReflection]:       http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventReflection.html
-[EventCollection]:       http://api.icanboogie.org/event/2.1/class-ICanBoogie.EventCollection.html
-[`get_events()`]:        http://api.icanboogie.org/event/2.1/function-ICanBoogie.get_events.html
+[documentation]:         http://api.icanboogie.org/event/3.0/
+[Event]:                 http://api.icanboogie.org/event/3.0/class-ICanBoogie.Event.html
+[EventHook]:             http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventHook.html
+[EventProfiler]:         http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventProfiler.html
+[EventReflection]:       http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventReflection.html
+[EventCollection]:       http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventCollection.html
+[`get_events()`]:        http://api.icanboogie.org/event/3.0/function-ICanBoogie.get_events.html
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
 [ICanBoogie]:            https://github.com/ICanBoogie/ICanBoogie
