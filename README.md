@@ -77,7 +77,8 @@ with event hooks provided by an application configuration:
 
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
-use function ICanBoogie\get_events();
+
+/* @var $app */
 
 EventCollectionProvider::define(function() use ($app) {
 
@@ -91,7 +92,7 @@ EventCollectionProvider::define(function() use ($app) {
 
 $events = EventCollectionProvider::provide();
 # or
-$events = get_events();
+$events = \ICanBoogie\get_events();
 ```
 
 
@@ -176,7 +177,7 @@ class ProcessEvent extends Event
 	 *
 	 * @param Operation $target
 	 * @param Request $request
-	 * @param response $response
+	 * @param Response $response
 	 * @param mixed $rc
 	 */
 	public function __construct(Operation $target, Request $request, Response $response, &$rc)
@@ -264,6 +265,8 @@ The following example demonstrates how a closure may be attached to a `ICanBoogi
 
 use ICanBoogie\Operation;
 
+/* @var $events \ICanBoogie\EventCollection */
+
 $events->attach(function(Operation\BeforeProcessEvent $event, Operation $target) {
 
 	// …
@@ -274,12 +277,13 @@ $events->attach(function(Operation\BeforeProcessEvent $event, Operation $target)
 The following example demonstrates how an invokable object may be attached to that same event type.
 
 ```php
+<?php
 
 class ValidateOperation
 {
 	private $rules;
 
-	public function __construct($rules)
+	public function __construct(array $rules)
 	{
 		$this->rules = $rules;
 	}
@@ -292,7 +296,10 @@ class ValidateOperation
 
 // …
 
-$events->attach(new ValidateOperation($rules);
+/* @var $events \ICanBoogie\EventCollection */
+/* @var $rules array */
+
+$events->attach(new ValidateOperation($rules));
 ```
 
 
@@ -309,7 +316,9 @@ invoked for that target.
 
 use ICanBoogie\Routing\Controller;
 
-…
+// …
+
+/* @var $events \ICanBoogie\EventCollection */
 
 $events->attach_to($controller, function(Controller\ActionEvent $event, Controller $target) {
 
@@ -334,9 +343,13 @@ The `once()` method attaches event hooks that are automatically detached after t
 ```php
 <?php
 
+use ICanBoogie\Event;
+
 $n = 0;
 
-$events->once('flash', function() use(&n) {
+/* @var $events \ICanBoogie\EventCollection */
+
+$events->once('flash', function() use(&$n) {
 
 	$n++;
 
@@ -385,6 +398,8 @@ class CountEvent extends \ICanBoogie\Event
 		parent::__construct(null, 'count');
 	}
 }
+
+/* @var $events \ICanBoogie\EventCollection */
 
 $events->attach('count', function(CountEvent $event) {
 
@@ -461,7 +476,7 @@ $event = ProcessEvent::from([
 
 	'target' => $operation,
 	'request' => $request,
-	'response' => $response
+	'response' => $response,
 	'rc' => &$rc
 
 ]);
@@ -478,6 +493,8 @@ The event can later be fired using the `fire()` method:
 
 ```php
 <?php
+
+/* @var $event \ICanBoogie\Event */
 
 $event->fire();
 ```
