@@ -24,7 +24,7 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->events = $events = new EventCollection;
 
-		EventCollectionProvider::using(function () use ($events) { return $events; });
+		EventCollectionProvider::define(function () use ($events) { return $events; });
 	}
 
 	public function test_generic_event()

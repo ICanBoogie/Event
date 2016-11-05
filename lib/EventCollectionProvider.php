@@ -22,16 +22,6 @@ class EventCollectionProvider
 	static private $provider;
 
 	/**
-	 * Alias for {@link define()}
-	 *
-	 * @deprecated
-	 */
-	static public function using(callable $provider)
-	{
-		return self::define($provider);
-	}
-
-	/**
 	 * Defines the {@link EventCollection} provider.
 	 *
 	 * @param callable $provider
@@ -80,17 +70,5 @@ class EventCollectionProvider
 		}
 
 		return $provider();
-	}
-
-	/**
-	 * Alias for {@link undefine()}.
-	 *
-	 * @deprecated
-	 *
-	 * @codeCoverageIgnore
-	 */
-	static public function clear()
-	{
-		self::undefine();
 	}
 }
