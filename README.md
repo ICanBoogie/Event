@@ -606,12 +606,12 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 
 
-[documentation]:         http://api.icanboogie.org/event/3.0/
-[Event]:                 http://api.icanboogie.org/event/3.0/class-ICanBoogie.Event.html
-[EventHook]:             http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventHook.html
-[EventProfiler]:         http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventProfiler.html
-[EventReflection]:       http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventReflection.html
-[EventCollection]:       http://api.icanboogie.org/event/3.0/class-ICanBoogie.EventCollection.html
-[`get_events()`]:        http://api.icanboogie.org/event/3.0/function-ICanBoogie.get_events.html
+[documentation]:         https://icanboogie.org/api/event/3.0/
+[Event]:                 https://icanboogie.org/api/event/3.0/class-ICanBoogie.Event.html
+[EventHook]:             https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventHook.html
+[EventProfiler]:         https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventProfiler.html
+[EventReflection]:       https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventReflection.html
+[EventCollection]:       https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventCollection.html
+[`get_events()`]:        https://icanboogie.org/api/event/3.0/function-ICanBoogie.get_events.html
+[ICanBoogie]:            https://icanboogie.org/
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
-[ICanBoogie]:            https://github.com/ICanBoogie/ICanBoogie
