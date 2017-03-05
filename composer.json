@@ -2,7 +2,9 @@
 	"name": "icanboogie/event",
 	"type": "library",
 	"description": "Provides an event API",
-	"keywords": [ "event" ],
+	"keywords": [
+		"event"
+	],
 	"homepage": "https://icanboogie.org/",
 	"license": "BSD-3-Clause",
 	"authors": [
@@ -10,7 +12,7 @@
 			"name": "Olivier Laviale",
 			"email": "olivier.laviale@gmail.com",
 			"homepage": "https://olvlvl.com/",
-			"role" : "Developer"
+			"role": "Developer"
 		}
 	],
 	"support": {
@@ -30,6 +32,8 @@
 		"psr-4": {
 			"ICanBoogie\\": "lib/"
 		},
-		"files": [ "helpers.php" ]
+		"files": [
+			"lib/functions.php"
+		]
 	}
 }
