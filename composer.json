@@ -19,10 +19,12 @@
 		"issues": "https://github.com/ICanBoogie/Event/issues",
 		"source": "https://github.com/ICanBoogie/Event"
 	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"require": {
-		"php": ">=5.6",
+		"php": "^7.2",
 		"icanboogie/common": "^1.2",
-		"icanboogie/accessor": "^1.0",
+		"icanboogie/accessor": "^2.0|^3.0",
 		"icanboogie/inflector": "^1.3"
 	},
 	"autoload": {

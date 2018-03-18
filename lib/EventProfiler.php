@@ -43,9 +43,9 @@ final class EventProfiler
 	 *
 	 * @param string $type
 	 */
-	static public function add_unused($type)
+	static public function add_unused(string $type): void
 	{
-		self::$unused[] = [ microtime(true), $type ];
+		self::$unused[] = [ \microtime(true), $type ];
 	}
 
 	/**
@@ -53,10 +53,10 @@ final class EventProfiler
 	 *
 	 * @param string $type
 	 * @param callable $hook
-	 * @param double $started_at
+	 * @param float $started_at
 	 */
-	static public function add_call($type, $hook, $started_at)
+	static public function add_call(string $type, callable $hook, float $started_at)
 	{
-		self::$calls[] = [ microtime(true), $type, $hook, $started_at ];
+		self::$calls[] = [ \microtime(true), $type, $hook, $started_at ];
 	}
 }

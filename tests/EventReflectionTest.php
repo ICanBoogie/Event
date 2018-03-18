@@ -13,7 +13,7 @@ namespace ICanBoogie;
 
 use ICanBoogie\EventTest\WithReferencesEvent;
 
-class EventReflectionTest extends \PHPUnit_Framework_TestCase
+class EventReflectionTest extends \PHPUnit\Framework\TestCase
 {
 	public function test_make_should_throw_exception_on_extraneous_param()
 	{

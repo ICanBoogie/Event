@@ -2,7 +2,7 @@
 
 namespace ICanBoogie;
 
-class helpersTest extends \PHPUnit_Framework_TestCase
+class helpersTest extends \PHPUnit\Framework\TestCase
 {
 	public function test_get_events()
 	{

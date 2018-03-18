@@ -48,7 +48,7 @@ class EventHook
 	 */
 	private $type;
 
-	protected function get_type()
+	protected function get_type(): string
 	{
 		return $this->type;
 	}
@@ -58,7 +58,7 @@ class EventHook
 	 */
 	private $hook;
 
-	protected function get_hook()
+	protected function get_hook(): callable
 	{
 		return $this->hook;
 	}
@@ -68,17 +68,12 @@ class EventHook
 	 */
 	private $events;
 
-	protected function get_events()
+	protected function get_events(): EventCollection
 	{
 		return $this->events;
 	}
 
-	/**
-	 * @param EventCollection $events
-	 * @param string $type
-	 * @param callable $hook
-	 */
-	public function __construct(EventCollection $events, $type, $hook)
+	public function __construct(EventCollection $events, string $type, callable $hook)
 	{
 		$this->events = $events;
 		$this->type = $type;
@@ -88,7 +83,7 @@ class EventHook
 	/**
 	 * Detaches the event hook from the events.
 	 */
-	public function detach()
+	public function detach(): void
 	{
 		$this->events->detach($this->type, $this->hook);
 	}

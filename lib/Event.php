@@ -30,7 +30,15 @@ class Event
 	 *
 	 * @var array[string]bool
 	 */
-	static private $reserved = [ 'chain' => true, 'stopped' => true, 'target' => true, 'used' => true, 'used_by' => true ];
+	private const RESERVED = [
+
+		'chain' => true,
+		'stopped' => true,
+		'target' => true,
+		'used' => true,
+		'used_by' => true
+
+	];
 
 	/**
 	 * Returns an unfired, initialized event.
@@ -40,10 +48,12 @@ class Event
 	 * @param array $params
 	 *
 	 * @return Event
+	 *
+	 * @throws \ReflectionException
 	 */
-	static public function from(array $params)
+	static public function from(array $params): self
 	{
-		$reflection = EventReflection::from(get_called_class());
+		$reflection = EventReflection::from(\get_called_class());
 
 		return $reflection->with($params);
 	}
@@ -55,7 +65,7 @@ class Event
 	 */
 	private $stopped = false;
 
-	protected function get_stopped()
+	protected function get_stopped(): bool
 	{
 		return $this->stopped;
 	}
@@ -67,12 +77,12 @@ class Event
 	 */
 	private $used_by = [];
 
-	protected function get_used_by()
+	protected function get_used_by(): array
 	{
 		return $this->used_by;
 	}
 
-	protected function get_used()
+	protected function get_used(): int
 	{
 		return count($this->used_by);
 	}
@@ -80,18 +90,16 @@ class Event
 	/**
 	 * The object the event is dispatched on.
 	 *
-	 * @var mixed
+	 * @var object|null
 	 */
 	private $target;
 
-	protected function get_target()
+	protected function get_target(): ?object
 	{
 		return $this->target;
 	}
 
 	/**
-	 * Event type.
-	 *
 	 * @var string
 	 */
 	private $event_type;
@@ -117,17 +125,17 @@ class Event
 	 * if the event's target is an instance of `ICanBoogie\Operation` and the event type is
 	 * `process` the final event type will be `ICanBoogie\Operation::process`.
 	 *
-	 * @param mixed $target The target of the event.
+	 * @param object|null $target The target of the event.
 	 * @param string $type The event type.
 	 * @param array $payload Event payload.
 	 *
 	 * @throws PropertyIsReserved in attempt to specify a reserved property with the payload.
 	 */
-	public function __construct($target, $type, array $payload = [])
+	public function __construct(?object $target, string $type, array $payload = [])
 	{
 		if ($target)
 		{
-			$type = get_class($target) . '::' . $type;
+			$type = \get_class($target) . '::' . $type;
 		}
 
 		$this->target = $target;
@@ -149,7 +157,7 @@ class Event
 	/**
 	 * Fires the event.
 	 */
-	public function fire()
+	public function fire(): void
 	{
 		$target = $this->target;
 		$type = $this->event_type;
@@ -188,9 +196,9 @@ class Event
 	 *
 	 * @throws PropertyIsReserved if a reserved property is used in the payload.
 	 */
-	private function map_payload(array $payload)
+	private function map_payload(array $payload): void
 	{
-		$reserved = array_intersect_key($payload, self::$reserved);
+		$reserved = \array_intersect_key($payload, self::RESERVED);
 
 		if ($reserved)
 		{
@@ -219,25 +227,25 @@ class Event
 	 * @param string $type
 	 * @param object|null $target
 	 *
-	 * @throws \Exception, the exception of the event hook.
+	 * @throws \Throwable, the exception of the event hook.
 	 */
-	private function process_chain(array $chain, EventCollection $events, $type, $target)
+	private function process_chain(array $chain, EventCollection $events, string $type, ?object $target): void
 	{
 		foreach ($chain as $hook)
 		{
-			$started_at = microtime(true);
+			$started_at = \microtime(true);
 
 			try
 			{
-				call_user_func($hook, $this, $target);
+				$hook($this, $target);
 			}
-			catch (\Exception $e)
+			catch (\Throwable $e)
 			{
 				throw $e;
 			}
 			finally
 			{
-				$this->used_by[] = [ $hook, $started_at, microtime(true) ];
+				$this->used_by[] = [ $hook, $started_at, \microtime(true) ];
 				EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
 			}
 
@@ -253,7 +261,7 @@ class Event
 	 *
 	 * After the `stop()` method is called the hooks chain is broken and no other hook is called.
 	 */
-	public function stop()
+	public function stop(): void
 	{
 		$this->stopped = true;
 	}
@@ -267,7 +275,7 @@ class Event
 	 *
 	 * @return Event
 	 */
-	public function chain($hook)
+	public function chain(callable $hook): Event
 	{
 		$this->chain[] = $hook;
 

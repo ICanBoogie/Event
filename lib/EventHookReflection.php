@@ -36,8 +36,9 @@ class EventHookReflection
 	 * @return EventHookReflection
 	 *
 	 * @throws \InvalidArgumentException if `$hook` is not a valid event hook.
+	 * @throws \ReflectionException
 	 */
-	static public function from($hook)
+	static public function from(callable $hook): self
 	{
 		self::assert_valid($hook);
 
@@ -57,12 +58,14 @@ class EventHookReflection
 	 * @param callable $hook
 	 *
 	 * @return string
+	 *
+	 * @throws \ReflectionException
 	 */
-	static private function make_key($hook)
+	static private function make_key(callable $hook): string
 	{
-		if (is_array($hook))
+		if (\is_array($hook))
 		{
-			return implode('#', $hook);
+			return \implode('#', $hook);
 		}
 
 		if ($hook instanceof \Closure)
@@ -72,11 +75,11 @@ class EventHookReflection
 			return $reflection->getFileName() . '#'. $reflection->getStartLine() . '#'. $reflection->getEndLine();
 		}
 
-		if (is_object($hook))
+		if (\is_object($hook))
 		{
 			/* @var $hook object */
 
-			return spl_object_hash($hook);
+			return \spl_object_hash($hook);
 		}
 
 		/* @var $hook string */
@@ -91,15 +94,15 @@ class EventHookReflection
 	 *
 	 * @throws \InvalidArgumentException if `$hook` is not a valid event hook.
 	 */
-	static public function assert_valid($hook)
+	static public function assert_valid(callable $hook): void
 	{
-		if (!is_callable($hook))
+		if (!\is_callable($hook))
 		{
 			throw new \InvalidArgumentException(format
 			(
-				'The event hook must be a callable, %type given: :hook', [
+				"The event hook must be a callable, %type given: :hook", [
 
-					'type' => gettype($hook),
+					'type' => \gettype($hook),
 					'hook' => $hook
 
 				]
@@ -128,22 +131,24 @@ class EventHookReflection
 	 * @param callable $hook
 	 *
 	 * @return \ReflectionFunction|\ReflectionMethod
+	 *
+	 * @throws \ReflectionException
 	 */
-	static private function resolve_reflection($hook)
+	static private function resolve_reflection(callable $hook): \ReflectionFunctionAbstract
 	{
-		if (is_object($hook))
+		if (\is_object($hook))
 		{
 			return new \ReflectionMethod($hook, '__invoke');
 		}
 
-		if (is_array($hook))
+		if (\is_array($hook))
 		{
 			return new \ReflectionMethod($hook[0], $hook[1]);
 		}
 
-		if (is_string($hook) && strpos($hook, '::'))
+		if (\is_string($hook) && \strpos($hook, '::'))
 		{
-			list($class, $method) = explode('::', $hook);
+			[ $class, $method ] = \explode('::', $hook);
 
 			return new \ReflectionMethod($class, $method);
 		}
@@ -161,9 +166,9 @@ class EventHookReflection
 	 *
 	 * @return string|null
 	 */
-	static private function resolve_parameter_class(\ReflectionParameter $param)
+	static private function resolve_parameter_class(\ReflectionParameter $param): ?string
 	{
-		if (!preg_match('/([\w\\\]+)\s\$/', $param, $matches))
+		if (!\preg_match('/([\w\\\]+)\s\$/', $param, $matches))
 		{
 			throw new \LogicException("The parameter `{$param->name}` is not typed.");
 		}
@@ -178,18 +183,21 @@ class EventHookReflection
 	 *
 	 * @return string
 	 */
-	static private function resolve_type_from_class($class)
+	static private function resolve_type_from_class(string $class): string
 	{
-		$base = basename('/' . strtr($class, '\\', '/'));
+		$base = \basename('/' . \strtr($class, '\\', '/'));
 
-		$type = substr($base, 0, -5);
-		$type = strpos($base, 'Before') === 0
-			? hyphenate(substr($type, 6)) . ':before'
+		$type = \substr($base, 0, -5);
+		$type = \strpos($base, 'Before') === 0
+			? hyphenate(\substr($type, 6)) . ':before'
 			: hyphenate($type);
 
-		return strtr($type, '-', '_');
+		return \strtr($type, '-', '_');
 	}
 
+	/**
+	 * @var \ReflectionFunctionAbstract
+	 */
 	private $reflection;
 
 	/**
@@ -197,18 +205,18 @@ class EventHookReflection
 	 *
 	 * @return string
 	 */
-	protected function get_type()
+	protected function get_type(): string
 	{
 		$parameters = $this->reflection->getParameters();
 
 		self::assert_valid_parameters_number($parameters);
 
-		list($event, $target) = $parameters;
+		[ $event, $target ] = $parameters;
 
 		return self::resolve_parameter_class($target) . '::' . self::resolve_type_from_class(self::resolve_parameter_class($event));
 	}
 
-	private function __construct($reflection)
+	private function __construct(\ReflectionFunctionAbstract $reflection)
 	{
 		$this->reflection = $reflection;
 	}

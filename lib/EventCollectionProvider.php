@@ -28,7 +28,7 @@ class EventCollectionProvider
 	 *
 	 * @return callable The previous provider, or `null` if none was defined.
 	 */
-	static public function define(callable $provider)
+	static public function define(callable $provider): ?callable
 	{
 		$previous = self::$provider;
 
@@ -42,7 +42,7 @@ class EventCollectionProvider
 	 *
 	 * @return callable|null
 	 */
-	static public function defined()
+	static public function defined(): ?callable
 	{
 		return self::$provider;
 	}
@@ -50,7 +50,7 @@ class EventCollectionProvider
 	/**
 	 * Undefine the provider.
 	 */
-	static public function undefine()
+	static public function undefine(): void
 	{
 		self::$provider = null;
 	}
@@ -60,7 +60,7 @@ class EventCollectionProvider
 	 *
 	 * @return EventCollection
 	 */
-	static public function provide()
+	static public function provide(): EventCollection
 	{
 		$provider = self::$provider;
 

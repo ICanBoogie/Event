@@ -15,7 +15,7 @@ use ICanBoogie\EventTest\CallableInstance;
 use ICanBoogie\EventTest\Hooks;
 use ICanBoogie\EventTest\Target;
 
-class EventHookRefectionTest extends \PHPUnit_Framework_TestCase
+class EventHookRefectionTest extends \PHPUnit\Framework\TestCase
 {
 	/**
 	 * @dataProvider provide_event_hooks
@@ -25,14 +25,6 @@ class EventHookRefectionTest extends \PHPUnit_Framework_TestCase
 	public function test_valid($hook)
 	{
 		EventHookReflection::assert_valid($hook);
-	}
-
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function test_invalid()
-	{
-		EventHookReflection::assert_valid(123);
 	}
 
 	public function test_from()

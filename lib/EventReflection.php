@@ -15,25 +15,36 @@ class EventReflection
 	 * @param string $class
 	 *
 	 * @return EventReflection
+	 *
+	 * @throws \ReflectionException
 	 */
 	static public function from($class)
 	{
-		if (isset(self::$instances[$class]))
-		{
-			return self::$instances[$class];
-		}
+		$reflection = &self::$instances[$class];
 
-		return self::$instances[$class] = new static($class);
+		return $reflection ?: $reflection = new static($class);
 	}
 
 	/*
 	 * Instance
 	 */
 
-	protected $class;
-	protected $parameters;
+	/**
+	 * @var \ReflectionClass
+	 */
+	private $class;
 
-	protected function __construct($class)
+	/**
+	 * @var array
+	 */
+	private $parameters;
+
+	/**
+	 * @param string $class
+	 *
+	 * @throws \ReflectionException
+	 */
+	private function __construct(string $class)
 	{
 		$construct_reflection = new \ReflectionMethod($class, '__construct');
 		$parameters_reflection = $construct_reflection->getParameters();
@@ -56,7 +67,7 @@ class EventReflection
 	 *
 	 * @return Event
 	 */
-	public function with(array $params)
+	public function with(array $params): Event
 	{
 		$this->assert_no_extraneous($params);
 		$this->assert_no_missing($params);
@@ -76,13 +87,13 @@ class EventReflection
 	 *
 	 * @throws \BadMethodCallException when an extraneous parameter is specified.
 	 */
-	protected function assert_no_extraneous(array $params)
+	private function assert_no_extraneous(array $params): void
 	{
-		$extraneous = array_diff_key($params, $this->parameters);
+		$extraneous = \array_diff_key($params, $this->parameters);
 
 		if ($extraneous)
 		{
-			throw new \BadMethodCallException("The following parameters are extraneous: " . implode(', ', array_keys($extraneous)) . ".");
+			throw new \BadMethodCallException("The following parameters are extraneous: " . \implode(', ', \array_keys($extraneous)) . ".");
 		}
 	}
 
@@ -93,13 +104,13 @@ class EventReflection
 	 *
 	 * @throws \BadMethodCallException when a required parameter is missing.
 	 */
-	protected function assert_no_missing(array $params)
+	private function assert_no_missing(array $params): void
 	{
 		$missing = [];
 
 		/* @var $reflection \ReflectionParameter */
 
-		foreach (array_diff_key($this->parameters, $params) as $param => $reflection)
+		foreach (\array_diff_key($this->parameters, $params) as $param => $reflection)
 		{
 			if ($reflection->isDefaultValueAvailable())
 			{
@@ -111,7 +122,7 @@ class EventReflection
 
 		if ($missing)
 		{
-			throw new \BadMethodCallException("The following parameters are required: " . implode(', ', array_keys($missing)) . ".");
+			throw new \BadMethodCallException("The following parameters are required: " . \implode(', ', \array_keys($missing)) . ".");
 		}
 	}
 
@@ -122,13 +133,13 @@ class EventReflection
 	 *
 	 * @throws \BadMethodCallException when a parameter is skipped.
 	 */
-	protected function assert_no_skipped(array $params)
+	private function assert_no_skipped(array $params): void
 	{
-		$skipped = array_diff_key(array_slice($this->parameters, 0, count($params)), $params);
+		$skipped = \array_diff_key(\array_slice($this->parameters, 0, \count($params)), $params);
 
 		if ($skipped)
 		{
-			throw new \BadMethodCallException("The following parameters are skipped: " . implode(', ', array_keys($skipped)) . ".");
+			throw new \BadMethodCallException("The following parameters are skipped: " . \implode(', ', \array_keys($skipped)) . ".");
 		}
 	}
 
@@ -136,8 +147,10 @@ class EventReflection
 	 * Makes event instance.
 	 *
 	 * @return Event
+	 *
+	 * @throws \ReflectionException
 	 */
-	protected function make_instance()
+	private function make_instance()
 	{
 		static $no_immediate_fire;
 
@@ -162,13 +175,13 @@ class EventReflection
 	 *
 	 * @return array
 	 */
-	protected function make_args(array $params)
+	private function make_args(array $params): array
 	{
 		$args = [];
 
-		foreach(array_keys($this->parameters) as $param)
+		foreach (\array_keys($this->parameters) as $param)
 		{
-			if (!array_key_exists($param, $params))
+			if (!\array_key_exists($param, $params))
 			{
 				break;
 			}

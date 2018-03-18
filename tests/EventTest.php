@@ -19,7 +19,7 @@ use ICanBoogie\EventTest\BeforeProcessEvent;
 use ICanBoogie\EventTest\ProcessEvent;
 use ICanBoogie\EventTest\ValidateEvent;
 
-class EventTest extends \PHPUnit_Framework_TestCase
+class EventTest extends \PHPUnit\Framework\TestCase
 {
 	/**
 	 * @var EventCollection

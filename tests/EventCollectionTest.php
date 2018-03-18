@@ -13,7 +13,7 @@ namespace ICanBoogie;
 
 use ICanBoogie\EventTest\Target;
 
-class EventCollectionTest extends \PHPUnit_Framework_TestCase
+class EventCollectionTest extends \PHPUnit\Framework\TestCase
 {
 	/**
 	 * @var EventCollection
@@ -122,14 +122,6 @@ class EventCollectionTest extends \PHPUnit_Framework_TestCase
 		new Target\PracticeEvent($target1);
 
 		$this->assertEquals(1, $invoked_count);
-	}
-
-	/**
-	 * @expectedException \InvalidArgumentException
-	 */
-	public function test_attach_to_should_throw_exception_when_target_is_not_an_object()
-	{
-		$this->events->attach_to(uniqid(), function() {});
 	}
 
 	public function test_once()
