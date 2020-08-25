@@ -11,7 +11,9 @@
 
 namespace ICanBoogie;
 
-class EventCollectionProviderTest extends \PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+
+class EventCollectionProviderTest extends TestCase
 {
 	public function test_provider()
 	{
@@ -33,14 +35,12 @@ class EventCollectionProviderTest extends \PHPUnit\Framework\TestCase
 		$this->assertSame($events, EventCollectionProvider::provide());
 	}
 
-	/**
-	 * @expectedException \LogicException
-	 */
 	public function test_should_throw_exception_when_no_provider()
 	{
 		EventCollectionProvider::define(function() {});
 		EventCollectionProvider::undefine();
 		$this->assertNull(EventCollectionProvider::defined());
+		$this->expectException(\LogicException::class);
 		EventCollectionProvider::provide();
 	}
 }

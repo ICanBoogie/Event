@@ -12,15 +12,16 @@
 namespace ICanBoogie;
 
 use ICanBoogie\EventTest\Target;
+use PHPUnit\Framework\TestCase;
 
-class EventCollectionTest extends \PHPUnit\Framework\TestCase
+class EventCollectionTest extends TestCase
 {
 	/**
 	 * @var EventCollection
 	 */
 	private $events;
 
-	public function setUp()
+	protected function setUp(): void
 	{
 		$this->events = $events = new EventCollection;
 
@@ -88,11 +89,9 @@ class EventCollectionTest extends \PHPUnit\Framework\TestCase
 		new Target\BeforePracticeEvent(new Target);
 	}
 
-	/**
-	 * @expectedException \LogicException
-	 */
 	public function test_detach_unattached_hook()
 	{
+		$this->expectException(\LogicException::class);
 		$this->events->detach(Target::class . '::practice:before', function(Target\BeforePracticeEvent $event, Target $target) {});
 	}
 

@@ -11,13 +11,17 @@
 
 namespace ICanBoogie;
 
+use Exception;
 use ICanBoogie\EventTest\WithReferencesEvent;
+use PHPUnit\Framework\TestCase;
+use function uniqid;
 
-class EventReflectionTest extends \PHPUnit\Framework\TestCase
+class EventReflectionTest extends TestCase
 {
 	public function test_make_should_throw_exception_on_extraneous_param()
 	{
-		$target = new \StdClass;
+		$target = new class() {
+		};
 		$a = null;
 		$extra = 'extra' . uniqid();
 
@@ -27,44 +31,46 @@ class EventReflectionTest extends \PHPUnit\Framework\TestCase
 
 				'target' => $target,
 				'a' => &$a,
-				$extra => uniqid()
+				$extra => uniqid(),
 
 			]);
 
 			$this->fail("Expected exception.");
 		}
-		catch (\Exception $e)
+		catch (Exception $e)
 		{
 			$this->assertInstanceOf(\BadMethodCallException::class, $e);
-			$this->assertContains('extraneous', $e->getMessage());
-			$this->assertContains($extra, $e->getMessage());
+			$this->assertStringContainsString('extraneous', $e->getMessage());
+			$this->assertStringContainsString($extra, $e->getMessage());
 		}
 	}
 
 	public function test_make_should_throw_exception_on_missing_param()
 	{
-		$target = new \StdClass;
+		$target = new class() {
+		};
 
 		try
 		{
 			EventReflection::from(WithReferencesEvent::class)->with([
 
-				'target' => $target
+				'target' => $target,
 
 			]);
 
 			$this->fail("Expected exception.");
 		}
-		catch (\Exception $e)
+		catch (Exception $e)
 		{
 			$this->assertInstanceOf(\BadMethodCallException::class, $e);
-			$this->assertContains('required', $e->getMessage());
+			$this->assertStringContainsString('required', $e->getMessage());
 		}
 	}
 
 	public function test_make_should_throw_exception_on_skipped_param()
 	{
-		$target = new \StdClass;
+		$target = new class() {
+		};
 		$a = null;
 		$c = null;
 
@@ -74,22 +80,23 @@ class EventReflectionTest extends \PHPUnit\Framework\TestCase
 
 				'target' => $target,
 				'a' => &$a,
-				'c' => &$c
+				'c' => &$c,
 
 			]);
 
 			$this->fail("Expected exception.");
 		}
-		catch (\Exception $e)
+		catch (Exception $e)
 		{
 			$this->assertInstanceOf(\BadMethodCallException::class, $e);
-			$this->assertContains('skipped', $e->getMessage());
+			$this->assertStringContainsString('skipped', $e->getMessage());
 		}
 	}
 
 	public function test_from()
 	{
-		$target = new \StdClass;
+		$target = new class() {
+		};
 		$a = null;
 		$b = null;
 		$a_value = uniqid();

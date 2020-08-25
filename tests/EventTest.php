@@ -18,15 +18,16 @@ use ICanBoogie\EventTest\B;
 use ICanBoogie\EventTest\BeforeProcessEvent;
 use ICanBoogie\EventTest\ProcessEvent;
 use ICanBoogie\EventTest\ValidateEvent;
+use PHPUnit\Framework\TestCase;
 
-class EventTest extends \PHPUnit\Framework\TestCase
+class EventTest extends TestCase
 {
 	/**
 	 * @var EventCollection
 	 */
 	private $events;
 
-	public function setUp()
+	protected function setUp(): void
 	{
 		$this->events = $events = new EventCollection;
 
@@ -195,7 +196,6 @@ class EventTest extends \PHPUnit\Framework\TestCase
 
 	/**
 	 * @dataProvider provide_test_reserved
-	 * @expectedException \ICanBoogie\PropertyIsReserved
 	 */
 	public function test_reserved(array $payload)
 	{
@@ -203,6 +203,7 @@ class EventTest extends \PHPUnit\Framework\TestCase
 
 		$this->events->attach($type, function() { });
 
+		$this->expectException(PropertyIsReserved::class);
 		new Event(null, $type, $payload);
 	}
 

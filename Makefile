@@ -2,7 +2,7 @@
 
 PACKAGE_NAME = icanboogie/event
 PACKAGE_VERSION = 4.0
-PHPUNIT_VERSION = phpunit-7-4.phar
+PHPUNIT_VERSION = phpunit-8.phar
 PHPUNIT = build/$(PHPUNIT_VERSION)
 
 # do not edit the following lines

@@ -11,7 +11,9 @@
 
 namespace ICanBoogie;
 
-class EventHookTest extends \PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+
+class EventHookTest extends TestCase
 {
 	public function test_properties()
 	{

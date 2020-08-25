@@ -14,8 +14,9 @@ namespace ICanBoogie;
 use ICanBoogie\EventTest\CallableInstance;
 use ICanBoogie\EventTest\Hooks;
 use ICanBoogie\EventTest\Target;
+use PHPUnit\Framework\TestCase;
 
-class EventHookRefectionTest extends \PHPUnit\Framework\TestCase
+class EventHookRefectionTest extends TestCase
 {
 	/**
 	 * @dataProvider provide_event_hooks
@@ -45,7 +46,10 @@ class EventHookRefectionTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals('ICanBoogie\EventTest\Target::practice:before', EventHookReflection::from($hook)->type);
 	}
 
-	public function provide_event_hooks()
+	/**
+	 * @uses \ICanBoogie\EventTest\before_target_practice
+	 */
+	public function provide_event_hooks(): array
 	{
 		return [
 
@@ -58,21 +62,17 @@ class EventHookRefectionTest extends \PHPUnit\Framework\TestCase
 		];
 	}
 
-	/**
-	 * @expectedException \LogicException
-	 */
 	public function test_invalid_parameters_number()
 	{
 		$reflection = EventHookReflection::from(function() {});
+		$this->expectException(\LogicException::class);
 		$reflection->type;
 	}
 
-	/**
-	 * @expectedException \LogicException
-	 */
 	public function test_invalid_parameters()
 	{
 		$reflection = EventHookReflection::from(function($a, Target $b) {});
+		$this->expectException(\LogicException::class);
 		$reflection->type;
 	}
 }
