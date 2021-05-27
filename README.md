@@ -1,8 +1,7 @@
 # Event
 
 [![Release](https://img.shields.io/packagist/v/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
-[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/master.svg)](http://travis-ci.org/ICanBoogie/Event)
-[![HHVM](https://img.shields.io/hhvm/icanboogie/event.svg)](http://hhvm.h4cc.de/package/icanboogie/event)
+[![Build Status](https://img.shields.io/github/workflow/status/ICanBoogie/Event/test)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Atest)
 [![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/master.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
 [![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
 [![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
@@ -25,7 +24,7 @@ request is dispatched or to rescue an exception.
 * Events are fired as they are instantiated.
 * Events usually have a target object, but simpler event types can also be emitted.
 * Event hooks are attached to classes rather than objects, and they are inherited.
-* Event hooks can be attached to a _finish chain_ that is executed after the event hooks chain. 
+* Event hooks can be attached to a _finish chain_ that is executed after the event hooks chain.
 * Execution of the event chain can be stopped.
 
 
@@ -240,7 +239,7 @@ class Operation
 
 		$response->rc = $this->process();
 
-		new Operation\ProcessEvent($this, $request, $response, $response->rc); 
+		new Operation\ProcessEvent($this, $request, $response, $response->rc);
 
 		// …
 	}
@@ -552,22 +551,9 @@ The package requires PHP 7.2 or later.
 
 ## Installation
 
-The recommended way to install this package is through [Composer](http://getcomposer.org/):
-
+```bash
+composer require icanboogie/event
 ```
-$ composer require icanboogie/event
-```
-
-
-
-
-
-### Cloning the repository
-
-The package is [available on GitHub](https://github.com/ICanBoogie/Event), its repository can be
-cloned with the following command line:
-
-	$ git clone https://github.com/ICanBoogie/Event.git
 
 
 
@@ -587,12 +573,9 @@ be cleaned with the `make clean` command.
 
 ## Testing
 
-The test suite is ran with the `make test` command. [PHPUnit](https://phpunit.de/) and [Composer](http://getcomposer.org/) need to be globally available to run the suite. The command installs dependencies as required. The `make test-coverage` command runs test suite and also creates an HTML coverage report in `build/coverage`. The directory can later be cleaned with the `make clean` command.
-
-The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
-
-[![Build Status](https://img.shields.io/travis/ICanBoogie/Event/master.svg)](https://travis-ci.org/ICanBoogie/Event)
-[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
+Run `make test-container` to create and log into the test container, then run `make test` to run the
+test suite. Alternatively, run `make test-coverage` to run the test suite with test coverage. Open
+`build/coverage/index.html` to see the breakdown of the code coverage.
 
 
 
@@ -600,7 +583,7 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 
 ## License
 
-**icanboogie/event** is licensed under the New BSD License - See the [LICENSE](LICENSE) file for details.
+**icanboogie/event** is released under the [New BSD License](LICENSE).
 
 
 
@@ -612,6 +595,6 @@ The package is continuously tested by [Travis CI](http://about.travis-ci.org/).
 [EventProfiler]:         https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventProfiler.html
 [EventReflection]:       https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventReflection.html
 [EventCollection]:       https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventCollection.html
-[`get_events()`]:        https://icanboogie.org/api/event/3.0/function-ICanBoogie.get_events.html
+[`get_events`]:          https://icanboogie.org/api/event/3.0/function-ICanBoogie.get_events.html
 [ICanBoogie]:            https://icanboogie.org/
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event
