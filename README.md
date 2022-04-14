@@ -541,14 +541,6 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 
 
-## Requirements
-
-The package requires PHP 7.2 or later.
-
-
-
-
-
 ## Installation
 
 ```bash

@@ -11,10 +11,13 @@
 
 namespace ICanBoogie;
 
+use ArrayIterator;
+use IteratorAggregate;
+
 /**
  * Events collected from the "hooks" config or attached by the user.
  */
-class EventCollection implements \IteratorAggregate
+class EventCollection implements IteratorAggregate
 {
 	/**
 	 * Resolves type and hook.
@@ -85,9 +88,9 @@ class EventCollection implements \IteratorAggregate
 	/**
 	 * Returns an iterator for event hooks.
 	 */
-	public function getIterator()
+	public function getIterator(): ArrayIterator
 	{
-		return new \ArrayIterator($this->hooks);
+		return new ArrayIterator($this->hooks);
 	}
 
 	/**
