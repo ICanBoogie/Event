@@ -37,3 +37,24 @@ function get_events()
 
 	return $provider();
 }
+
+namespace ICanBoogie\Event;
+
+use function is_object;
+
+/**
+ * @param string $type An unqualified event type e.g. "recover"
+ * @param object|class-string $target
+ *
+ * @return string
+ *     An qualified event type made of the target class and the unqualified event type.
+ *     e.g. "Exception::recover"
+ */
+function qualify_type(string $type, object|string $target): string
+{
+	if (is_object($target)) {
+		$target = $target::class;
+	}
+
+	return "$target::$type";
+}

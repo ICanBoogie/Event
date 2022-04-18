@@ -9,34 +9,36 @@
  * file that was distributed with this source code.
  */
 
-namespace ICanBoogie;
+namespace Test\ICanBoogie;
 
-use ICanBoogie\EventTest\Target;
+use ICanBoogie\Event;
+use ICanBoogie\EventCollection;
+use ICanBoogie\EventCollectionProvider;
 use PHPUnit\Framework\TestCase;
+use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
+use Test\ICanBoogie\SampleTarget\PracticeEvent;
+use Traversable;
 
-class EventCollectionTest extends TestCase
+use function ICanBoogie\Event\qualify_type;
+
+final class EventCollectionTest extends TestCase
 {
-	/**
-	 * @var EventCollection
-	 */
-	private $events;
+	private EventCollection $events;
 
 	protected function setUp(): void
 	{
 		$this->events = $events = new EventCollection;
 
-		EventCollectionProvider::define(function () use ($events) { return $events; });
+		EventCollectionProvider::define(fn(): EventCollection => $events);
 	}
 
-	public function test_generic_event()
+	public function test_generic_event(): void
 	{
 		$type = 'type' . uniqid();
 		$invoked = false;
 
-		$this->events->attach($type, function(Event $event) use (&$invoked) {
-
+		$this->events->attach($type, function (Event $event) use (&$invoked) {
 			$invoked = true;
-
 		});
 
 		new Event(null, $type);
@@ -44,103 +46,115 @@ class EventCollectionTest extends TestCase
 		$this->assertTrue($invoked);
 	}
 
-	public function test_detach_generic_event_hook()
+	public function test_detach_generic_event_hook(): void
 	{
+		$n = 0;
 		$type = 'type' . uniqid();
-		$hook = function(Event $event) {
-
-			$this->fail("Should not be invoked");
-
+		$hook = function (Event $event) use (&$n) {
+			$n++;
 		};
 
-		$this->events->attach($type, $hook);
-		$this->events->detach($type, $hook);
-
+		$detach = $this->events->attach($type, $hook);
 		new Event(null, $type);
+
+		$detach();
+		new Event(null, $type);
+
+		$this->assertEquals(1, $n);
 	}
 
-	public function test_detach_event_hook()
+	public function test_detach_event_hook(): void
 	{
+		$n = 0;
+		$target = new SampleTarget();
 		$type = 'type' . uniqid();
-
-		$hook = function(Event $event, Target $target) {
-
-			$this->fail("Should not be invoked");
-
+		$qualified_type = qualify_type($type, $target);
+		$hook = function (Event $event, SampleTarget $t) use ($target, &$n) {
+			$n++;
+			$this->assertSame($target, $t);
 		};
 
-		$this->events->attach($type, $hook);
-		$this->events->detach($type, $hook);
+		$detach = $this->events->attach($qualified_type, $hook);
+		new Event($target, $type);
 
-		new Event(new Target, $type);
+		$detach();
+		new Event($target, $type);
+
+		$this->assertEquals(1, $n);
 	}
 
-	public function test_detach_typed_event_hook()
+	public function test_detach_typed_event_hook(): void
 	{
-		$hook = function(Target\BeforePracticeEvent $event, Target $target) {
-
-			$this->fail("Should not be invoked");
-
+		$n = 0;
+		$target = new SampleTarget();
+		$hook = function (BeforePracticeEvent $event, SampleTarget $target) use (&$n) {
+			$n++;
 		};
 
-		$this->events->attach($hook);
-		$this->events->detach('ICanBoogie\EventTest\Target::practice:before', $hook);
+		$detach = $this->events->attach($hook);
+		new BeforePracticeEvent($target);
 
-		new Target\BeforePracticeEvent(new Target);
+		$detach();
+		new BeforePracticeEvent($target);
+
+		$this->assertEquals(1, $n);
 	}
 
-	public function test_detach_unattached_hook()
+	public function test_detach_unattached_hook(): void
 	{
 		$this->expectException(\LogicException::class);
-		$this->events->detach(Target::class . '::practice:before', function(Target\BeforePracticeEvent $event, Target $target) {});
+		$this->events->detach(
+			SampleTarget::class . '::practice:before',
+			function (BeforePracticeEvent $event, SampleTarget $target) {
+			}
+		);
 	}
 
 	/**
 	 * @depends test_detach_typed_event_hook
 	 */
-	public function test_attach_to()
+	public function test_attach_to(): void
 	{
-		$target0 = new Target;
+		$target0 = new SampleTarget;
 		$target1 = clone $target0;
 
 		$invoked_count = 0;
 
-		$this->events->attach_to($target0, function(Target\PracticeEvent $event, Target $target) use ($target0, &$invoked_count) {
+		$this->events->attach_to(
+			$target0,
+			function (PracticeEvent $event, SampleTarget $target) use ($target0, &$invoked_count) {
+				$this->assertSame($target0, $target);
 
-			$this->assertSame($target0, $target);
+				$invoked_count++;
+			}
+		);
 
-			$invoked_count++;
-
-		});
-
-		new Target\PracticeEvent($target1);
+		new PracticeEvent($target1);
 
 		$this->assertEquals(0, $invoked_count);
 
-		new Target\PracticeEvent($target0);
-		new Target\PracticeEvent($target1);
+		new PracticeEvent($target0);
+		new PracticeEvent($target1);
 
 		$this->assertEquals(1, $invoked_count);
 	}
 
-	public function test_once()
+	public function test_once(): void
 	{
 		$invoked_count = 0;
 
-		$this->events->once(function(Target\PracticeEvent $event, Target $target) use (&$invoked_count) {
-
+		$this->events->once(function (PracticeEvent $event, SampleTarget $target) use (&$invoked_count) {
 			$invoked_count++;
-
 		});
 
-		$target = new Target;
+		$target = new SampleTarget;
 
-		new Target\PracticeEvent($target);
+		new PracticeEvent($target);
 		$this->assertEquals(1, $invoked_count);
 
-		new Target\PracticeEvent($target);
-		new Target\PracticeEvent($target);
-		new Target\PracticeEvent($target);
+		new PracticeEvent($target);
+		new PracticeEvent($target);
+		new PracticeEvent($target);
 		$this->assertEquals(1, $invoked_count);
 	}
 
@@ -148,13 +162,18 @@ class EventCollectionTest extends TestCase
 	 * Should be able to attach many events.
 	 * A same callable should only be attached once per event.
 	 */
-	public function test_attach_many()
+	public function test_attach_many(): void
 	{
-		$f1 = function () {};
-		$f11 = function () {};
-		$f2 = function () {};
-		$f21 = function () {};
-		$f3 = function () {};
+		$f1 = function () {
+		};
+		$f11 = function () {
+		};
+		$f2 = function () {
+		};
+		$f21 = function () {
+		};
+		$f3 = function () {
+		};
 
 		$events = new EventCollection([
 
@@ -180,10 +199,10 @@ class EventCollectionTest extends TestCase
 		], iterator_to_array($events));
 	}
 
-	public function test_iterator()
+	public function test_iterator(): void
 	{
-		$events = new EventCollection;
+		$events = new EventCollection();
 
-		$this->assertInstanceOf(\ArrayIterator::class, $events->getIterator());
+		$this->assertInstanceOf(Traversable::class, $events->getIterator());
 	}
 }

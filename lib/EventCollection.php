@@ -12,7 +12,24 @@
 namespace ICanBoogie;
 
 use ArrayIterator;
+use Closure;
+use ICanBoogie\Event\Detach;
+use InvalidArgumentException;
 use IteratorAggregate;
+use LogicException;
+use ReflectionException;
+use SplObjectStorage;
+use Traversable;
+
+use function array_diff_key;
+use function array_intersect_key;
+use function array_map;
+use function array_merge;
+use function array_unique;
+use function array_unshift;
+use function array_values;
+use function count;
+use function strpos;
 
 /**
  * Events collected from the "hooks" config or attached by the user.
@@ -22,27 +39,25 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Resolves type and hook.
 	 *
-	 * @param string|callable $type_or_hook
-	 * @param callable|null $hook
+	 * @phpstan-param string|(callable(Event, ?object): void) $type_or_hook
+	 * @phpstan-param (callable(Event, ?object): void)|null $hook
 	 *
-	 * @return array Returns the type and hook.
+	 * @return array{ 0: string, 1: callable } Returns the type and hook.
+	 *
+	 * @throws ReflectionException
 	 */
-	static private function resolve_type_and_hook($type_or_hook, ?callable $hook): array
+	static private function resolve_type_and_hook(string|callable $type_or_hook, ?callable $hook): array
 	{
-		if ($hook === null)
-		{
+		if ($hook === null) {
 			$type = null;
 			$hook = $type_or_hook;
-		}
-		else
-		{
+		} else {
 			$type = $type_or_hook;
 		}
 
 		EventHookReflection::assert_valid($hook);
 
-		if ($type === null)
-		{
+		if ($type === null) {
 			$type = EventHookReflection::from($hook)->type;
 		}
 
@@ -52,35 +67,37 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Event hooks by type.
 	 *
-	 * @var array
+	 * @var array<string, callable[]>
+	 *     Where _key_ is an event type and _value_ an array of callables.
+	 * @phpstan-var array<string, (callable(Event, ?object): void)[]>
 	 */
-	protected $hooks = [];
+	private array $hooks = [];
 
 	/**
 	 * Event hooks by class and type.
 	 *
-	 * @var array
+	 * @var array<string, callable[]>
+	 *     Where _key_ is an event type and _value_ an array of callables.
+	 * @phpstan-var array<string, (callable(Event, ?object): void)[]>
 	 */
-	protected $consolidated_hooks = [];
+	private array $consolidated_hooks = [];
 
-	/**
-	 * @var \SplObjectStorage
-	 */
-	protected $original_hooks;
+	private SplObjectStorage $original_hooks;
 
 	/**
 	 * Skippable events.
 	 *
-	 * @var array
+	 * @var array<string, true>
+	 *     Where _key_ is an event type.
 	 */
-	protected $skippable = [];
+	private array $skippable = [];
 
 	/**
 	 * @param array $definitions Event hooks grouped by type.
 	 */
 	public function __construct(array $definitions = [])
 	{
-		$this->original_hooks = new \SplObjectStorage;
+		$this->original_hooks = new SplObjectStorage();
 
 		$this->attach_many($definitions);
 	}
@@ -88,7 +105,7 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Returns an iterator for event hooks.
 	 */
-	public function getIterator(): ArrayIterator
+	public function getIterator(): Traversable
 	{
 		return new ArrayIterator($this->hooks);
 	}
@@ -96,7 +113,7 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Revokes consolidated hooks and skippable types.
 	 */
-	protected function revoke_traces()
+	private function revoke_traces()
 	{
 		$this->consolidated_hooks = [];
 		$this->skippable = [];
@@ -111,7 +128,8 @@ class EventCollection implements IteratorAggregate
 	 * <pre>
 	 * <?php
 	 *
-	 * $events->attach(function(ICanBoogie\Operation\BeforeProcessEvent $event, ICanBoogie\Module\Operation\SaveOperation $target) {
+	 * $events->attach(function(ICanBoogie\Operation\BeforeProcessEvent $event,
+	 * ICanBoogie\Module\Operation\SaveOperation $target) {
 	 *
 	 *     // …
 	 *
@@ -120,24 +138,19 @@ class EventCollection implements IteratorAggregate
 	 *
 	 * The hook will be attached to the `ICanBoogie\Module\Operation\SaveOperation::process:before` event.
 	 *
-	 * @param string|callable $type_or_hook Event type or event hook.
-	 * @param callable|null $hook The event hook, or nothing if $type is the event hook.
+	 * @param Closure|string $type_or_hook Event type or event hook.
+	 * @param Closure|null $hook The event hook, or nothing if $type is the event hook.
+	 * @phpstan-param (Closure(Event, ?object): void)|null $hook
 	 *
-	 * @return EventHook An event hook reference that can be used to easily detach the event
-	 * hook.
-	 *
-	 * @throws \InvalidArgumentException when `$hook` is not a callable.
+	 * @throws InvalidArgumentException when `$hook` is not a callable.
+	 * @throws ReflectionException
 	 */
-	public function attach($type_or_hook, callable $hook = null): EventHook
+	public function attach(Closure|string $type_or_hook, Closure $hook = null): Detach
 	{
 		[ $type, $hook ] = self::resolve_type_and_hook($type_or_hook, $hook);
 
-		if (!isset($this->hooks[$type]))
-		{
-			$this->hooks[$type] = [];
-		}
-
-		\array_unshift($this->hooks[$type], $hook);
+		$this->hooks[$type] ??= [];
+		array_unshift($this->hooks[$type], $hook);
 
 		#
 		# If the event is a targeted event, we reset the skippable and consolidated hooks arrays.
@@ -145,12 +158,12 @@ class EventCollection implements IteratorAggregate
 
 		$this->skippable = [];
 
-		if (\strpos($type, '::') !== false)
-		{
+		if (str_contains($type, '::')) {
+			// Reset consolidated hooks
 			$this->consolidated_hooks = [];
 		}
 
-		return new EventHook($this, $type, $hook);
+		return new Detach($this, $type, $hook);
 	}
 
 	/**
@@ -163,18 +176,15 @@ class EventCollection implements IteratorAggregate
 	public function attach_many(array $definitions): void
 	{
 		$hooks = &$this->hooks;
-		$intersect = \array_intersect_key($definitions, $hooks);
-		$hooks += \array_diff_key($definitions, $hooks);
+		$intersect = array_intersect_key($definitions, $hooks);
+		$hooks += array_diff_key($definitions, $hooks);
 
-		foreach ($intersect as $type => $type_hooks)
-		{
-			$hooks[$type] = \array_merge($hooks[$type], $type_hooks);
+		foreach ($intersect as $type => $type_hooks) {
+			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
 		}
 
-		$hooks = \array_map(function ($callables) {
-
-			return \array_values(\array_unique($callables, SORT_REGULAR));
-
+		$hooks = array_map(function ($callables) {
+			return array_values(array_unique($callables, SORT_REGULAR));
 		}, $hooks);
 
 		$this->revoke_traces();
@@ -183,52 +193,52 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Attaches an event hook to a specific target.
 	 *
-	 * @param object $target
-	 * @param callable $hook
+	 * @template T of object
 	 *
-	 * @return EventHook
+	 * @param T $target
+	 * @phpstan-param (Closure(Event, T): void) $hook
+	 *
+	 * @throws ReflectionException
 	 */
-	public function attach_to(object $target, callable $hook): EventHook
+	public function attach_to(object $target, Closure $hook): Detach
 	{
 		$type = EventHookReflection::from($hook)->type;
 
-		return $this->attach($type, $this->shadow_original_hook($hook, function($e, $t) use ($target, $hook) {
+		return $this->attach(
+			$type,
+			$this->shadow_original_hook($hook, function ($e, $t) use ($target, $hook) {
+				if ($t !== $target) {
+					return;
+				}
 
-			if ($t !== $target)
-			{
-				return;
-			}
-
-			$hook($e, $t);
-
-		}));
+				$hook($e, $t);
+			})
+		);
 	}
 
 	/**
 	 * Attaches an event hook that is detached once used.
 	 *
-	 * @param string|callable $type_or_hook Event type or event hook.
-	 * @param callable|null $hook The event hook, or nothing if $type is the event hook.
+	 * @param Closure|string $type_or_hook Event type or event hook.
+	 * @param Closure|null $hook The event hook, or nothing if $type is the event hook.
+	 * @phpstan-param (Closure(Event, ?object): void)|null $hook
 	 *
-	 * @return EventHook
-	 *
-	 * @see attach()
+	 * @throws ReflectionException
 	 */
-	public function once($type_or_hook, callable $hook = null): EventHook
+	public function once(Closure|string $type_or_hook, Closure $hook = null): Detach
 	{
 		[ $type, $hook ] = self::resolve_type_and_hook($type_or_hook, $hook);
 
-		$eh = $this->attach($type, $this->shadow_original_hook($hook, function($e, $t) use ($hook, &$eh) {
+		$detach = $this->attach(
+			$type,
+			$this->shadow_original_hook($hook, function ($e, $t) use ($hook, &$detach) {
+				$hook($e, $t);
 
-			/* @var $eh EventHook */
+				$detach();
+			})
+		);
 
-			$hook($e, $t);
-
-			$eh->detach();
-
-		}));
-
-		return $eh;
+		return $detach;
 	}
 
 	/**
@@ -237,27 +247,24 @@ class EventCollection implements IteratorAggregate
 	 * @param string $type The name of the event.
 	 * @param callable $hook The event hook.
 	 *
-	 * @throws \LogicException when the event hook is not attached to the event name.
+	 * @throws LogicException when the event hook is not attached to the event name.
 	 */
 	public function detach(string $type, callable $hook): void
 	{
 		$hooks = &$this->hooks;
 		$key = $this->search_hook($type, $hook);
 
-		if ($key === false)
-		{
-			throw new \LogicException("The specified event hook is not attached to `$type`.");
+		if ($key === false) {
+			throw new LogicException("The specified event hook is not attached to `$type`.");
 		}
 
 		unset($hooks[$type][$key]);
 
-		if (!\count($hooks[$type]))
-		{
+		if (!count($hooks[$type])) {
 			unset($hooks[$type]);
 		}
 
-		if (\strpos($type, '::'))
-		{
+		if (strpos($type, '::')) {
 			$this->consolidated_hooks = [];
 		}
 	}
@@ -293,13 +300,11 @@ class EventCollection implements IteratorAggregate
 	 */
 	public function get_hooks(string $type): array
 	{
-		if (!\strpos($type, '::'))
-		{
+		if (!strpos($type, '::')) {
 			return isset($this->hooks[$type]) ? $this->hooks[$type] : [];
 		}
 
-		if (isset($this->consolidated_hooks[$type]))
-		{
+		if (isset($this->consolidated_hooks[$type])) {
 			return $this->consolidated_hooks[$type];
 		}
 
@@ -337,13 +342,11 @@ class EventCollection implements IteratorAggregate
 
 		$hooks = [];
 
-		while ($class)
-		{
+		while ($class) {
 			$k = $class . '::' . $type;
 
-			if (isset($this->hooks[$k]))
-			{
-				$hooks = \array_merge($hooks, $this->hooks[$k]);
+			if (isset($this->hooks[$k])) {
+				$hooks = array_merge($hooks, $this->hooks[$k]);
 			}
 
 			$class = \get_parent_class($class);
@@ -361,8 +364,7 @@ class EventCollection implements IteratorAggregate
 	 */
 	public function resolve_original_hook(callable $hook): callable
 	{
-		if (!\is_object($hook) || empty($this->original_hooks[$hook]))
-		{
+		if (!\is_object($hook) || empty($this->original_hooks[$hook])) {
 			return $hook;
 		}
 

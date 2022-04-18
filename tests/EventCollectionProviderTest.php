@@ -9,20 +9,21 @@
  * file that was distributed with this source code.
  */
 
-namespace ICanBoogie;
+namespace Test\ICanBoogie;
 
+use ICanBoogie\EventCollection;
+use ICanBoogie\EventCollectionProvider;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 
-class EventCollectionProviderTest extends TestCase
+final class EventCollectionProviderTest extends TestCase
 {
-	public function test_provider()
+	public function test_provider(): void
 	{
 		$provider = function() {
-
 			static $collection;
 
-			return $collection ?: $collection = new EventCollection;
-
+			return $collection ??= new EventCollection();
 		};
 
 		EventCollectionProvider::define($provider);
@@ -35,12 +36,12 @@ class EventCollectionProviderTest extends TestCase
 		$this->assertSame($events, EventCollectionProvider::provide());
 	}
 
-	public function test_should_throw_exception_when_no_provider()
+	public function test_should_throw_exception_when_no_provider(): void
 	{
 		EventCollectionProvider::define(function() {});
 		EventCollectionProvider::undefine();
 		$this->assertNull(EventCollectionProvider::defined());
-		$this->expectException(\LogicException::class);
+		$this->expectException(LogicException::class);
 		EventCollectionProvider::provide();
 	}
 }

@@ -9,23 +9,23 @@
  * file that was distributed with this source code.
  */
 
-namespace ICanBoogie;
+namespace Test\ICanBoogie;
 
-use ICanBoogie\EventTest\Target;
-
-use ICanBoogie\EventTest\A;
-use ICanBoogie\EventTest\B;
-use ICanBoogie\EventTest\BeforeProcessEvent;
-use ICanBoogie\EventTest\ProcessEvent;
-use ICanBoogie\EventTest\ValidateEvent;
+use ICanBoogie\Event;
+use ICanBoogie\EventCollection;
+use ICanBoogie\EventCollectionProvider;
+use ICanBoogie\PropertyIsReserved;
+use Test\ICanBoogie\EventTest\A;
+use Test\ICanBoogie\EventTest\B;
+use Test\ICanBoogie\EventTest\BeforeProcessEvent;
+use Test\ICanBoogie\EventTest\ProcessEvent;
+use Test\ICanBoogie\EventTest\ValidateEvent;
 use PHPUnit\Framework\TestCase;
+use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
 
-class EventTest extends TestCase
+final class EventTest extends TestCase
 {
-	/**
-	 * @var EventCollection
-	 */
-	private $events;
+	private EventCollection $events;
 
 	protected function setUp(): void
 	{
@@ -36,10 +36,10 @@ class EventTest extends TestCase
 
 	public function test_from()
 	{
-		$target = new Target;
-		$event = Target\BeforePracticeEvent::from([ 'target' => $target ]);
+		$target = new SampleTarget;
+		$event = BeforePracticeEvent::from([ 'target' => $target ]);
 
-		$this->assertInstanceOf(Target\BeforePracticeEvent::class, $event);
+		$this->assertInstanceOf(BeforePracticeEvent::class, $event);
 	}
 
 	public function test_stop()
@@ -109,7 +109,7 @@ class EventTest extends TestCase
 
 	public function test_target()
 	{
-		$target = new Target;
+		$target = new SampleTarget;
 		$event = new Event($target, uniqid());
 
 		$this->assertSame($target, $event->target);
@@ -224,10 +224,9 @@ class EventTest extends TestCase
 	}
 }
 
-namespace ICanBoogie\EventTest;
+namespace Test\ICanBoogie\EventTest;
 
 use ICanBoogie\Event;
-use ICanBoogie\HTTP\Dispatcher;
 
 class A
 {

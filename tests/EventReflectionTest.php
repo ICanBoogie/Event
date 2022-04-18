@@ -12,7 +12,7 @@
 namespace ICanBoogie;
 
 use Exception;
-use ICanBoogie\EventTest\WithReferencesEvent;
+use Test\ICanBoogie\EventTest\WithReferencesEvent;
 use PHPUnit\Framework\TestCase;
 use function uniqid;
 

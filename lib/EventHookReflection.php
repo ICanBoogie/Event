@@ -18,6 +18,8 @@ use ICanBoogie\Accessor\AccessorTrait;
  *
  * @property \ReflectionFunction|\ReflectionMethod $reflection
  * @property string $type The event type resolved from the event hook parameters.
+ *
+ * @internal
  */
 class EventHookReflection
 {

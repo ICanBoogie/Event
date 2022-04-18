@@ -74,16 +74,15 @@ with event hooks provided by an application configuration:
 ```php
 <?php
 
-use ICanBoogie\EventCollection;
-use ICanBoogie\EventCollectionProvider;
+namespace ICanBoogie;
 
-/* @var $app */
+/* @var Application $app */
 
 EventCollectionProvider::define(function() use ($app) {
 
 	static $collection;
 
-	return $collection ?: $collection = new EventCollection($app->configs['event']);
+	return $collection ??= new EventCollection($app->configs['event']);
 
 });
 
@@ -91,7 +90,7 @@ EventCollectionProvider::define(function() use ($app) {
 
 $events = EventCollectionProvider::provide();
 # or
-$events = \ICanBoogie\get_events();
+$events = get_events();
 ```
 
 
@@ -100,14 +99,14 @@ $events = \ICanBoogie\get_events();
 
 ## Typed events
 
-An instance of an [Event][] subclass is used
-to provide contextual information about an event to the event hooks processing it. It is passed as
-the first argument, with the target object as second argument (if any). This instance contain
-information directly relating to the type of event they accompany.
+An instance of an [Event][] subclass is used to provide contextual information about an event to the
+event hooks processing it. It is passed as the first argument, with the target object as second
+argument (if any). This instance contain information directly relating to the type of event they
+accompany.
 
 For example, a `process` event is usually instantiated from a `ProcessEvent` class, and a
-`process:before` event—fired before a `process` event—is usually instantiated
-from a `BeforeProcessEvent` instance.
+`process:before` event—fired before a `process` event—is usually instantiated from a
+`BeforeProcessEvent` instance.
 
 The following code demonstrates how a `ProcessEvent` class may be defined for a `process` event type:
 
@@ -262,21 +261,23 @@ The following example demonstrates how a closure may be attached to a `ICanBoogi
 ```php
 <?php
 
-use ICanBoogie\Operation;
+namespace ICanBoogie
 
-/* @var $events \ICanBoogie\EventCollection */
-
-$events->attach(function(Operation\BeforeProcessEvent $event, Operation $target) {
+$detach = $events->attach(function(Operation\BeforeProcessEvent $event, Operation $target) {
 
 	// …
 
 });
+
+$detach(); // You can detach if you no longer want to listen.
 ```
 
 The following example demonstrates how an invokable object may be attached to that same event type.
 
 ```php
 <?php
+
+namespace ICanBoogie
 
 class ValidateOperation
 {
@@ -295,8 +296,8 @@ class ValidateOperation
 
 // …
 
-/* @var $events \ICanBoogie\EventCollection */
-/* @var $rules array */
+/* @var $events EventCollection */
+/* @var $rules array<string, mixed> */
 
 $events->attach(new ValidateOperation($rules));
 ```
@@ -313,13 +314,15 @@ invoked for that target.
 ```php
 <?php
 
+namespace ICanBoogie;
+
 use ICanBoogie\Routing\Controller;
 
 // …
 
-/* @var $events \ICanBoogie\EventCollection */
+/* @var $events EventCollection */
 
-$events->attach_to($controller, function(Controller\ActionEvent $event, Controller $target) {
+$detach = $events->attach_to($controller, function(Controller\ActionEvent $event, Controller $target) {
 
 	echo "invoked!";
 
@@ -329,6 +332,10 @@ $controller_clone = clone $controller;
 
 new Controller\ActionEvent($controller_clone, …);   // nothing happens
 new Controller\ActionEvent($controller, …);         // echo "invoked!"
+
+// …
+
+$detach(); // You can detach if you no longer want to listen.
 ```
 
 

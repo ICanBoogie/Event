@@ -9,15 +9,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie\SampleTarget;
 
+use ICanBoogie\Event;
 use Test\ICanBoogie\SampleTarget;
-use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
 
-class Hooks
+class BeforePracticeEvent extends Event
 {
-	static public function before_target_practice(BeforePracticeEvent $event, SampleTarget $target): void
-	{
+	public const TYPE = 'practice:before';
 
+	public function __construct(SampleTarget $target)
+	{
+		parent::__construct($target, self::TYPE);
 	}
 }

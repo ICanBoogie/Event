@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace ICanBoogie;
+namespace Test\ICanBoogie;
 
-$autoload = require __DIR__ . '/../vendor/autoload.php';
-$autoload->addPsr4('ICanBoogie\\EventTest\\', __DIR__ . '/EventTest/');
+class SampleTarget
+{
+
+}

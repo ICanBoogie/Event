@@ -12,23 +12,34 @@
 namespace ICanBoogie;
 
 use ICanBoogie\Accessor\AccessorTrait;
+use ReflectionException;
+use Throwable;
+
+use function array_intersect_key;
+use function get_called_class;
+use function get_class;
+use function microtime;
 
 /**
  * An event.
  *
- * @property-read $stopped bool `true` when the event was stopped, `false` otherwise.
- * @property-read $used int The number of event hooks that were invoked while dispatching the event.
- * @property-read $used_by array Event hooks that were invoked while dispatching the event.
- * @property-read $target mixed The object the event is dispatched on.
+ * @property-read bool $stopped `true` when the event was stopped, `false` otherwise.
+ * @property-read int $used The number of event hooks that were invoked while dispatching the event.
+ * @property-read callable[] $used_by Event hooks that were invoked while dispatching the event.
+ * @property-read ?object $target The object the event is dispatched on.
  */
 class Event
 {
+	/**
+	 * @uses get_stopped
+	 * @uses get_used_by
+	 * @uses get_used
+	 * @uses get_target
+	 */
 	use AccessorTrait;
 
 	/**
 	 * The reserved properties that cannot be used to provide event properties.
-	 *
-	 * @var array[string]bool
 	 */
 	private const RESERVED = [
 
@@ -43,29 +54,26 @@ class Event
 	/**
 	 * Returns an unfired, initialized event.
 	 *
+	 * @param array<string, mixed> $params
+	 *     Where _key_ is an attribute and _value_ its value.
+	 *
+	 * @throws ReflectionException
+	 *
 	 * @see EventReflection::from
-	 *
-	 * @param array $params
-	 *
-	 * @return Event
-	 *
-	 * @throws \ReflectionException
 	 */
-	static public function from(array $params): self
+	static public function from(array $params): static
 	{
-		$reflection = EventReflection::from(\get_called_class());
+		$reflection = EventReflection::from(get_called_class());
 
-		return $reflection->with($params);
+		return $reflection->with($params); // @phpstan-ignore-line
 	}
 
 	/**
 	 * `true` when the event was stopped, `false` otherwise.
-	 *
-	 * @var bool
 	 */
-	private $stopped = false;
+	private bool $stopped = false;
 
-	protected function get_stopped(): bool
+	private function get_stopped(): bool
 	{
 		return $this->stopped;
 	}
@@ -73,50 +81,44 @@ class Event
 	/**
 	 * Event hooks that were invoked while dispatching the event.
 	 *
-	 * @var array
+	 * @var callable[]
+	 * @phpstan-var (callable(Event, ?object): void)[]
 	 */
-	private $used_by = [];
+	private array $used_by = [];
 
-	protected function get_used_by(): array
+	private function get_used_by(): array
 	{
 		return $this->used_by;
 	}
 
-	protected function get_used(): int
+	private function get_used(): int
 	{
 		return count($this->used_by);
 	}
 
 	/**
 	 * The object the event is dispatched on.
-	 *
-	 * @var object|null
 	 */
-	private $target;
+	private ?object $target;
 
 	protected function get_target(): ?object
 	{
 		return $this->target;
 	}
 
-	/**
-	 * @var string
-	 */
-	private $event_type;
+	private string $event_type;
 
 	/**
 	 * Chain of hooks to execute once the event has been fired.
 	 *
 	 * @var array
 	 */
-	private $chain = [];
+	private array $chain = [];
 
 	/**
 	 * Whether the event fire should be fired immediately.
-	 *
-	 * @var bool
 	 */
-	private $no_immediate_fire = false;
+	private bool $no_immediate_fire = false;
 
 	/**
 	 * Creates an event and fires it immediately.
@@ -127,27 +129,24 @@ class Event
 	 *
 	 * @param object|null $target The target of the event.
 	 * @param string $type The event type.
-	 * @param array $payload Event payload.
+	 * @param array<string, mixed> $payload Event payload.
 	 *
 	 * @throws PropertyIsReserved in attempt to specify a reserved property with the payload.
 	 */
 	public function __construct(?object $target, string $type, array $payload = [])
 	{
-		if ($target)
-		{
-			$type = \get_class($target) . '::' . $type;
+		if ($target) {
+			$type = get_class($target) . '::' . $type;
 		}
 
 		$this->target = $target;
 		$this->event_type = $type;
 
-		if ($payload)
-		{
+		if ($payload) {
 			$this->map_payload($payload);
 		}
 
-		if ($this->no_immediate_fire)
-		{
+		if ($this->no_immediate_fire) {
 			return;
 		}
 
@@ -163,15 +162,13 @@ class Event
 		$type = $this->event_type;
 		$events = get_events();
 
-		if ($events->is_skippable($type))
-		{
+		if ($events->is_skippable($type)) {
 			return;
 		}
 
 		$hooks = $events->get_hooks($type);
 
-		if (!$hooks)
-		{
+		if (!$hooks) {
 			EventProfiler::add_unused($type);
 
 			$events->skip($type);
@@ -181,8 +178,7 @@ class Event
 
 		$this->process_chain($hooks, $events, $type, $target);
 
-		if ($this->stopped || !$this->chain)
-		{
+		if ($this->stopped || !$this->chain) {
 			return;
 		}
 
@@ -192,26 +188,24 @@ class Event
 	/**
 	 * Maps the payload to the event's properties.
 	 *
-	 * @param array $payload
+	 * @param array<string, mixed> $payload
 	 *
 	 * @throws PropertyIsReserved if a reserved property is used in the payload.
 	 */
 	private function map_payload(array $payload): void
 	{
-		$reserved = \array_intersect_key($payload, self::RESERVED);
+		$reserved = array_intersect_key($payload, self::RESERVED);
 
-		if ($reserved)
-		{
+		if ($reserved) {
 			throw new PropertyIsReserved(key($reserved));
 		}
 
-		foreach ($payload as $property => &$value)
-		{
+		foreach ($payload as $property => &$value) {
 			#
 			# we need to set the property to null before we set its value by reference
-			# otherwise if the property doesn't exists the magic method `__get()` is
+			# otherwise if the property doesn't exist the magic method `__get()` is
 			# invoked and throws an exception because we try to get the value of a
-			# property that do not exists.
+			# property that do not exist.
 			#
 
 			$this->$property = null;
@@ -222,35 +216,23 @@ class Event
 	/**
 	 * Process an event chain.
 	 *
-	 * @param array $chain
-	 * @param EventCollection $events
-	 * @param string $type
-	 * @param object|null $target
+	 * @phpstan-param (callable(Event, ?object): void)[] $chain
 	 *
-	 * @throws \Throwable, the exception of the event hook.
+	 * @throws Throwable the exception of the event hook.
 	 */
-	private function process_chain(array $chain, EventCollection $events, string $type, ?object $target): void
+	private function process_chain(iterable $chain, EventCollection $events, string $type, ?object $target): void
 	{
-		foreach ($chain as $hook)
-		{
-			$started_at = \microtime(true);
+		foreach ($chain as $hook) {
+			$started_at = microtime(true);
 
-			try
-			{
+			try {
 				$hook($this, $target);
-			}
-			catch (\Throwable $e)
-			{
-				throw $e;
-			}
-			finally
-			{
-				$this->used_by[] = [ $hook, $started_at, \microtime(true) ];
+			} finally {
+				$this->used_by[] = [ $hook, $started_at, microtime(true) ];
 				EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
 			}
 
-			if ($this->stopped)
-			{
+			if ($this->stopped) {
 				return;
 			}
 		}
@@ -271,9 +253,7 @@ class Event
 	 *
 	 * The finish chain is executed after the event chain was traversed without being stopped.
 	 *
-	 * @param callable $hook
-	 *
-	 * @return Event
+	 * @phpstan-param (callable(Event, ?object): void) $hook
 	 */
 	public function chain(callable $hook): Event
 	{

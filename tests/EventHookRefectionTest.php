@@ -9,28 +9,33 @@
  * file that was distributed with this source code.
  */
 
-namespace ICanBoogie;
+namespace Test\ICanBoogie;
 
-use ICanBoogie\EventTest\CallableInstance;
-use ICanBoogie\EventTest\Hooks;
-use ICanBoogie\EventTest\Target;
+use ICanBoogie\EventHookReflection;
 use PHPUnit\Framework\TestCase;
+use Test\ICanBoogie\EventTest\CallableInstance;
+use Test\ICanBoogie\EventTest\Hooks;
+use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
+use Test\ICanBoogie\SampleTarget\PracticeEvent;
 
-class EventHookRefectionTest extends TestCase
+use function ICanBoogie\Event\qualify_type;
+
+final class EventHookRefectionTest extends TestCase
 {
 	/**
 	 * @dataProvider provide_event_hooks
-	 *
-	 * @param mixed $hook
 	 */
-	public function test_valid($hook)
+	public function test_valid(mixed $hook)
 	{
 		EventHookReflection::assert_valid($hook);
+
+		$this->assertTrue(true);
 	}
 
 	public function test_from()
 	{
-		$hook = function(Target\PracticeEvent $event, Target $target) {};
+		$hook = function (PracticeEvent $event, SampleTarget $target) {
+		};
 
 		$reflection = EventHookReflection::from($hook);
 		$this->assertSame($reflection, EventHookReflection::from($hook));
@@ -38,41 +43,49 @@ class EventHookRefectionTest extends TestCase
 
 	/**
 	 * @dataProvider provide_event_hooks
-	 *
-	 * @param mixed $hook
 	 */
-	public function test_type($hook)
+	public function test_type(mixed $hook): void
 	{
-		$this->assertEquals('ICanBoogie\EventTest\Target::practice:before', EventHookReflection::from($hook)->type);
+		$this->assertEquals(
+			qualify_type(BeforePracticeEvent::TYPE, SampleTarget::class),
+			EventHookReflection::from($hook)->type
+		);
 	}
 
-	/**
-	 * @uses \ICanBoogie\EventTest\before_target_practice
-	 */
 	public function provide_event_hooks(): array
 	{
 		return [
 
-			[ 'ICanBoogie\EventTest\before_target_practice' ],
+			[ before_target_practice(...) ],
 			[ Hooks::class . '::before_target_practice' ],
 			[ [ Hooks::class, 'before_target_practice' ] ],
-			[ function(Target\BeforePracticeEvent $event, Target $target) { } ],
+			[
+				function (BeforePracticeEvent $event, SampleTarget $target) {
+				}
+			],
 			[ new CallableInstance ]
 
 		];
 	}
 
-	public function test_invalid_parameters_number()
+	public function test_invalid_parameters_number(): void
 	{
-		$reflection = EventHookReflection::from(function() {});
+		$reflection = EventHookReflection::from(function () {
+		});
 		$this->expectException(\LogicException::class);
 		$reflection->type;
 	}
 
-	public function test_invalid_parameters()
+	public function test_invalid_parameters(): void
 	{
-		$reflection = EventHookReflection::from(function($a, Target $b) {});
+		$reflection = EventHookReflection::from(function ($a, SampleTarget $b) {
+		});
 		$this->expectException(\LogicException::class);
 		$reflection->type;
 	}
+}
+
+function before_target_practice(BeforePracticeEvent $event, SampleTarget $target)
+{
+
 }
