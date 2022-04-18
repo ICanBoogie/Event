@@ -72,7 +72,7 @@ class Event
 			trigger_error("The 'payload' parameter is no longer supported, better write an event class.", E_USER_DEPRECATED);
 		}
 
-		$qualified_type = $target ? qualify_type($type, $target) : $type;
+		$qualified_type = $target ? qualify_type($target, $type) : $type;
 
 		$this->target = $target;
 		$this->unqualified_type = $type;

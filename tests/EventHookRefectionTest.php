@@ -47,7 +47,7 @@ final class EventHookRefectionTest extends TestCase
 	public function test_type(mixed $hook): void
 	{
 		$this->assertEquals(
-			qualify_type(BeforePracticeEvent::TYPE, SampleTarget::class),
+			qualify_type(SampleTarget::class, BeforePracticeEvent::TYPE),
 			EventHookReflection::from($hook)->type
 		);
 	}

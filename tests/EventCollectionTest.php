@@ -69,7 +69,7 @@ final class EventCollectionTest extends TestCase
 		$n = 0;
 		$target = new SampleTarget();
 		$type = 'type' . uniqid();
-		$qualified_type = qualify_type($type, $target);
+		$qualified_type = qualify_type($target, $type);
 		$hook = function (Event $event, SampleTarget $t) use ($target, &$n) {
 			$n++;
 			$this->assertSame($target, $t);

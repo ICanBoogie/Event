@@ -54,14 +54,14 @@ namespace ICanBoogie\Event;
 use function is_object;
 
 /**
- * @param string $type An unqualified event type e.g. "recover"
  * @param object|class-string $target
+ * @param string $type An unqualified event type e.g. "recover"
  *
  * @return string
- *     An qualified event type made of the target class and the unqualified event type.
+ *     A qualified event type made of the target class and the unqualified event type.
  *     e.g. "Exception::recover"
  */
-function qualify_type(string $type, object|string $target): string
+function qualify_type(object|string $target, string $type): string
 {
 	if (is_object($target)) {
 		$target = $target::class;

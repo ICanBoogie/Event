@@ -204,8 +204,8 @@ class EventHookReflection
 		[ $event, $target ] = $parameters;
 
 		return qualify_type(
-			self::resolve_type_from_class(self::resolve_parameter_class($event)),
-			self::resolve_parameter_class($target)
+			self::resolve_parameter_class($target),
+			self::resolve_type_from_class(self::resolve_parameter_class($event))
 		);
 	}
 
