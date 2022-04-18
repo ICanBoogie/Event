@@ -27,32 +27,13 @@ use const E_USER_DEPRECATED;
  * An event.
  *
  * @property-read bool $stopped `true` when the event was stopped, `false` otherwise.
- * @property-read int $used The number of event hooks that were invoked while dispatching the event.
- * @property-read callable[] $used_by Event hooks that were invoked while dispatching the event.
- * @property-read ?object $target The object the event is dispatched on.
  */
 class Event
 {
 	/**
 	 * @uses get_stopped
-	 * @uses get_used_by
-	 * @uses get_used
-	 * @uses get_target
 	 */
 	use AccessorTrait;
-
-	/**
-	 * The reserved properties that cannot be used to provide event properties.
-	 */
-	private const RESERVED = [
-
-		'chain' => true,
-		'stopped' => true,
-		'target' => true,
-		'used' => true,
-		'used_by' => true
-
-	];
 
 	/**
 	 * Returns an unfired, initialized event.
@@ -72,6 +53,21 @@ class Event
 	}
 
 	/**
+	 * The object the event is dispatched on.
+	 */
+	public readonly ?object $target;
+
+	/**
+	 * Event unqualified type e.g. `recover`.
+	 */
+	public readonly string $unqualified_type;
+
+	/**
+	 * Event qualified type. e.g. `Exception::recover`
+	 */
+	public readonly string $qualified_type;
+
+	/**
 	 * `true` when the event was stopped, `false` otherwise.
 	 */
 	private bool $stopped = false;
@@ -80,36 +76,6 @@ class Event
 	{
 		return $this->stopped;
 	}
-
-	/**
-	 * Event hooks that were invoked while dispatching the event.
-	 *
-	 * @var callable[]
-	 * @phpstan-var (callable(Event, ?object): void)[]
-	 */
-	private array $used_by = [];
-
-	private function get_used_by(): array
-	{
-		return $this->used_by;
-	}
-
-	private function get_used(): int
-	{
-		return count($this->used_by);
-	}
-
-	/**
-	 * The object the event is dispatched on.
-	 */
-	private ?object $target;
-
-	protected function get_target(): ?object
-	{
-		return $this->target;
-	}
-
-	private string $event_type;
 
 	/**
 	 * Chain of hooks to execute once the event has been fired.
@@ -141,12 +107,11 @@ class Event
 			trigger_error("The 'payload' parameter is no longer supported, better write an event class.", E_USER_DEPRECATED);
 		}
 
-		if ($target) {
-			$type = qualify_type($type, $target);
-		}
+		$qualified_type = $target ? qualify_type($type, $target) : $type;
 
 		$this->target = $target;
-		$this->event_type = $type;
+		$this->unqualified_type = $type;
+		$this->qualified_type = $qualified_type;
 
 		if ($this->no_immediate_fire) {
 			return;
@@ -161,7 +126,7 @@ class Event
 	public function fire(): void
 	{
 		$target = $this->target;
-		$type = $this->event_type;
+		$type = $this->qualified_type;
 		$events = get_events();
 
 		if ($events->is_skippable($type)) {
@@ -202,7 +167,6 @@ class Event
 			try {
 				$hook($this, $target);
 			} finally {
-				$this->used_by[] = [ $hook, $started_at, microtime(true) ];
 				EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
 			}
 
