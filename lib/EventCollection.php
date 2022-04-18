@@ -19,6 +19,7 @@ use IteratorAggregate;
 use LogicException;
 use ReflectionException;
 use SplObjectStorage;
+use Throwable;
 use Traversable;
 
 use function array_diff_key;
@@ -29,6 +30,7 @@ use function array_unique;
 use function array_unshift;
 use function array_values;
 use function count;
+use function microtime;
 use function strpos;
 
 /**
@@ -268,6 +270,76 @@ class EventCollection implements IteratorAggregate
 			$this->consolidated_hooks = [];
 		}
 	}
+
+	/**
+	 * Fires the event.
+	 *
+	 * @template T of Event
+	 *
+	 * @param T $event
+	 *
+	 * @return T
+	 *
+	 * @throws Throwable
+	 */
+	public function emit(Event $event): Event
+	{
+		$target = $event->target;
+		$type = $event->qualified_type;
+
+		if ($this->is_skippable($type)) {
+			return $event;
+		}
+
+		$hooks = $this->get_hooks($type);
+
+		if (!$hooks) {
+			EventProfiler::add_unused($type);
+
+			$this->skip($type);
+
+			return $event;
+		}
+
+		$this->process_chain($event, $hooks, $type, $target);
+
+		if ($event->stopped || !$event->__internal_chain) {
+			return $event;
+		}
+
+		$this->process_chain($event, $event->__internal_chain, $type, $target);
+
+		return $event;
+	}
+
+	/**
+	 * Process an event chain.
+	 *
+	 * @phpstan-param (callable(Event, ?object): void)[] $chain
+	 *
+	 * @throws Throwable the exception of the event hook.
+	 */
+	private function process_chain(Event $event, iterable $chain, string $type, ?object $target): void
+	{
+		foreach ($chain as $hook) {
+			$started_at = microtime(true);
+
+			try {
+				$hook($event, $target);
+			} finally {
+				EventProfiler::add_call($type, $this->resolve_original_hook($hook), $started_at);
+			}
+
+			if ($event->stopped) {
+				return;
+			}
+		}
+	}
+
+
+
+
+
 
 	/**
 	 * Marks an event as skippable.

@@ -12,13 +12,9 @@
 namespace ICanBoogie;
 
 use ICanBoogie\Accessor\AccessorTrait;
-use ReflectionException;
-use Throwable;
 
 use function func_num_args;
-use function get_called_class;
 use function ICanBoogie\Event\qualify_type;
-use function microtime;
 use function trigger_error;
 
 use const E_USER_DEPRECATED;
@@ -34,23 +30,6 @@ class Event
 	 * @uses get_stopped
 	 */
 	use AccessorTrait;
-
-	/**
-	 * Returns an unfired, initialized event.
-	 *
-	 * @param array<string, mixed> $params
-	 *     Where _key_ is an attribute and _value_ its value.
-	 *
-	 * @throws ReflectionException
-	 *
-	 * @see EventReflection::from
-	 */
-	static public function from(array $params): static
-	{
-		$reflection = EventReflection::from(get_called_class());
-
-		return $reflection->with($params); // @phpstan-ignore-line
-	}
 
 	/**
 	 * The object the event is dispatched on.
@@ -78,18 +57,6 @@ class Event
 	}
 
 	/**
-	 * Chain of hooks to execute once the event has been fired.
-	 *
-	 * @var array
-	 */
-	private array $chain = [];
-
-	/**
-	 * Whether the event fire should be fired immediately.
-	 */
-	private bool $no_immediate_fire = false;
-
-	/**
 	 * Creates an event and fires it immediately.
 	 *
 	 * If the event's target is specified its class is used to prefix the event type. For example,
@@ -98,8 +65,6 @@ class Event
 	 *
 	 * @param object|null $target The target of the event.
 	 * @param string $type The event type.
-	 *
-	 * @throws PropertyIsReserved in attempt to specify a reserved property with the payload.
 	 */
 	public function __construct(?object $target, string $type)
 	{
@@ -112,68 +77,6 @@ class Event
 		$this->target = $target;
 		$this->unqualified_type = $type;
 		$this->qualified_type = $qualified_type;
-
-		if ($this->no_immediate_fire) {
-			return;
-		}
-
-		$this->fire();
-	}
-
-	/**
-	 * Fires the event.
-	 */
-	public function fire(): void
-	{
-		$target = $this->target;
-		$type = $this->qualified_type;
-		$events = get_events();
-
-		if ($events->is_skippable($type)) {
-			return;
-		}
-
-		$hooks = $events->get_hooks($type);
-
-		if (!$hooks) {
-			EventProfiler::add_unused($type);
-
-			$events->skip($type);
-
-			return;
-		}
-
-		$this->process_chain($hooks, $events, $type, $target);
-
-		if ($this->stopped || !$this->chain) {
-			return;
-		}
-
-		$this->process_chain($this->chain, $events, $type, $target);
-	}
-
-	/**
-	 * Process an event chain.
-	 *
-	 * @phpstan-param (callable(Event, ?object): void)[] $chain
-	 *
-	 * @throws Throwable the exception of the event hook.
-	 */
-	private function process_chain(iterable $chain, EventCollection $events, string $type, ?object $target): void
-	{
-		foreach ($chain as $hook) {
-			$started_at = microtime(true);
-
-			try {
-				$hook($this, $target);
-			} finally {
-				EventProfiler::add_call($type, $events->resolve_original_hook($hook), $started_at);
-			}
-
-			if ($this->stopped) {
-				return;
-			}
-		}
 	}
 
 	/**
@@ -187,15 +90,26 @@ class Event
 	}
 
 	/**
+	 * Chain of hooks to execute once the event has been fired.
+	 *
+	 * @var callable[]
+	 *
+	 * @internal
+	 */
+	public array $__internal_chain = [];
+
+	/**
 	 * Add an event hook to the finish chain.
 	 *
 	 * The finish chain is executed after the event chain was traversed without being stopped.
 	 *
 	 * @phpstan-param (callable(Event, ?object): void) $hook
+	 *
+	 * @return $this
 	 */
-	public function chain(callable $hook): Event
+	public function chain(callable $hook): static
 	{
-		$this->chain[] = $hook;
+		$this->__internal_chain[] = $hook;
 
 		return $this;
 	}

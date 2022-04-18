@@ -9,11 +9,17 @@
 The **icanboogie/event** allows you to provide hooks which other developers can attach to, to be
 notified when certain events occur inside the application and take action.
 
-Inside [ICanBoogie][], events are often used to alter initial parameters,
-take action before/after an operation is processed or when it fails, take action before/after a
-request is dispatched or to rescue an exception.
+Inside [ICanBoogie][], events are often used to alter initial parameters, take action before/after
+an operation is processed or when it fails, take action before/after a request is dispatched or to
+rescue an exception.
 
 
+
+#### Installation
+
+```bash
+composer require icanboogie/event
+```
 
 
 
@@ -21,7 +27,6 @@ request is dispatched or to rescue an exception.
 
 * Easily implementable.
 * Events are typed.
-* Events are fired as they are instantiated.
 * Events usually have a target object, but simpler event types can also be emitted.
 * Event hooks are attached to classes rather than objects, and they are inherited.
 * Event hooks can be attached to a _finish chain_ that is executed after the event hooks chain.
@@ -122,67 +127,21 @@ use ICanBoogie\Operation;
 
 /**
  * Event class for the `ICanBoogie\Operation::process` event.
- *
- * @property mixed $rc
- * @property-read Response $response
- * @property-read Request $request
  */
 class ProcessEvent extends Event
 {
 	/**
 	 * Reference to the response result property.
-	 *
-	 * @var mixed
 	 */
-	private $rc;
+	public mixed $result;
 
-	protected function get_rc()
-	{
-		return $this->rc;
-	}
-
-	protected function set_rc($rc)
-	{
-		$this->rc = $rc;
-	}
-
-	/**
-	 * The response object of the operation.
-	 *
-	 * @var Response
-	 */
-	private $response;
-
-	protected function get_response()
-	{
-		return $this->response;
-	}
-
-	/**
-	 * The request that triggered the operation.
-	 *
-	 * @var Request
-	 */
-	private $request;
-
-	protected function get_request()
-	{
-		return $this->request;
-	}
-
-	/**
-	 * The event is constructed with the type `process`.
-	 *
-	 * @param Operation $target
-	 * @param Request $request
-	 * @param Response $response
-	 * @param mixed $rc
-	 */
-	public function __construct(Operation $target, Request $request, Response $response, &$rc)
-	{
-		$this->request = $request;
-		$this->response = $response;
-		$this->rc = &$rc;
+	public function __construct(
+	    Operation $target,
+	    public readonly Request $request,
+	    public readonly Response $response,
+	    mixed &$result
+    ) {
+		$this->result = &$result;
 
 		parent::__construct($target, 'process');
 	}
@@ -205,9 +164,8 @@ event type is fired before.
 
 ### Namespacing and naming
 
-Event classes should be defined in a namespace unique to their target object. Events
-targeting `ICanBoogie\Operation` instances should be defined in the `ICanBoogie\Operation`
-namespace.
+Event classes should be defined in a namespace unique to their target object. Events targeting
+`ICanBoogie\Operation` instances should be defined in the `ICanBoogie\Operation` namespace.
 
 The class name should match the event type. `ProcessEvent` for the `process` event type,
 `BeforeProcessEvent` for the `process:before` event.
@@ -218,33 +176,16 @@ The class name should match the event type. `ProcessEvent` for the `process` eve
 
 ## Firing events
 
-Events are fired as they are instantiated.
-
-The following example demonstrates how the `process` event is fired upon an
-`ICanBoogie\Operation` instance:
+Events are fired with the `emit()` function.
 
 ```php
 <?php
 
 namespace ICanBoogie;
 
-class Operation
-{
-	// …
+/* @var Event $event */
 
-	public function __invoke()
-	{
-		// …
-
-		$response->rc = $this->process();
-
-		new Operation\ProcessEvent($this, $request, $response, $response->rc);
-
-		// …
-	}
-
-	// …
-}
+emit($event);
 ```
 
 
@@ -330,8 +271,8 @@ $detach = $events->attach_to($controller, function(Controller\ActionEvent $event
 
 $controller_clone = clone $controller;
 
-new Controller\ActionEvent($controller_clone, …);   // nothing happens
-new Controller\ActionEvent($controller, …);         // echo "invoked!"
+emit(new Controller\ActionEvent($controller_clone, …));   // nothing happens, it's a clone
+emit(new Controller\ActionEvent($controller, …));         // echo "invoked!"
 
 // …
 
@@ -349,11 +290,11 @@ The `once()` method attaches event hooks that are automatically detached after t
 ```php
 <?php
 
-use ICanBoogie\Event;
+namespace ICanBoogie;
+
+/* @var $events EventCollection */
 
 $n = 0;
-
-/* @var $events \ICanBoogie\EventCollection */
 
 $events->once('flash', function() use(&$n) {
 
@@ -361,9 +302,9 @@ $events->once('flash', function() use(&$n) {
 
 });
 
-new Event(null, 'flash');
-new Event(null, 'flash');
-new Event(null, 'flash');
+emit(new Event(null, 'flash'));
+emit(new Event(null, 'flash'));
+emit(new Event(null, 'flash'));
 
 echo $n;   // 1
 ```
@@ -393,33 +334,34 @@ others we would obtain "0312".
 ```php
 <?php
 
-class CountEvent extends \ICanBoogie\Event
+namespace ICanBoogie;
+
+class CountEvent extends Event
 {
-	public $count;
+    public const TYPE = 'count';
 
-	public function __construct($count)
-	{
-		$this->count = $count;
-
-		parent::__construct(null, 'count');
+	public function __construct(
+	    public int $count
+    ) {
+		parent::__construct(null, self::TYPE);
 	}
 }
 
-/* @var $events \ICanBoogie\EventCollection */
+/* @var $events EventCollection */
 
-$events->attach('count', function(CountEvent $event) {
+$events->attach('count', function(CountEvent $event): void {
 
 	$event->count .= 2;
 
 });
 
-$events->attach('count', function(CountEvent $event) {
+$events->attach('count', function(CountEvent $event): void {
 
 	$event->count .= 1;
 
 });
 
-$events->attach('count', function(CountEvent $event) {
+$events->attach('count', function(CountEvent $event): void {
 
 	$event->chain(function(CountEvent $event) {
 
@@ -428,7 +370,7 @@ $events->attach('count', function(CountEvent $event) {
 	});
 });
 
-$event = new CountEvent(0);
+$event = emit(new CountEvent(0));
 
 echo $event->count; // 0123
 ```
@@ -446,63 +388,11 @@ The processing of an event hook chain can be broken by an event hook using the `
 
 use ICanBoogie\Operation;
 
-function on_event(Operation\ProcessEvent $event, Operation $operation)
+function on_event(Operation\ProcessEvent $event, Operation $operation): void
 {
 	$event->rc = true;
 	$event->stop();
 }
-```
-
-
-
-
-
-## Instantiating _non-firing_ events
-
-Events are designed to be fired as they are instantiated, but sometimes you want to be able to
-create an [Event][] instance without it to be fired immediately, for instance when you
-need to test that event, or alter it before it is fired.
-
-The `from()` method creates _non-firing_ event instances from an array of parameters.
-
-The following example demonstrates how to create an _non-firing_ instance of the
-`ProcessEvent` class we saw earlier:
-
-```php
-<?php
-
-use ICanBoogie\Operation\ProcessEvent;
-use ICanBoogie\EventReflection;
-
-$rc = null;
-
-// …
-
-$event = ProcessEvent::from([
-
-	'target' => $operation,
-	'request' => $request,
-	'response' => $response,
-	'rc' => &$rc
-
-]);
-
-$event->rc = "ABBA";
-echo $rc;  // ABBA
-```
-
-> Array keys must match construct arguments, an exception will fire otherwise. Also, if a
-> constructor argument must be passed by reference keep in mind that it must be passed by
-> reference in the array as well.
-
-The event can later be fired using the `fire()` method:
-
-```php
-<?php
-
-/* @var $event \ICanBoogie\Event */
-
-$event->fire();
 ```
 
 
@@ -536,37 +426,15 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 ## Helpers
 
-- [`get_events`][]: Returns the current event collection. If the event collection provider is defined the method defines one that provides a new [EventCollection][] instance.
+- `get_events()`: Returns the current event collection. A new one is created if none exist.
+
+- `emit()`: Emit the specified event.
 
 
 
 
 
 ----------
-
-
-
-
-
-## Installation
-
-```bash
-composer require icanboogie/event
-```
-
-
-
-
-
-## Documentation
-
-The package is documented as part of the [ICanBoogie][] framework
-[documentation][]. You can generate the documentation for the
-package and its dependencies with the `make doc` command. The documentation is generated in
-the `build/docs` directory. [ApiGen](http://apigen.org/) is required. The directory can later
-be cleaned with the `make clean` command.
-
-
 
 
 
@@ -578,22 +446,14 @@ test suite. Alternatively, run `make test-coverage` to run the test suite with t
 
 
 
-
-
 ## License
 
-**icanboogie/event** is released under the [New BSD License](LICENSE).
+**icanboogie/event** is released under the [BSD-3-Clause](LICENSE).
 
 
 
-
-
-[documentation]:         https://icanboogie.org/api/event/3.0/
-[Event]:                 https://icanboogie.org/api/event/3.0/class-ICanBoogie.Event.html
-[EventHook]:             https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventHook.html
-[EventProfiler]:         https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventProfiler.html
-[EventReflection]:       https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventReflection.html
-[EventCollection]:       https://icanboogie.org/api/event/3.0/class-ICanBoogie.EventCollection.html
-[`get_events`]:          https://icanboogie.org/api/event/3.0/function-ICanBoogie.get_events.html
+[Event]:                 lib/Event.php
+[EventProfiler]:         lib/EventProfiler.php
+[EventCollection]:       lib/EventCollection.php
 [ICanBoogie]:            https://icanboogie.org/
 [icanboogie/bind-event]: https://github.com/ICanBoogie/bind-event

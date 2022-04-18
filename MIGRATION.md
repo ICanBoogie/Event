@@ -4,6 +4,25 @@
 
 ### Breaking changes
 
+- Events are not longer emitted during instantiation, you need to use the `emit()` function for
+  that. All code related to event reflexion to create non-firing events has been removed.
+
+    ```php
+    <?php
+
+    namespace ICanBoogie;
+
+    $event = new Event('created');
+    ```
+
+    ```php
+    <?php
+
+    namespace ICanBoogie;
+
+    $event = emit(new Event('created'));
+    ```
+
 - `EventCollection::attach()`, `EventCollection::attach_to()`, `EventCollection::once()` now require
   a `Closure` and no longer a callable. `EventCollection::attach_many()` still works with regular
   callables.

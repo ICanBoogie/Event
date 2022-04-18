@@ -19,6 +19,7 @@ use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
 use Test\ICanBoogie\SampleTarget\PracticeEvent;
 use Traversable;
 
+use function ICanBoogie\emit;
 use function ICanBoogie\Event\qualify_type;
 
 final class EventCollectionTest extends TestCase
@@ -41,7 +42,7 @@ final class EventCollectionTest extends TestCase
 			$invoked = true;
 		});
 
-		new Event(null, $type);
+		emit(new Event(null, $type));
 
 		$this->assertTrue($invoked);
 	}
@@ -55,10 +56,10 @@ final class EventCollectionTest extends TestCase
 		};
 
 		$detach = $this->events->attach($type, $hook);
-		new Event(null, $type);
+		emit(new Event(null, $type));
 
 		$detach();
-		new Event(null, $type);
+		emit(new Event(null, $type));
 
 		$this->assertEquals(1, $n);
 	}
@@ -75,10 +76,10 @@ final class EventCollectionTest extends TestCase
 		};
 
 		$detach = $this->events->attach($qualified_type, $hook);
-		new Event($target, $type);
+		emit(new Event($target, $type));
 
 		$detach();
-		new Event($target, $type);
+		emit(new Event($target, $type));
 
 		$this->assertEquals(1, $n);
 	}
@@ -92,10 +93,10 @@ final class EventCollectionTest extends TestCase
 		};
 
 		$detach = $this->events->attach($hook);
-		new BeforePracticeEvent($target);
+		emit(new BeforePracticeEvent($target));
 
 		$detach();
-		new BeforePracticeEvent($target);
+		emit(new BeforePracticeEvent($target));
 
 		$this->assertEquals(1, $n);
 	}
@@ -129,12 +130,12 @@ final class EventCollectionTest extends TestCase
 			}
 		);
 
-		new PracticeEvent($target1);
+		emit(new PracticeEvent($target1));
 
 		$this->assertEquals(0, $invoked_count);
 
-		new PracticeEvent($target0);
-		new PracticeEvent($target1);
+		emit(new PracticeEvent($target0));
+		emit(new PracticeEvent($target1));
 
 		$this->assertEquals(1, $invoked_count);
 	}
@@ -149,12 +150,12 @@ final class EventCollectionTest extends TestCase
 
 		$target = new SampleTarget;
 
-		new PracticeEvent($target);
+		emit(new PracticeEvent($target));
 		$this->assertEquals(1, $invoked_count);
 
-		new PracticeEvent($target);
-		new PracticeEvent($target);
-		new PracticeEvent($target);
+		emit(new PracticeEvent($target));
+		emit(new PracticeEvent($target));
+		emit(new PracticeEvent($target));
 		$this->assertEquals(1, $invoked_count);
 	}
 

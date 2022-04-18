@@ -11,34 +11,57 @@
 
 namespace ICanBoogie;
 
+use Closure;
 use ICanBoogie\Accessor\AccessorTrait;
+use InvalidArgumentException;
+use LogicException;
+use ReflectionException;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
+use ReflectionParameter;
+
+use function basename;
+use function count;
+use function explode;
+use function get_debug_type;
+use function ICanBoogie\Event\qualify_type;
+use function implode;
+use function is_array;
+use function is_callable;
+use function is_object;
+use function is_string;
+use function preg_match;
+use function spl_object_hash;
+use function strpos;
+use function strtr;
+use function substr;
 
 /**
  * Reflection of an event hook.
  *
- * @property \ReflectionFunction|\ReflectionMethod $reflection
  * @property string $type The event type resolved from the event hook parameters.
  *
  * @internal
  */
 class EventHookReflection
 {
+	/**
+	 * @uses get_type
+	 */
 	use AccessorTrait;
 
 	/**
-	 * @var EventHookReflection[]
+	 * @var array<string, EventHookReflection>
+	 *     Where _key_ is a hook key.
 	 */
-	static private $instances = [];
+	static private array $instances = [];
 
 	/**
 	 * Creates instance from an event hook.
 	 *
-	 * @param callable $hook
-	 *
-	 * @return EventHookReflection
-	 *
-	 * @throws \InvalidArgumentException if `$hook` is not a valid event hook.
-	 * @throws \ReflectionException
+	 * @throws InvalidArgumentException if `$hook` is not a valid event hook.
+	 * @throws ReflectionException
 	 */
 	static public function from(callable $hook): self
 	{
@@ -46,42 +69,30 @@ class EventHookReflection
 
 		$key = self::make_key($hook);
 
-		if (isset(self::$instances[$key]))
-		{
-			return self::$instances[$key];
-		}
-
-		return self::$instances[$key] = new self(self::resolve_reflection($hook));
+		return self::$instances[$key] ??= new self(self::resolve_reflection($hook));
 	}
 
 	/**
 	 * Makes key from event hook.
 	 *
-	 * @param callable $hook
-	 *
-	 * @return string
-	 *
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	static private function make_key(callable $hook): string
 	{
-		if (\is_array($hook))
-		{
-			return \implode('#', $hook);
+		if (is_array($hook)) {
+			return implode('#', $hook);
 		}
 
-		if ($hook instanceof \Closure)
-		{
-			$reflection = new \ReflectionFunction($hook);
+		if ($hook instanceof Closure) {
+			$reflection = new ReflectionFunction($hook);
 
-			return $reflection->getFileName() . '#'. $reflection->getStartLine() . '#'. $reflection->getEndLine();
+			return $reflection->getFileName() . '#' . $reflection->getStartLine() . '#' . $reflection->getEndLine();
 		}
 
-		if (\is_object($hook))
-		{
+		if (is_object($hook)) {
 			/* @var $hook object */
 
-			return \spl_object_hash($hook);
+			return spl_object_hash($hook);
 		}
 
 		/* @var $hook string */
@@ -92,70 +103,59 @@ class EventHookReflection
 	/**
 	 * Asserts that the event hook is valid.
 	 *
-	 * @param callable $hook
-	 *
-	 * @throws \InvalidArgumentException if `$hook` is not a valid event hook.
+	 * @throws InvalidArgumentException if `$hook` is not a valid event hook.
 	 */
 	static public function assert_valid(callable $hook): void
 	{
-		if (!\is_callable($hook))
-		{
-			throw new \InvalidArgumentException(format
+		is_callable($hook) or throw new InvalidArgumentException(
+			format
 			(
 				"The event hook must be a callable, %type given: :hook", [
 
-					'type' => \gettype($hook),
+					'type' => get_debug_type($hook),
 					'hook' => $hook
 
 				]
-			));
-		}
+			)
+		);
 	}
 
 	/**
 	 * Asserts that the number of parameters is valid.
 	 *
-	 * @param \ReflectionParameter[] $parameters
+	 * @param ReflectionParameter[] $parameters
 	 */
-	static public function assert_valid_parameters_number(array $parameters)
+	static public function assert_valid_parameters_number(iterable $parameters): void
 	{
 		$n = count($parameters);
 
-		if ($n !== 2)
-		{
-			throw new \LogicException("Invalid number of parameters, expected 2 got $n.");
+		if ($n !== 2) {
+			throw new LogicException("Invalid number of parameters, expected 2 got $n.");
 		}
 	}
 
 	/**
 	 * Resolves hook reflection.
 	 *
-	 * @param callable $hook
-	 *
-	 * @return \ReflectionFunction|\ReflectionMethod
-	 *
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
-	static private function resolve_reflection(callable $hook): \ReflectionFunctionAbstract
+	static private function resolve_reflection(callable $hook): ReflectionFunctionAbstract
 	{
-		if (\is_object($hook))
-		{
-			return new \ReflectionMethod($hook, '__invoke');
+		if (is_object($hook)) {
+			return new ReflectionMethod($hook, '__invoke');
 		}
 
-		if (\is_array($hook))
-		{
-			return new \ReflectionMethod($hook[0], $hook[1]);
+		if (is_array($hook)) {
+			return new ReflectionMethod($hook[0], $hook[1]);
 		}
 
-		if (\is_string($hook) && \strpos($hook, '::'))
-		{
-			[ $class, $method ] = \explode('::', $hook);
+		if (is_string($hook) && strpos($hook, '::')) {
+			[ $class, $method ] = explode('::', $hook);
 
-			return new \ReflectionMethod($class, $method);
+			return new ReflectionMethod($class, $method);
 		}
 
-		return new \ReflectionFunction($hook);
+		return new ReflectionFunction($hook);
 	}
 
 	/**
@@ -163,16 +163,11 @@ class EventHookReflection
 	 *
 	 * Contrary of the {@link ReflectionParameter::getClass()} method, the class does not need to
 	 * be available to be successfully retrieved.
-	 *
-	 * @param \ReflectionParameter $param
-	 *
-	 * @return string|null
 	 */
-	static private function resolve_parameter_class(\ReflectionParameter $param): ?string
+	static private function resolve_parameter_class(ReflectionParameter $param): ?string
 	{
-		if (!\preg_match('/([\w\\\]+)\s\$/', $param, $matches))
-		{
-			throw new \LogicException("The parameter `{$param->name}` is not typed.");
+		if (!preg_match('/([\w\\\]+)\s\$/', $param, $matches)) {
+			throw new LogicException("The parameter `$param->name` is not typed.");
 		}
 
 		return $matches[1];
@@ -181,33 +176,26 @@ class EventHookReflection
 	/**
 	 * Resolves event type from its class.
 	 *
-	 * @param string $class
-	 *
-	 * @return string
+	 * @param class-string $class
 	 */
 	static private function resolve_type_from_class(string $class): string
 	{
-		$base = \basename('/' . \strtr($class, '\\', '/'));
+		$base = basename('/' . strtr($class, '\\', '/'));
 
-		$type = \substr($base, 0, -5);
-		$type = \strpos($base, 'Before') === 0
-			? hyphenate(\substr($type, 6)) . ':before'
+		$type = substr($base, 0, -5);
+		$type = str_starts_with($base, 'Before')
+			? hyphenate(substr($type, 6)) . ':before'
 			: hyphenate($type);
 
-		return \strtr($type, '-', '_');
+		return strtr($type, '-', '_');
 	}
 
-	/**
-	 * @var \ReflectionFunctionAbstract
-	 */
-	private $reflection;
+	private ReflectionFunctionAbstract $reflection;
 
 	/**
 	 * Returns the event type resolved from the event hook parameters.
-	 *
-	 * @return string
 	 */
-	protected function get_type(): string
+	private function get_type(): string
 	{
 		$parameters = $this->reflection->getParameters();
 
@@ -215,10 +203,13 @@ class EventHookReflection
 
 		[ $event, $target ] = $parameters;
 
-		return self::resolve_parameter_class($target) . '::' . self::resolve_type_from_class(self::resolve_parameter_class($event));
+		return qualify_type(
+			self::resolve_type_from_class(self::resolve_parameter_class($event)),
+			self::resolve_parameter_class($target)
+		);
 	}
 
-	private function __construct(\ReflectionFunctionAbstract $reflection)
+	private function __construct(ReflectionFunctionAbstract $reflection)
 	{
 		$this->reflection = $reflection;
 	}

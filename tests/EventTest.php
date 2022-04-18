@@ -14,14 +14,14 @@ namespace Test\ICanBoogie;
 use ICanBoogie\Event;
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
-use ICanBoogie\PropertyIsReserved;
+use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\EventTest\A;
 use Test\ICanBoogie\EventTest\B;
 use Test\ICanBoogie\EventTest\BeforeProcessEvent;
 use Test\ICanBoogie\EventTest\ProcessEvent;
 use Test\ICanBoogie\EventTest\ValidateEvent;
-use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
+
+use function ICanBoogie\emit;
 
 final class EventTest extends TestCase
 {
@@ -29,42 +29,36 @@ final class EventTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->events = $events = new EventCollection;
+		$this->events = $events = new EventCollection();
 
 		EventCollectionProvider::define(function () use ($events) {
 			return $events;
 		});
 	}
 
-	public function test_from()
+	public function test_stop(): void
 	{
-		$target = new SampleTarget;
-		$event = BeforePracticeEvent::from([ 'target' => $target ]);
-
-		$this->assertInstanceOf(BeforePracticeEvent::class, $event);
-	}
-
-	public function test_stop()
-	{
+		$n = 0;
 		$type = 'event-' . uniqid();
 
-		$this->events->attach($type, function (Event $event) {
-			$this->fail("Should not be invoked.");
+		$this->events->attach($type, function (Event $event) use (&$n) {
+			$n++;
 		});
 
 		$this->events->attach($type, function (Event $event) {
 			$event->stop();
 		});
 
-		$event = new Event(null, $type);
+		$event = emit(new Event(null, $type));
 
 		$this->assertTrue($event->stopped);
+		$this->assertEquals(0, $n);
 	}
 
-	public function test_target()
+	public function test_target(): void
 	{
 		$target = new SampleTarget;
-		$event = new Event($target, uniqid());
+		$event = emit(new Event($target, uniqid()));
 
 		$this->assertSame($target, $event->target);
 	}
@@ -126,8 +120,8 @@ final class EventTest extends TestCase
 
 		$initial_array = [ 'one' => 1, 'two' => 2 ];
 
-		$a = new A;
-		$b = new B;
+		$a = new A();
+		$b = new B();
 
 		$a_processed = $a($initial_array);
 		$b_processed = $b($initial_array);
@@ -145,6 +139,8 @@ namespace Test\ICanBoogie\EventTest;
 use Exception;
 use ICanBoogie\Event;
 
+use function ICanBoogie\emit;
+
 class A
 {
 	public function __invoke(array $values): array
@@ -153,7 +149,7 @@ class A
 			throw new Exception("Values validation failed.");
 		}
 
-		new BeforeProcessEvent($this, $values);
+		emit(new BeforeProcessEvent($this, $values));
 
 		return $this->process($values);
 	}
@@ -162,14 +158,14 @@ class A
 	{
 		$valid = false;
 
-		new ValidateEvent($this, $values, $valid);
+		emit(new ValidateEvent($this, $values, $valid));
 
 		return $valid;
 	}
 
 	protected function process(array $values): array
 	{
-		new ProcessEvent($this, $values);
+		emit(new ProcessEvent($this, $values));
 
 		return $values;
 	}

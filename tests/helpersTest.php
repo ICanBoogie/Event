@@ -19,7 +19,7 @@ use function ICanBoogie\get_events;
 
 class helpersTest extends TestCase
 {
-	public function test_get_events()
+	public function test_get_events(): void
 	{
 		EventCollectionProvider::undefine();
 		$events = get_events();
