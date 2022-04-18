@@ -15,10 +15,13 @@ use ICanBoogie\Accessor\AccessorTrait;
 use ReflectionException;
 use Throwable;
 
-use function array_intersect_key;
+use function func_num_args;
 use function get_called_class;
-use function get_class;
+use function ICanBoogie\Event\qualify_type;
 use function microtime;
+use function trigger_error;
+
+use const E_USER_DEPRECATED;
 
 /**
  * An event.
@@ -129,22 +132,21 @@ class Event
 	 *
 	 * @param object|null $target The target of the event.
 	 * @param string $type The event type.
-	 * @param array<string, mixed> $payload Event payload.
 	 *
 	 * @throws PropertyIsReserved in attempt to specify a reserved property with the payload.
 	 */
-	public function __construct(?object $target, string $type, array $payload = [])
+	public function __construct(?object $target, string $type)
 	{
+		if (func_num_args() === 3) {
+			trigger_error("The 'payload' parameter is no longer supported, better write an event class.", E_USER_DEPRECATED);
+		}
+
 		if ($target) {
-			$type = get_class($target) . '::' . $type;
+			$type = qualify_type($type, $target);
 		}
 
 		$this->target = $target;
 		$this->event_type = $type;
-
-		if ($payload) {
-			$this->map_payload($payload);
-		}
 
 		if ($this->no_immediate_fire) {
 			return;
@@ -183,34 +185,6 @@ class Event
 		}
 
 		$this->process_chain($this->chain, $events, $type, $target);
-	}
-
-	/**
-	 * Maps the payload to the event's properties.
-	 *
-	 * @param array<string, mixed> $payload
-	 *
-	 * @throws PropertyIsReserved if a reserved property is used in the payload.
-	 */
-	private function map_payload(array $payload): void
-	{
-		$reserved = array_intersect_key($payload, self::RESERVED);
-
-		if ($reserved) {
-			throw new PropertyIsReserved(key($reserved));
-		}
-
-		foreach ($payload as $property => &$value) {
-			#
-			# we need to set the property to null before we set its value by reference
-			# otherwise if the property doesn't exist the magic method `__get()` is
-			# invoked and throws an exception because we try to get the value of a
-			# property that do not exist.
-			#
-
-			$this->$property = null;
-			$this->$property = &$value;
-		}
 	}
 
 	/**

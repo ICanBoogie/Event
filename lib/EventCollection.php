@@ -301,7 +301,7 @@ class EventCollection implements IteratorAggregate
 	public function get_hooks(string $type): array
 	{
 		if (!strpos($type, '::')) {
-			return isset($this->hooks[$type]) ? $this->hooks[$type] : [];
+			return $this->hooks[$type] ?? [];
 		}
 
 		if (isset($this->consolidated_hooks[$type])) {
