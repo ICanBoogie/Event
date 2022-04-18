@@ -15,8 +15,8 @@ use ICanBoogie\Event;
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
 use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\EventTest\A;
-use Test\ICanBoogie\EventTest\B;
+use Test\ICanBoogie\EventTest\SampleA;
+use Test\ICanBoogie\EventTest\SampleB;
 use Test\ICanBoogie\EventTest\BeforeProcessEvent;
 use Test\ICanBoogie\EventTest\ProcessEvent;
 use Test\ICanBoogie\EventTest\ValidateEvent;
@@ -29,11 +29,17 @@ final class EventTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->events = $events = new EventCollection();
+		$this->events = new EventCollection();
 
-		EventCollectionProvider::define(function () use ($events) {
-			return $events;
-		});
+		EventCollectionProvider::define(fn() => $this->events);
+	}
+
+	public function test_qualify(): void
+	{
+		$this->assertEquals(
+			"Test\ICanBoogie\SampleTarget::process:before",
+			BeforeProcessEvent::qualify(SampleTarget::class)
+		);
 	}
 
 	public function test_stop(): void
@@ -66,19 +72,19 @@ final class EventTest extends TestCase
 	/**
 	 * The big test, with reflection and chains.
 	 */
-	public function testEventHooks()
+	public function testEventHooks(): void
 	{
 		/*
 		 * The A::validate() method would return false if the following hook wasn't called.
 		 */
-		$this->events->attach(function (ValidateEvent $event, A $target) {
+		$this->events->attach(function (ValidateEvent $event, SampleA $target) {
 			$event->valid = true;
 		});
 
 		/*
 		 * We add "three" to the values of A instances before they are processed.
 		 */
-		$this->events->attach(function (BeforeProcessEvent $event, A $target) {
+		$this->events->attach(function (BeforeProcessEvent $event, SampleA $target) {
 			$event->values['three'] = 3;
 		});
 
@@ -88,7 +94,7 @@ final class EventTest extends TestCase
 		 *
 		 * Hooks pushed by the chain() method are executed after the even chain was processed.
 		 */
-		$this->events->attach(function (BeforeProcessEvent $event, B $target) {
+		$this->events->attach(function (BeforeProcessEvent $event, SampleB $target) {
 			$event->chain(function ($event) {
 				$event->values['four'] = 4;
 			});
@@ -97,7 +103,7 @@ final class EventTest extends TestCase
 		/*
 		 * 10 is added to all processed values of A instances.
 		 */
-		$this->events->attach(function (ProcessEvent $event, A $target) {
+		$this->events->attach(function (ProcessEvent $event, SampleA $target) {
 			array_walk($event->values, function (&$v) {
 				$v += 10;
 			});
@@ -110,7 +116,7 @@ final class EventTest extends TestCase
 		 * The stop() method of the event breaks the event chain, so our hook will be the last
 		 * called in the chain.
 		 */
-		$this->events->attach(function (ProcessEvent $event, B $target) {
+		$this->events->attach(function (ProcessEvent $event, SampleB $target) {
 			array_walk($event->values, function (&$v) {
 				$v *= 10;
 			});
@@ -120,8 +126,8 @@ final class EventTest extends TestCase
 
 		$initial_array = [ 'one' => 1, 'two' => 2 ];
 
-		$a = new A();
-		$b = new B();
+		$a = new SampleA();
+		$b = new SampleB();
 
 		$a_processed = $a($initial_array);
 		$b_processed = $b($initial_array);
@@ -131,103 +137,5 @@ final class EventTest extends TestCase
 
 		$this->assertEquals([ 'one' => 10, 'two' => 20, 'three' => 30, 'four' => 40, 'five' => 50 ], $b_processed);
 		$this->assertEquals('one,two,three,four,five', implode(',', array_keys($b_processed)));
-	}
-}
-
-namespace Test\ICanBoogie\EventTest;
-
-use Exception;
-use ICanBoogie\Event;
-
-use function ICanBoogie\emit;
-
-class A
-{
-	public function __invoke(array $values): array
-	{
-		if (!$this->validate($values)) {
-			throw new Exception("Values validation failed.");
-		}
-
-		emit(new BeforeProcessEvent($this, $values));
-
-		return $this->process($values);
-	}
-
-	protected function validate(array $values): bool
-	{
-		$valid = false;
-
-		emit(new ValidateEvent($this, $values, $valid));
-
-		return $valid;
-	}
-
-	protected function process(array $values): array
-	{
-		emit(new ProcessEvent($this, $values));
-
-		return $values;
-	}
-}
-
-class B extends A
-{
-	protected function process(array $values): array
-	{
-		return parent::process($values + [ 'five' => 5 ]);
-	}
-}
-
-/**
- * Event class for the `Test\A::validate` event.
- */
-class ValidateEvent extends Event
-{
-	public const TYPE = 'validate';
-
-	public array $values;
-	public bool $valid;
-
-	public function __construct(A $target, array $values, bool &$valid)
-	{
-		$this->values = $values;
-		$this->valid = &$valid;
-
-		parent::__construct($target, self::TYPE);
-	}
-}
-
-/**
- * Event class for the `Test\A::process:before` event.
- */
-class BeforeProcessEvent extends Event
-{
-	public const TYPE = 'process:before';
-
-	public array $values;
-
-	public function __construct(A $target, array &$values)
-	{
-		$this->values = &$values;
-
-		parent::__construct($target, self::TYPE);
-	}
-}
-
-/**
- * Event class for the `Test\A::process` event.
- */
-class ProcessEvent extends Event
-{
-	public const TYPE = 'process';
-
-	public array $values;
-
-	public function __construct(A $target, array &$values)
-	{
-		$this->values = &$values;
-
-		parent::__construct($target, self::TYPE);
 	}
 }

@@ -15,6 +15,7 @@ use ICanBoogie\Accessor\AccessorTrait;
 
 use function func_num_args;
 use function ICanBoogie\Event\qualify_type;
+use function is_object;
 use function trigger_error;
 
 use const E_USER_DEPRECATED;
@@ -30,6 +31,23 @@ class Event
 	 * @uses get_stopped
 	 */
 	use AccessorTrait;
+
+	/**
+	 * @param object|class-string $target
+	 *
+	 * @return string
+	 *     A qualified event type made of the target class and the unqualified event type.
+	 *     e.g. "Exception::recover"
+	 */
+	public static function qualify(string|object $target): string
+	{
+		if (is_object($target)) {
+			$target = $target::class;
+		}
+
+		// @phpstan-ignore-next-line
+		return qualify_type($target, static::TYPE);
+	}
 
 	/**
 	 * The object the event is dispatched on.
