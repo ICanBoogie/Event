@@ -72,5 +72,19 @@
     }
     ```
 
+- Callables without targets are not supported for attachment:
+
+    ```php
+    $events->attach('count', function(CountEvent $event): void {
+        // …
+    }
+    ```
+
+    ```php
+    $events->attach(function(CountEvent $event): void {
+        // …
+    }
+    ```
+
 - Dropped `Event::$used` and `Event::$used_by` properties. The information is still available in the
   profiler.

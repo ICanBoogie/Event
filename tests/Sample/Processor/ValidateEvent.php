@@ -9,19 +9,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie\Sample\Processor;
 
 use ICanBoogie\Event;
+use Test\ICanBoogie\Sample\Processor;
 
-/**
- * Event class for the `Test\A::validate` event.
- */
 class ValidateEvent extends Event
 {
     public array $values;
     public bool $valid;
 
-    public function __construct(SampleA $target, array $values, bool &$valid)
+    public function __construct(Processor $target, array $values, bool &$valid)
     {
         $this->values = $values;
         $this->valid = &$valid;

@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\SampleTarget;
+namespace Test\ICanBoogie\Sample\SampleTarget;
 
 use ICanBoogie\Event;
-use Test\ICanBoogie\SampleTarget;
+use Test\ICanBoogie\Sample\SampleTarget;
 
-class PracticeEvent extends Event
+class ActionEvent extends Event
 {
 	public function __construct(SampleTarget $target)
 	{

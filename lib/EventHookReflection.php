@@ -12,7 +12,6 @@
 namespace ICanBoogie;
 
 use Closure;
-use ICanBoogie\Accessor\AccessorTrait;
 use InvalidArgumentException;
 use LogicException;
 use ReflectionException;
@@ -120,8 +119,12 @@ final class EventHookReflection
 	{
 		$n = count($parameters);
 
-		if ($n !== 2) {
-			throw new LogicException("Invalid number of parameters, expected 2 got $n.");
+		if ($n < 1) {
+			throw new LogicException("Expecting at least 1 parameter got none.");
+		}
+
+		if ($n > 2) {
+			throw new LogicException("Expecting at most 2 parameters got $n.");
 		}
 	}
 
@@ -189,20 +192,27 @@ final class EventHookReflection
 
 		self::assert_valid_parameters_number($parameters);
 
-		[ $event_param, $target_param ] = $parameters;
+		[ $event_param, $target_param ] = $parameters + [ 1 => null ];
 
 		try {
-			$event = self::resolve_parameter_class($event_param);
+			$event_class = self::resolve_parameter_class($event_param);
 		} catch (LogicException $e) {
-			throw new LogicException("The parameter `$event_param->name` must be an instance of `ICanBoogie\Event`.");
+			throw new LogicException(
+				"The parameter `$event_param->name` must be an instance of `ICanBoogie\Event`.",
+				previous: $e
+			);
 		}
 
-		assert(is_subclass_of($event, Event::class, true));
+		assert(is_subclass_of($event_class, Event::class, true));
+
+		if (!$target_param) {
+			return $event_class;
+		}
 
 		$target_class = self::resolve_parameter_class($target_param);
 
-		/** @var Event $event */
+		/** @var Event $event_class */
 
-		return $event::for($target_class);
+		return $event_class::for($target_class);
 	}
 }

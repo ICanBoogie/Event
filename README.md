@@ -197,6 +197,14 @@ $detach = $events->attach(function(Operation\BeforeProcessEvent $event, Operatio
 
 });
 
+# or, if the event doesn't have a target
+
+$detach = $events->attach(function(Operation\BeforeProcessEvent $event) {
+
+	// …
+
+});
+
 $detach(); // You can detach if you no longer want to listen.
 ```
 
@@ -283,15 +291,15 @@ namespace ICanBoogie;
 
 $n = 0;
 
-$events->once('flash', function() use(&$n) {
+$events->once(MyEvent $event, function() use(&$n) {
 
 	$n++;
 
 });
 
-emit(new Event(null, 'flash'));
-emit(new Event(null, 'flash'));
-emit(new Event(null, 'flash'));
+emit(new MyEvent());
+emit(new MyEvent());
+emit(new MyEvent());
 
 echo $n;   // 1
 ```
@@ -325,26 +333,24 @@ namespace ICanBoogie;
 
 class CountEvent extends Event
 {
-    public const TYPE = 'count';
-
 	public function __construct(
-	    public int $count
+	    public string $count = "0"
     ) {
-		parent::__construct(null, self::TYPE);
+		parent::__construct();
 	}
 }
 
 /* @var $events EventCollection */
 
-$events->attach('count', function(CountEvent $event): void {
+$events->attach(function(CountEvent $event): void {
 
-	$event->count .= 2;
+	$event->count .= "2";
 
 });
 
-$events->attach('count', function(CountEvent $event): void {
+$events->attach(function(CountEvent $event): void {
 
-	$event->count .= 1;
+	$event->count .= "1";
 
 });
 
@@ -352,7 +358,7 @@ $events->attach('count', function(CountEvent $event): void {
 
 	$event->chain(function(CountEvent $event) {
 
-		$event->count .= 3;
+		$event->count .= "3";
 
 	});
 });

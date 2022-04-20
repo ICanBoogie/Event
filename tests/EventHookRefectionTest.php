@@ -14,15 +14,18 @@ namespace Test\ICanBoogie;
 use ICanBoogie\EventHookReflection;
 use LogicException;
 use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\EventTest\CallableInstance;
-use Test\ICanBoogie\EventTest\Hooks;
-use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
-use Test\ICanBoogie\SampleTarget\PracticeEvent;
+use Test\ICanBoogie\Sample\SampleCallableWithoutTarget;
+use Test\ICanBoogie\Sample\SampleCallableWithTarget;
+use Test\ICanBoogie\Sample\SampleEvent;
+use Test\ICanBoogie\Sample\SampleHooks;
+use Test\ICanBoogie\Sample\SampleTarget;
+use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
+use Test\ICanBoogie\Sample\SampleTarget\ActionEvent;
 
 final class EventHookRefectionTest extends TestCase
 {
 	/**
-	 * @dataProvider provide_event_hooks
+	 * @dataProvider provide_event_hooks_with_target
 	 */
 	public function test_valid(mixed $hook)
 	{
@@ -33,7 +36,7 @@ final class EventHookRefectionTest extends TestCase
 
 	public function test_from(): void
 	{
-		$hook = function (PracticeEvent $event, SampleTarget $target) {
+		$hook = function (ActionEvent $event, SampleTarget $target) {
 		};
 
 		$reflection = EventHookReflection::from($hook);
@@ -41,38 +44,57 @@ final class EventHookRefectionTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provide_event_hooks
+	 * @dataProvider provide_event_hooks_with_target
 	 */
-	public function test_type(mixed $hook): void
+	public function test_type_with_target(mixed $hook): void
 	{
 		$this->assertEquals(
-			BeforePracticeEvent::for(SampleTarget::class),
+			BeforeActionEvent::for(SampleTarget::class),
 			EventHookReflection::from($hook)->type
 		);
 	}
 
-	public function provide_event_hooks(): array
+	public function provide_event_hooks_with_target(): array
 	{
 		return [
 
-			[ before_target_practice(...) ],
-			[ Hooks::class . '::before_target_practice' ],
-			[ [ Hooks::class, 'before_target_practice' ] ],
+			[ hook_with_target(...) ],
+			[ SampleHooks::class . '::with_target' ],
+			[ [ SampleHooks::class, 'with_target' ] ],
 			[
-				function (BeforePracticeEvent $event, SampleTarget $target) {
+				function (BeforeActionEvent $event, SampleTarget $target) {
 				}
 			],
-			[ new CallableInstance ]
+			[ new SampleCallableWithTarget() ]
 
 		];
 	}
 
-	public function test_invalid_parameters_number(): void
+	/**
+	 * @dataProvider provide_event_hooks_without_target
+	 */
+	public function test_type_without_target(mixed $hook): void
 	{
-		$this->expectException(LogicException::class);
-		$this->expectExceptionMessageMatches("/Invalid number of parameters/");
-		$this->assertNull(EventHookReflection::from(function () {
-		}));
+		$this->assertEquals(
+			SampleEvent::class,
+			EventHookReflection::from($hook)->type
+		);
+	}
+
+	public function provide_event_hooks_without_target(): array
+	{
+		return [
+
+			[ hook_without_target(...) ],
+			[ SampleHooks::class . '::without_target' ],
+			[ [ SampleHooks::class, 'without_target' ] ],
+			[
+				function (SampleEvent $event) {
+				}
+			],
+			[ new SampleCallableWithoutTarget() ]
+
+		];
 	}
 
 	public function test_invalid_parameters(): void
@@ -82,8 +104,28 @@ final class EventHookRefectionTest extends TestCase
 		$this->assertNull(EventHookReflection::from(function ($a, SampleTarget $b) {
 		}));
 	}
+
+	public function test_too_few_parameters(): void
+	{
+		$this->expectException(LogicException::class);
+		$this->expectExceptionMessage("Expecting at least 1 parameter got none.");
+		$this->assertNull(EventHookReflection::from(function () {
+		}));
+	}
+
+	public function test_too_few_many_parameters(): void
+	{
+		$this->expectException(LogicException::class);
+		$this->expectExceptionMessage("Expecting at most 2 parameters got 3.");
+		$this->assertNull(EventHookReflection::from(function ($a, $b, $c) {
+		}));
+	}
 }
 
-function before_target_practice(BeforePracticeEvent $event, SampleTarget $target)
+function hook_with_target(BeforeActionEvent $event, SampleTarget $target)
+{
+}
+
+function hook_without_target(SampleEvent $event)
 {
 }

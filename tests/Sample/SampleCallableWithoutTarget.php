@@ -9,14 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie\Sample;
 
-use Test\ICanBoogie\SampleTarget;
-use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
-
-class Hooks
+class SampleCallableWithoutTarget
 {
-	static public function before_target_practice(BeforePracticeEvent $event, SampleTarget $target): void
+	public function __invoke(SampleEvent $event): void
 	{
 
 	}

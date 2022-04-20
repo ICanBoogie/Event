@@ -9,15 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie\Sample\Processor;
 
 use ICanBoogie\Event;
+use Test\ICanBoogie\Sample\Processor;
 
 class BeforeProcessEvent extends Event
 {
     public array $values;
 
-    public function __construct(SampleA $target, array &$values)
+    public function __construct(Processor $target, array &$values)
     {
         $this->values = &$values;
 

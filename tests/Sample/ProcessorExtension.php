@@ -9,15 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie\Sample;
 
-use Test\ICanBoogie\SampleTarget;
-use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
-
-class CallableInstance
+class ProcessorExtension extends Processor
 {
-	public function __invoke(BeforePracticeEvent $event, SampleTarget $target): void
+	protected function process(array $values): array
 	{
-
+		return parent::process($values + [ 'five' => 5 ]);
 	}
 }

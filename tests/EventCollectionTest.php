@@ -15,8 +15,10 @@ use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
 use LogicException;
 use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
-use Test\ICanBoogie\SampleTarget\PracticeEvent;
+use Test\ICanBoogie\Sample\SampleEvent;
+use Test\ICanBoogie\Sample\SampleTarget;
+use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
+use Test\ICanBoogie\Sample\SampleTarget\ActionEvent;
 use Traversable;
 
 use function ICanBoogie\emit;
@@ -67,16 +69,16 @@ final class EventCollectionTest extends TestCase
 		$target = new SampleTarget();
 
 		$detach = $this->events->attach(
-			SampleEvent::for($target),
-			function (SampleEvent $event, SampleTarget $t) use ($target, &$n) {
+			ActionEvent::for($target),
+			function (ActionEvent $event, SampleTarget $t) use ($target, &$n) {
 				$n++;
 				$this->assertSame($target, $t);
 			}
 		);
-		emit(new SampleEvent($target));
+		emit(new ActionEvent($target));
 
 		$detach();
-		emit(new SampleEvent($target));
+		emit(new ActionEvent($target));
 
 		$this->assertEquals(1, $n);
 	}
@@ -86,13 +88,13 @@ final class EventCollectionTest extends TestCase
 		$n = 0;
 		$target = new SampleTarget();
 
-		$detach = $this->events->attach(function (BeforePracticeEvent $event, SampleTarget $target) use (&$n) {
+		$detach = $this->events->attach(function (BeforeActionEvent $event, SampleTarget $target) use (&$n) {
 			$n++;
 		});
-		emit(new BeforePracticeEvent($target));
+		emit(new BeforeActionEvent($target));
 
 		$detach();
-		emit(new BeforePracticeEvent($target));
+		emit(new BeforeActionEvent($target));
 
 		$this->assertEquals(1, $n);
 	}
@@ -101,8 +103,8 @@ final class EventCollectionTest extends TestCase
 	{
 		$this->expectException(LogicException::class);
 		$this->events->detach(
-			BeforePracticeEvent::for(SampleTarget::class),
-			function (BeforePracticeEvent $event, SampleTarget $target) {
+			BeforeActionEvent::for(SampleTarget::class),
+			function (BeforeActionEvent $event, SampleTarget $target) {
 			}
 		);
 	}
@@ -112,26 +114,26 @@ final class EventCollectionTest extends TestCase
 	 */
 	public function test_attach_to(): void
 	{
-		$target0 = new SampleTarget;
+		$target0 = new SampleTarget();
 		$target1 = clone $target0;
 
 		$invoked_count = 0;
 
 		$this->events->attach_to(
 			$target0,
-			function (PracticeEvent $event, SampleTarget $target) use ($target0, &$invoked_count) {
+			function (ActionEvent $event, SampleTarget $target) use ($target0, &$invoked_count) {
 				$this->assertSame($target0, $target);
 
 				$invoked_count++;
 			}
 		);
 
-		emit(new PracticeEvent($target1));
+		emit(new ActionEvent($target1));
 
 		$this->assertEquals(0, $invoked_count);
 
-		emit(new PracticeEvent($target0));
-		emit(new PracticeEvent($target1));
+		emit(new ActionEvent($target0));
+		emit(new ActionEvent($target1));
 
 		$this->assertEquals(1, $invoked_count);
 	}
@@ -140,18 +142,18 @@ final class EventCollectionTest extends TestCase
 	{
 		$invoked_count = 0;
 
-		$this->events->once(function (PracticeEvent $event, SampleTarget $target) use (&$invoked_count) {
+		$this->events->once(function (ActionEvent $event, SampleTarget $target) use (&$invoked_count) {
 			$invoked_count++;
 		});
 
-		$target = new SampleTarget;
+		$target = new SampleTarget();
 
-		emit(new PracticeEvent($target));
+		emit(new ActionEvent($target));
 		$this->assertEquals(1, $invoked_count);
 
-		emit(new PracticeEvent($target));
-		emit(new PracticeEvent($target));
-		emit(new PracticeEvent($target));
+		emit(new ActionEvent($target));
+		emit(new ActionEvent($target));
+		emit(new ActionEvent($target));
 		$this->assertEquals(1, $invoked_count);
 	}
 

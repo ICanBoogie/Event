@@ -9,13 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie\Sample;
 
 use Exception;
+use Test\ICanBoogie\Sample\Processor\BeforeProcessEvent;
+use Test\ICanBoogie\Sample\Processor\ProcessEvent;
+use Test\ICanBoogie\Sample\Processor\ValidateEvent;
 
 use function ICanBoogie\emit;
 
-class SampleA
+class Processor
 {
     public function __invoke(array $values): array
     {

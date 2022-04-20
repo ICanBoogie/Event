@@ -9,10 +9,14 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie;
+namespace Test\ICanBoogie\Sample;
 
-use ICanBoogie\Event;
+use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
 
-class SampleEvent extends Event
+class SampleCallableWithTarget
 {
+	public function __invoke(BeforeActionEvent $event, SampleTarget $target): void
+	{
+
+	}
 }

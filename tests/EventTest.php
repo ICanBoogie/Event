@@ -11,15 +11,16 @@
 
 namespace Test\ICanBoogie;
 
-use ICanBoogie\Event;
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
 use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\EventTest\SampleA;
-use Test\ICanBoogie\EventTest\SampleB;
-use Test\ICanBoogie\EventTest\BeforeProcessEvent;
-use Test\ICanBoogie\EventTest\ProcessEvent;
-use Test\ICanBoogie\EventTest\ValidateEvent;
+use Test\ICanBoogie\Sample\Processor;
+use Test\ICanBoogie\Sample\Processor\BeforeProcessEvent;
+use Test\ICanBoogie\Sample\Processor\ProcessEvent;
+use Test\ICanBoogie\Sample\Processor\ValidateEvent;
+use Test\ICanBoogie\Sample\ProcessorExtension;
+use Test\ICanBoogie\Sample\SampleEvent;
+use Test\ICanBoogie\Sample\SampleTarget;
 
 use function ICanBoogie\emit;
 
@@ -37,7 +38,7 @@ final class EventTest extends TestCase
 	public function test_for(): void
 	{
 		$this->assertEquals(
-			"Test\ICanBoogie\SampleTarget::Test\ICanBoogie\EventTest\BeforeProcessEvent",
+			"Test\ICanBoogie\Sample\SampleTarget::Test\ICanBoogie\Sample\Processor\BeforeProcessEvent",
 			BeforeProcessEvent::for(SampleTarget::class)
 		);
 	}
@@ -76,14 +77,14 @@ final class EventTest extends TestCase
 		/*
 		 * The A::validate() method would return false if the following hook wasn't called.
 		 */
-		$this->events->attach(function (ValidateEvent $event, SampleA $target) {
+		$this->events->attach(function (ValidateEvent $event, Processor $target) {
 			$event->valid = true;
 		});
 
 		/*
 		 * We add "three" to the values of A instances before they are processed.
 		 */
-		$this->events->attach(function (BeforeProcessEvent $event, SampleA $target) {
+		$this->events->attach(function (BeforeProcessEvent $event, Processor $target) {
 			$event->values['three'] = 3;
 		});
 
@@ -93,7 +94,7 @@ final class EventTest extends TestCase
 		 *
 		 * Hooks pushed by the chain() method are executed after the even chain was processed.
 		 */
-		$this->events->attach(function (BeforeProcessEvent $event, SampleB $target) {
+		$this->events->attach(function (BeforeProcessEvent $event, ProcessorExtension $target) {
 			$event->chain(function ($event) {
 				$event->values['four'] = 4;
 			});
@@ -102,7 +103,7 @@ final class EventTest extends TestCase
 		/*
 		 * 10 is added to all processed values of A instances.
 		 */
-		$this->events->attach(function (ProcessEvent $event, SampleA $target) {
+		$this->events->attach(function (ProcessEvent $event, Processor $target) {
 			array_walk($event->values, function (&$v) {
 				$v += 10;
 			});
@@ -115,7 +116,7 @@ final class EventTest extends TestCase
 		 * The stop() method of the event breaks the event chain, so our hook will be the last
 		 * called in the chain.
 		 */
-		$this->events->attach(function (ProcessEvent $event, SampleB $target) {
+		$this->events->attach(function (ProcessEvent $event, ProcessorExtension $target) {
 			array_walk($event->values, function (&$v) {
 				$v *= 10;
 			});
@@ -125,8 +126,8 @@ final class EventTest extends TestCase
 
 		$initial_array = [ 'one' => 1, 'two' => 2 ];
 
-		$a = new SampleA();
-		$b = new SampleB();
+		$a = new Processor();
+		$b = new ProcessorExtension();
 
 		$a_processed = $a($initial_array);
 		$b_processed = $b($initial_array);
