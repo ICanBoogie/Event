@@ -12,13 +12,12 @@
 namespace Test\ICanBoogie;
 
 use ICanBoogie\EventHookReflection;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\EventTest\CallableInstance;
 use Test\ICanBoogie\EventTest\Hooks;
 use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
 use Test\ICanBoogie\SampleTarget\PracticeEvent;
-
-use function ICanBoogie\Event\qualify_type;
 
 final class EventHookRefectionTest extends TestCase
 {
@@ -32,7 +31,7 @@ final class EventHookRefectionTest extends TestCase
 		$this->assertTrue(true);
 	}
 
-	public function test_from()
+	public function test_from(): void
 	{
 		$hook = function (PracticeEvent $event, SampleTarget $target) {
 		};
@@ -47,7 +46,7 @@ final class EventHookRefectionTest extends TestCase
 	public function test_type(mixed $hook): void
 	{
 		$this->assertEquals(
-			qualify_type(SampleTarget::class, BeforePracticeEvent::TYPE),
+			BeforePracticeEvent::for(SampleTarget::class),
 			EventHookReflection::from($hook)->type
 		);
 	}
@@ -70,22 +69,21 @@ final class EventHookRefectionTest extends TestCase
 
 	public function test_invalid_parameters_number(): void
 	{
-		$reflection = EventHookReflection::from(function () {
-		});
-		$this->expectException(\LogicException::class);
-		$reflection->type;
+		$this->expectException(LogicException::class);
+		$this->expectExceptionMessageMatches("/Invalid number of parameters/");
+		$this->assertNull(EventHookReflection::from(function () {
+		}));
 	}
 
 	public function test_invalid_parameters(): void
 	{
-		$reflection = EventHookReflection::from(function ($a, SampleTarget $b) {
-		});
-		$this->expectException(\LogicException::class);
-		$reflection->type;
+		$this->expectException(LogicException::class);
+		$this->expectExceptionMessage("The parameter `a` must be an instance of `ICanBoogie\\Event`.");
+		$this->assertNull(EventHookReflection::from(function ($a, SampleTarget $b) {
+		}));
 	}
 }
 
 function before_target_practice(BeforePracticeEvent $event, SampleTarget $target)
 {
-
 }

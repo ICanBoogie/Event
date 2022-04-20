@@ -11,16 +11,15 @@
 
 namespace Test\ICanBoogie;
 
-use ICanBoogie\Event;
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\SampleTarget\BeforePracticeEvent;
 use Test\ICanBoogie\SampleTarget\PracticeEvent;
 use Traversable;
 
 use function ICanBoogie\emit;
-use function ICanBoogie\Event\qualify_type;
 
 final class EventCollectionTest extends TestCase
 {
@@ -33,66 +32,63 @@ final class EventCollectionTest extends TestCase
 		EventCollectionProvider::define(fn(): EventCollection => $events);
 	}
 
-	public function test_generic_event(): void
+	public function test_event_without_target(): void
 	{
-		$type = 'type' . uniqid();
 		$invoked = false;
 
-		$this->events->attach($type, function (Event $event) use (&$invoked) {
+		$this->events->attach(SampleEvent::class, function (SampleEvent $event) use (&$invoked) {
 			$invoked = true;
 		});
 
-		emit(new Event(null, $type));
+		emit(new SampleEvent());
 
 		$this->assertTrue($invoked);
 	}
 
-	public function test_detach_generic_event_hook(): void
+	public function test_detach_without_target(): void
 	{
 		$n = 0;
-		$type = 'type' . uniqid();
-		$hook = function (Event $event) use (&$n) {
+		$hook = function (SampleEvent $event) use (&$n) {
 			$n++;
 		};
 
-		$detach = $this->events->attach($type, $hook);
-		emit(new Event(null, $type));
+		$detach = $this->events->attach(SampleEvent::class, $hook);
+		emit(new SampleEvent());
 
 		$detach();
-		emit(new Event(null, $type));
+		emit(new SampleEvent());
 
 		$this->assertEquals(1, $n);
 	}
 
-	public function test_detach_event_hook(): void
+	public function test_detach_with_target(): void
 	{
 		$n = 0;
 		$target = new SampleTarget();
-		$type = 'type' . uniqid();
-		$qualified_type = qualify_type($target, $type);
-		$hook = function (Event $event, SampleTarget $t) use ($target, &$n) {
-			$n++;
-			$this->assertSame($target, $t);
-		};
 
-		$detach = $this->events->attach($qualified_type, $hook);
-		emit(new Event($target, $type));
+		$detach = $this->events->attach(
+			SampleEvent::for($target),
+			function (SampleEvent $event, SampleTarget $t) use ($target, &$n) {
+				$n++;
+				$this->assertSame($target, $t);
+			}
+		);
+		emit(new SampleEvent($target));
 
 		$detach();
-		emit(new Event($target, $type));
+		emit(new SampleEvent($target));
 
 		$this->assertEquals(1, $n);
 	}
 
-	public function test_detach_typed_event_hook(): void
+	public function test_detach_with_auto_hook(): void
 	{
 		$n = 0;
 		$target = new SampleTarget();
-		$hook = function (BeforePracticeEvent $event, SampleTarget $target) use (&$n) {
-			$n++;
-		};
 
-		$detach = $this->events->attach($hook);
+		$detach = $this->events->attach(function (BeforePracticeEvent $event, SampleTarget $target) use (&$n) {
+			$n++;
+		});
 		emit(new BeforePracticeEvent($target));
 
 		$detach();
@@ -103,16 +99,16 @@ final class EventCollectionTest extends TestCase
 
 	public function test_detach_unattached_hook(): void
 	{
-		$this->expectException(\LogicException::class);
+		$this->expectException(LogicException::class);
 		$this->events->detach(
-			SampleTarget::class . '::practice:before',
+			BeforePracticeEvent::for(SampleTarget::class),
 			function (BeforePracticeEvent $event, SampleTarget $target) {
 			}
 		);
 	}
 
 	/**
-	 * @depends test_detach_typed_event_hook
+	 * @depends test_detach_with_auto_hook
 	 */
 	public function test_attach_to(): void
 	{

@@ -16,10 +16,8 @@ use Test\ICanBoogie\SampleTarget;
 
 class BeforePracticeEvent extends Event
 {
-	public const TYPE = 'practice:before';
-
 	public function __construct(SampleTarget $target)
 	{
-		parent::__construct($target, self::TYPE);
+		parent::__construct($target);
 	}
 }

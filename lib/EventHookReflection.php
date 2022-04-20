@@ -21,36 +21,27 @@ use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionParameter;
 
-use function basename;
+use function assert;
 use function count;
 use function explode;
 use function get_debug_type;
-use function ICanBoogie\Event\qualify_type;
 use function implode;
 use function is_array;
 use function is_callable;
 use function is_object;
 use function is_string;
+use function is_subclass_of;
 use function preg_match;
 use function spl_object_hash;
 use function strpos;
-use function strtr;
-use function substr;
 
 /**
  * Reflection of an event hook.
  *
- * @property string $type The event type resolved from the event hook parameters.
- *
  * @internal
  */
-class EventHookReflection
+final class EventHookReflection
 {
-	/**
-	 * @uses get_type
-	 */
-	use AccessorTrait;
-
 	/**
 	 * @var array<string, EventHookReflection>
 	 *     Where _key_ is a hook key.
@@ -163,54 +154,55 @@ class EventHookReflection
 	 *
 	 * Contrary of the {@link ReflectionParameter::getClass()} method, the class does not need to
 	 * be available to be successfully retrieved.
+	 *
+	 * @return class-string
 	 */
-	static private function resolve_parameter_class(ReflectionParameter $param): ?string
+	static private function resolve_parameter_class(ReflectionParameter $param): string
 	{
 		if (!preg_match('/([\w\\\]+)\s\$/', $param, $matches)) {
 			throw new LogicException("The parameter `$param->name` is not typed.");
 		}
 
-		return $matches[1];
-	}
-
-	/**
-	 * Resolves event type from its class.
-	 *
-	 * @param class-string $class
-	 */
-	static private function resolve_type_from_class(string $class): string
-	{
-		$base = basename('/' . strtr($class, '\\', '/'));
-
-		$type = substr($base, 0, -5);
-		$type = str_starts_with($base, 'Before')
-			? hyphenate(substr($type, 6)) . ':before'
-			: hyphenate($type);
-
-		return strtr($type, '-', '_');
+		return $matches[1]
+			?? throw new LogicException("Unable to resolve class from parameters `$param->name");
 	}
 
 	private ReflectionFunctionAbstract $reflection;
 
 	/**
+	 * @var string The event type resolved from the event hook parameters.
+	 */
+	public readonly string $type;
+
+	private function __construct(ReflectionFunctionAbstract $reflection)
+	{
+		$this->reflection = $reflection;
+		$this->type = $this->resolve_type();
+	}
+
+	/**
 	 * Returns the event type resolved from the event hook parameters.
 	 */
-	private function get_type(): string
+	private function resolve_type(): string
 	{
 		$parameters = $this->reflection->getParameters();
 
 		self::assert_valid_parameters_number($parameters);
 
-		[ $event, $target ] = $parameters;
+		[ $event_param, $target_param ] = $parameters;
 
-		return qualify_type(
-			self::resolve_parameter_class($target),
-			self::resolve_type_from_class(self::resolve_parameter_class($event))
-		);
-	}
+		try {
+			$event = self::resolve_parameter_class($event_param);
+		} catch (LogicException $e) {
+			throw new LogicException("The parameter `$event_param->name` must be an instance of `ICanBoogie\Event`.");
+		}
 
-	private function __construct(ReflectionFunctionAbstract $reflection)
-	{
-		$this->reflection = $reflection;
+		assert(is_subclass_of($event, Event::class, true));
+
+		$target_class = self::resolve_parameter_class($target_param);
+
+		/** @var Event $event */
+
+		return $event::for($target_class);
 	}
 }

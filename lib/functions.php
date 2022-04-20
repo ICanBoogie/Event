@@ -48,24 +48,3 @@ function emit(Event $event): Event
 {
 	return get_events()->emit($event);
 }
-
-namespace ICanBoogie\Event;
-
-use function is_object;
-
-/**
- * @param object|class-string $target
- * @param string $type An unqualified event type e.g. "recover"
- *
- * @return string
- *     A qualified event type made of the target class and the unqualified event type.
- *     e.g. "Exception::recover"
- */
-function qualify_type(object|string $target, string $type): string
-{
-	if (is_object($target)) {
-		$target = $target::class;
-	}
-
-	return "$target::$type";
-}

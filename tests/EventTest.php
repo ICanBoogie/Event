@@ -34,28 +34,27 @@ final class EventTest extends TestCase
 		EventCollectionProvider::define(fn() => $this->events);
 	}
 
-	public function test_qualify(): void
+	public function test_for(): void
 	{
 		$this->assertEquals(
-			"Test\ICanBoogie\SampleTarget::process:before",
-			BeforeProcessEvent::qualify(SampleTarget::class)
+			"Test\ICanBoogie\SampleTarget::Test\ICanBoogie\EventTest\BeforeProcessEvent",
+			BeforeProcessEvent::for(SampleTarget::class)
 		);
 	}
 
 	public function test_stop(): void
 	{
 		$n = 0;
-		$type = 'event-' . uniqid();
 
-		$this->events->attach($type, function (Event $event) use (&$n) {
+		$this->events->attach(SampleEvent::class, function (SampleEvent $event) use (&$n) {
 			$n++;
 		});
 
-		$this->events->attach($type, function (Event $event) {
+		$this->events->attach(SampleEvent::class, function (SampleEvent $event) {
 			$event->stop();
 		});
 
-		$event = emit(new Event(null, $type));
+		$event = emit(new SampleEvent());
 
 		$this->assertTrue($event->stopped);
 		$this->assertEquals(0, $n);
@@ -63,8 +62,8 @@ final class EventTest extends TestCase
 
 	public function test_target(): void
 	{
-		$target = new SampleTarget;
-		$event = emit(new Event($target, uniqid()));
+		$target = new SampleTarget();
+		$event = new SampleEvent($target);
 
 		$this->assertSame($target, $event->target);
 	}

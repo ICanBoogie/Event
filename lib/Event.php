@@ -14,7 +14,7 @@ namespace ICanBoogie;
 use ICanBoogie\Accessor\AccessorTrait;
 
 use function func_num_args;
-use function ICanBoogie\Event\qualify_type;
+use function get_called_class;
 use function is_object;
 use function trigger_error;
 
@@ -25,7 +25,7 @@ use const E_USER_DEPRECATED;
  *
  * @property-read bool $stopped `true` when the event was stopped, `false` otherwise.
  */
-class Event
+abstract class Event
 {
 	/**
 	 * @uses get_stopped
@@ -39,14 +39,13 @@ class Event
 	 *     A qualified event type made of the target class and the unqualified event type.
 	 *     e.g. "Exception::recover"
 	 */
-	public static function qualify(string|object $target): string
+	public static function for(string|object $target): string
 	{
 		if (is_object($target)) {
 			$target = $target::class;
 		}
 
-		// @phpstan-ignore-next-line
-		return qualify_type($target, static::TYPE);
+		return $target . '::'. get_called_class();
 	}
 
 	/**
@@ -55,12 +54,12 @@ class Event
 	public readonly ?object $target;
 
 	/**
-	 * Event unqualified type e.g. `recover`.
+	 * Event unqualified type e.g. `MyEvent`.
 	 */
 	public readonly string $unqualified_type;
 
 	/**
-	 * Event qualified type. e.g. `Exception::recover`
+	 * Event qualified type. e.g. `Exception::MyEvent`
 	 */
 	public readonly string $qualified_type;
 
@@ -82,19 +81,20 @@ class Event
 	 * `process` the final event type will be `ICanBoogie\Operation::process`.
 	 *
 	 * @param object|null $target The target of the event.
-	 * @param string $type The event type.
 	 */
-	public function __construct(?object $target, string $type)
+	public function __construct(object $target = null)
 	{
-		if (func_num_args() === 3) {
+		if (func_num_args() > 1) {
+			trigger_error("The 'type' parameter is no longer supported, the event class is used instead.", E_USER_DEPRECATED);
+		}
+
+		if (func_num_args() > 2) {
 			trigger_error("The 'payload' parameter is no longer supported, better write an event class.", E_USER_DEPRECATED);
 		}
 
-		$qualified_type = $target ? qualify_type($target, $type) : $type;
-
 		$this->target = $target;
-		$this->unqualified_type = $type;
-		$this->qualified_type = $qualified_type;
+		$this->unqualified_type = $this::class;
+		$this->qualified_type = $target ? static::for($target) : $this->unqualified_type;
 	}
 
 	/**

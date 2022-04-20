@@ -9,18 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\EventTest;
+namespace Test\ICanBoogie;
 
 use ICanBoogie\Event;
 
-class ProcessEvent extends Event
+class SampleEvent extends Event
 {
-    public array $values;
-
-    public function __construct(SampleA $target, array &$values)
-    {
-        $this->values = &$values;
-
-        parent::__construct($target);
-    }
 }

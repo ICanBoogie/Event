@@ -18,8 +18,6 @@ use ICanBoogie\Event;
  */
 class ValidateEvent extends Event
 {
-    public const TYPE = 'validate';
-
     public array $values;
     public bool $valid;
 
@@ -28,6 +26,6 @@ class ValidateEvent extends Event
         $this->values = $values;
         $this->valid = &$valid;
 
-        parent::__construct($target, self::TYPE);
+        parent::__construct($target);
     }
 }

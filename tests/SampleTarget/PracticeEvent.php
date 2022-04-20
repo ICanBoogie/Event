@@ -18,6 +18,6 @@ class PracticeEvent extends Event
 {
 	public function __construct(SampleTarget $target)
 	{
-		parent::__construct($target, 'practice');
+		parent::__construct($target);
 	}
 }

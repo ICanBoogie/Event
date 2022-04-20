@@ -52,14 +52,14 @@ Consider the following class hierarchy:
                 └─ Icybee\Modules\News\Operation\SaveOperation
 
 
-When the `process` event is fired upon a `…\News\Operation\SaveOperation` instance, all event
-hooks attached to the classes for this event are called, starting from the event hooks attached
-to the instance class (`…\News\Operation\SaveOperation`) all the way up to those attached
-to its root class.
+When a `ProcessEvent` is emitted with a `…\News\Operation\SaveOperation` instance, all event hooks
+attached to the classes for this event are called, starting from the event hooks attached to the
+instance class (`…\News\Operation\SaveOperation`) all the way up to those attached to its root
+class.
 
-Thus, event hooks attached to the `…\Node\Operation\SaveOperation` class are called
-when the `process` event is fired upon a `…\News\Operation\SaveOperation` instance. One could
-consider that event hooks are _inherited_.
+Thus, event hooks attached to the `…\Node\Operation\SaveOperation` class are called when a
+`ProcessEvent` event is fired with `…\News\Operation\SaveOperation` instance. One could consider
+that event hooks are _inherited_.
 
 
 
@@ -68,7 +68,7 @@ consider that event hooks are _inherited_.
 ## Getting started
 
 To be emitted, events need an event collection, which holds event hooks. Because a new event
-collection is created for you when required, you don't need to setup one yourself. Still you might
+collection is created for you when required, you don't need to set up one yourself. Still you might
 want to do so if you have a bunch of event hooks that you need to attach while creating the event
 collection. To do so, you need to define a _provider_ that will return your event collection when
 required.
@@ -104,16 +104,9 @@ $events = get_events();
 
 ## Typed events
 
-An instance of an [Event][] subclass is used to provide contextual information about an event to the
-event hooks processing it. It is passed as the first argument, with the target object as second
-argument (if any). This instance contain information directly relating to the type of event they
-accompany.
+All events are instance of the [Event][] class, and because it is abstract it needs to be extended.
 
-For example, a `process` event is usually instantiated from a `ProcessEvent` class, and a
-`process:before` event—fired before a `process` event—is usually instantiated from a
-`BeforeProcessEvent` instance.
-
-The following code demonstrates how a `ProcessEvent` class may be defined for a `process` event type:
+The following code demonstrates how a `ProcessEvent` class may be defined:
 
 ```php
 <?php
@@ -121,13 +114,10 @@ The following code demonstrates how a `ProcessEvent` class may be defined for a 
 namespace ICanBoogie\Operation;
 
 use ICanBoogie\Event;
-use ICanBoogie\HTTP\Response;
 use ICanBoogie\HTTP\Request;
+use ICanBoogie\HTTP\Response;
 use ICanBoogie\Operation;
 
-/**
- * Event class for the `ICanBoogie\Operation::process` event.
- */
 class ProcessEvent extends Event
 {
 	/**
@@ -143,7 +133,7 @@ class ProcessEvent extends Event
     ) {
 		$this->result = &$result;
 
-		parent::__construct($target, 'process');
+		parent::__construct($target);
 	}
 }
 ```
@@ -154,9 +144,8 @@ class ProcessEvent extends Event
 
 ### Event types
 
-The event type is usually the name of an associated method. For example, the `process` event
-type is fired after the `ICanBoogie\Operation::process` method was called, and the `process:before`
-event type is fired before.
+If an event has a target, the event is obtained using the `for()` method and the target class or
+object. If an event doesn't have a target, the event type is the event class.
 
 
 
@@ -166,9 +155,6 @@ event type is fired before.
 
 Event classes should be defined in a namespace unique to their target object. Events targeting
 `ICanBoogie\Operation` instances should be defined in the `ICanBoogie\Operation` namespace.
-
-The class name should match the event type. `ProcessEvent` for the `process` event type,
-`BeforeProcessEvent` for the `process:before` event.
 
 
 
@@ -195,9 +181,10 @@ emit($event);
 ## Attaching event hooks
 
 Event hooks are attached using the `attach()` method of an event collection. The `attach()` method
-is smart enough to create the event type from the parameters type. This works with any callable: closure, invokable objects, static class methods, functions.
+is smart enough to create the event type from the parameters type. This works with any callable:
+closure, invokable objects, static class methods, functions.
 
-The following example demonstrates how a closure may be attached to a `ICanBoogie\Operation::process:before` event type.
+The following example demonstrates how a closure may be attached to a `BeforeProcessEvent` event.
 
 ```php
 <?php
@@ -427,7 +414,6 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 ## Helpers
 
 - `get_events()`: Returns the current event collection. A new one is created if none exist.
-
 - `emit()`: Emit the specified event.
 
 
