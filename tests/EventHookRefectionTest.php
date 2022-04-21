@@ -14,18 +14,18 @@ namespace Test\ICanBoogie;
 use ICanBoogie\EventHookReflection;
 use LogicException;
 use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\Sample\SampleCallableWithoutTarget;
-use Test\ICanBoogie\Sample\SampleCallableWithTarget;
+use Test\ICanBoogie\Sample\SampleCallableWithoutSender;
+use Test\ICanBoogie\Sample\SampleCallableWithSender;
 use Test\ICanBoogie\Sample\SampleEvent;
 use Test\ICanBoogie\Sample\SampleHooks;
-use Test\ICanBoogie\Sample\SampleTarget;
-use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
-use Test\ICanBoogie\Sample\SampleTarget\ActionEvent;
+use Test\ICanBoogie\Sample\SampleSender;
+use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
+use Test\ICanBoogie\Sample\SampleSender\ActionEvent;
 
 final class EventHookRefectionTest extends TestCase
 {
 	/**
-	 * @dataProvider provide_event_hooks_with_target
+	 * @dataProvider provide_event_hooks_with_sender
 	 */
 	public function test_valid(mixed $hook)
 	{
@@ -36,7 +36,7 @@ final class EventHookRefectionTest extends TestCase
 
 	public function test_from(): void
 	{
-		$hook = function (ActionEvent $event, SampleTarget $target) {
+		$hook = function (ActionEvent $event, SampleSender $sender) {
 		};
 
 		$reflection = EventHookReflection::from($hook);
@@ -44,36 +44,36 @@ final class EventHookRefectionTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provide_event_hooks_with_target
+	 * @dataProvider provide_event_hooks_with_sender
 	 */
-	public function test_type_with_target(mixed $hook): void
+	public function test_type_with_sender(mixed $hook): void
 	{
 		$this->assertEquals(
-			BeforeActionEvent::for(SampleTarget::class),
+			BeforeActionEvent::for(SampleSender::class),
 			EventHookReflection::from($hook)->type
 		);
 	}
 
-	public function provide_event_hooks_with_target(): array
+	public function provide_event_hooks_with_sender(): array
 	{
 		return [
 
-			[ hook_with_target(...) ],
-			[ SampleHooks::class . '::with_target' ],
-			[ [ SampleHooks::class, 'with_target' ] ],
+			[ hook_with_sender(...) ],
+			[ SampleHooks::class . '::with_sender' ],
+			[ [ SampleHooks::class, 'with_sender' ] ],
 			[
-				function (BeforeActionEvent $event, SampleTarget $target) {
+				function (BeforeActionEvent $event, SampleSender $sender) {
 				}
 			],
-			[ new SampleCallableWithTarget() ]
+			[ new SampleCallableWithSender() ]
 
 		];
 	}
 
 	/**
-	 * @dataProvider provide_event_hooks_without_target
+	 * @dataProvider provide_event_hooks_without_sender
 	 */
-	public function test_type_without_target(mixed $hook): void
+	public function test_type_without_sender(mixed $hook): void
 	{
 		$this->assertEquals(
 			SampleEvent::class,
@@ -81,18 +81,18 @@ final class EventHookRefectionTest extends TestCase
 		);
 	}
 
-	public function provide_event_hooks_without_target(): array
+	public function provide_event_hooks_without_sender(): array
 	{
 		return [
 
-			[ hook_without_target(...) ],
-			[ SampleHooks::class . '::without_target' ],
-			[ [ SampleHooks::class, 'without_target' ] ],
+			[ hook_without_sender(...) ],
+			[ SampleHooks::class . '::without_sender' ],
+			[ [ SampleHooks::class, 'without_sender' ] ],
 			[
 				function (SampleEvent $event) {
 				}
 			],
-			[ new SampleCallableWithoutTarget() ]
+			[ new SampleCallableWithoutSender() ]
 
 		];
 	}
@@ -101,7 +101,7 @@ final class EventHookRefectionTest extends TestCase
 	{
 		$this->expectException(LogicException::class);
 		$this->expectExceptionMessage("The parameter `a` must be an instance of `ICanBoogie\\Event`.");
-		$this->assertNull(EventHookReflection::from(function ($a, SampleTarget $b) {
+		$this->assertNull(EventHookReflection::from(function ($a, SampleSender $b) {
 		}));
 	}
 
@@ -122,10 +122,10 @@ final class EventHookRefectionTest extends TestCase
 	}
 }
 
-function hook_with_target(BeforeActionEvent $event, SampleTarget $target)
+function hook_with_sender(BeforeActionEvent $event, SampleSender $sender)
 {
 }
 
-function hook_without_target(SampleEvent $event)
+function hook_without_sender(SampleEvent $event)
 {
 }

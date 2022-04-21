@@ -11,12 +11,7 @@
 
 namespace Test\ICanBoogie\Sample;
 
-use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
-
-class SampleCallableWithTarget
+class SampleSender
 {
-	public function __invoke(BeforeActionEvent $event, SampleTarget $target): void
-	{
 
-	}
 }

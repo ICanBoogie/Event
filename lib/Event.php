@@ -33,25 +33,25 @@ abstract class Event
 	use AccessorTrait;
 
 	/**
-	 * @param object|class-string $target
+	 * @param object|class-string $sender
 	 *
 	 * @return string
-	 *     A qualified event type made of the target class and the unqualified event type.
+	 *     A qualified event type made of the sender class and the unqualified event type.
 	 *     e.g. "Exception::recover"
 	 */
-	public static function for(string|object $target): string
+	public static function for(string|object $sender): string
 	{
-		if (is_object($target)) {
-			$target = $target::class;
+		if (is_object($sender)) {
+			$sender = $sender::class;
 		}
 
-		return $target . '::'. get_called_class();
+		return $sender . '::'. get_called_class();
 	}
 
 	/**
 	 * The object the event is dispatched on.
 	 */
-	public readonly ?object $target;
+	public readonly ?object $sender;
 
 	/**
 	 * Event unqualified type e.g. `MyEvent`.
@@ -74,15 +74,9 @@ abstract class Event
 	}
 
 	/**
-	 * Creates an event and fires it immediately.
-	 *
-	 * If the event's target is specified its class is used to prefix the event type. For example,
-	 * if the event's target is an instance of `ICanBoogie\Operation` and the event type is
-	 * `process` the final event type will be `ICanBoogie\Operation::process`.
-	 *
-	 * @param object|null $target The target of the event.
+	 * @param object|null $sender The sender of the event.
 	 */
-	public function __construct(object $target = null)
+	public function __construct(object $sender = null)
 	{
 		if (func_num_args() > 1) {
 			trigger_error("The 'type' parameter is no longer supported, the event class is used instead.", E_USER_DEPRECATED);
@@ -92,9 +86,9 @@ abstract class Event
 			trigger_error("The 'payload' parameter is no longer supported, better write an event class.", E_USER_DEPRECATED);
 		}
 
-		$this->target = $target;
+		$this->sender = $sender;
 		$this->unqualified_type = $this::class;
-		$this->qualified_type = $target ? static::for($target) : $this->unqualified_type;
+		$this->qualified_type = $sender ? static::for($sender) : $this->unqualified_type;
 	}
 
 	/**

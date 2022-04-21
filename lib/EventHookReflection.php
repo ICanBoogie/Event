@@ -192,7 +192,7 @@ final class EventHookReflection
 
 		self::assert_valid_parameters_number($parameters);
 
-		[ $event_param, $target_param ] = $parameters + [ 1 => null ];
+		[ $event_param, $sender_param ] = $parameters + [ 1 => null ];
 
 		try {
 			$event_class = self::resolve_parameter_class($event_param);
@@ -205,14 +205,14 @@ final class EventHookReflection
 
 		assert(is_subclass_of($event_class, Event::class, true));
 
-		if (!$target_param) {
+		if (!$sender_param) {
 			return $event_class;
 		}
 
-		$target_class = self::resolve_parameter_class($target_param);
+		$sender_class = self::resolve_parameter_class($sender_param);
 
 		/** @var Event $event_class */
 
-		return $event_class::for($target_class);
+		return $event_class::for($sender_class);
 	}
 }

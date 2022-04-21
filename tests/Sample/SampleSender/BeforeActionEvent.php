@@ -9,9 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Test\ICanBoogie\Sample;
+namespace Test\ICanBoogie\Sample\SampleSender;
 
-class SampleTarget
+use ICanBoogie\Event;
+use Test\ICanBoogie\Sample\SampleSender;
+
+class BeforeActionEvent extends Event
 {
-
+	public function __construct(SampleSender $sender)
+	{
+		parent::__construct($sender);
+	}
 }

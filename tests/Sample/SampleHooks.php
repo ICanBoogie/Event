@@ -11,16 +11,16 @@
 
 namespace Test\ICanBoogie\Sample;
 
-use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
+use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
 class SampleHooks
 {
-	static public function with_target(BeforeActionEvent $event, SampleTarget $target): void
+	static public function with_sender(BeforeActionEvent $event, SampleSender $sender): void
 	{
 
 	}
 
-	static public function without_target(SampleEvent $event): void
+	static public function without_sender(SampleEvent $event): void
 	{
 
 	}

@@ -16,9 +16,9 @@ use ICanBoogie\EventCollectionProvider;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\Sample\SampleEvent;
-use Test\ICanBoogie\Sample\SampleTarget;
-use Test\ICanBoogie\Sample\SampleTarget\BeforeActionEvent;
-use Test\ICanBoogie\Sample\SampleTarget\ActionEvent;
+use Test\ICanBoogie\Sample\SampleSender;
+use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
+use Test\ICanBoogie\Sample\SampleSender\ActionEvent;
 use Traversable;
 
 use function ICanBoogie\emit;
@@ -34,7 +34,7 @@ final class EventCollectionTest extends TestCase
 		EventCollectionProvider::define(fn(): EventCollection => $events);
 	}
 
-	public function test_event_without_target(): void
+	public function test_event_without_sender(): void
 	{
 		$invoked = false;
 
@@ -47,7 +47,7 @@ final class EventCollectionTest extends TestCase
 		$this->assertTrue($invoked);
 	}
 
-	public function test_detach_without_target(): void
+	public function test_detach_without_sender(): void
 	{
 		$n = 0;
 		$hook = function (SampleEvent $event) use (&$n) {
@@ -63,22 +63,22 @@ final class EventCollectionTest extends TestCase
 		$this->assertEquals(1, $n);
 	}
 
-	public function test_detach_with_target(): void
+	public function test_detach_with_sender(): void
 	{
 		$n = 0;
-		$target = new SampleTarget();
+		$sender = new SampleSender();
 
 		$detach = $this->events->attach(
-			ActionEvent::for($target),
-			function (ActionEvent $event, SampleTarget $t) use ($target, &$n) {
+			ActionEvent::for($sender),
+			function (ActionEvent $event, SampleSender $t) use ($sender, &$n) {
 				$n++;
-				$this->assertSame($target, $t);
+				$this->assertSame($sender, $t);
 			}
 		);
-		emit(new ActionEvent($target));
+		emit(new ActionEvent($sender));
 
 		$detach();
-		emit(new ActionEvent($target));
+		emit(new ActionEvent($sender));
 
 		$this->assertEquals(1, $n);
 	}
@@ -86,15 +86,15 @@ final class EventCollectionTest extends TestCase
 	public function test_detach_with_auto_hook(): void
 	{
 		$n = 0;
-		$target = new SampleTarget();
+		$sender = new SampleSender();
 
-		$detach = $this->events->attach(function (BeforeActionEvent $event, SampleTarget $target) use (&$n) {
+		$detach = $this->events->attach(function (BeforeActionEvent $event, SampleSender $sender) use (&$n) {
 			$n++;
 		});
-		emit(new BeforeActionEvent($target));
+		emit(new BeforeActionEvent($sender));
 
 		$detach();
-		emit(new BeforeActionEvent($target));
+		emit(new BeforeActionEvent($sender));
 
 		$this->assertEquals(1, $n);
 	}
@@ -103,8 +103,8 @@ final class EventCollectionTest extends TestCase
 	{
 		$this->expectException(LogicException::class);
 		$this->events->detach(
-			BeforeActionEvent::for(SampleTarget::class),
-			function (BeforeActionEvent $event, SampleTarget $target) {
+			BeforeActionEvent::for(SampleSender::class),
+			function (BeforeActionEvent $event, SampleSender $sender) {
 			}
 		);
 	}
@@ -114,26 +114,26 @@ final class EventCollectionTest extends TestCase
 	 */
 	public function test_attach_to(): void
 	{
-		$target0 = new SampleTarget();
-		$target1 = clone $target0;
+		$sender0 = new SampleSender();
+		$sender1 = clone $sender0;
 
 		$invoked_count = 0;
 
 		$this->events->attach_to(
-			$target0,
-			function (ActionEvent $event, SampleTarget $target) use ($target0, &$invoked_count) {
-				$this->assertSame($target0, $target);
+			$sender0,
+			function (ActionEvent $event, SampleSender $sender) use ($sender0, &$invoked_count) {
+				$this->assertSame($sender0, $sender);
 
 				$invoked_count++;
 			}
 		);
 
-		emit(new ActionEvent($target1));
+		emit(new ActionEvent($sender1));
 
 		$this->assertEquals(0, $invoked_count);
 
-		emit(new ActionEvent($target0));
-		emit(new ActionEvent($target1));
+		emit(new ActionEvent($sender0));
+		emit(new ActionEvent($sender1));
 
 		$this->assertEquals(1, $invoked_count);
 	}
@@ -142,18 +142,18 @@ final class EventCollectionTest extends TestCase
 	{
 		$invoked_count = 0;
 
-		$this->events->once(function (ActionEvent $event, SampleTarget $target) use (&$invoked_count) {
+		$this->events->once(function (ActionEvent $event, SampleSender $sender) use (&$invoked_count) {
 			$invoked_count++;
 		});
 
-		$target = new SampleTarget();
+		$sender = new SampleSender();
 
-		emit(new ActionEvent($target));
+		emit(new ActionEvent($sender));
 		$this->assertEquals(1, $invoked_count);
 
-		emit(new ActionEvent($target));
-		emit(new ActionEvent($target));
-		emit(new ActionEvent($target));
+		emit(new ActionEvent($sender));
+		emit(new ActionEvent($sender));
+		emit(new ActionEvent($sender));
 		$this->assertEquals(1, $invoked_count);
 	}
 

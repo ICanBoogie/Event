@@ -19,11 +19,11 @@ class ValidateEvent extends Event
     public array $values;
     public bool $valid;
 
-    public function __construct(Processor $target, array $values, bool &$valid)
+    public function __construct(Processor $sender, array $values, bool &$valid)
     {
         $this->values = $values;
         $this->valid = &$valid;
 
-        parent::__construct($target);
+        parent::__construct($sender);
     }
 }

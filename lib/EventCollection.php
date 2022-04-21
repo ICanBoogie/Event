@@ -124,20 +124,6 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Attaches an event hook.
 	 *
-	 * The name of the event is resolved from the parameters of the event hook. Consider the
-	 * following code:
-	 *
-	 * <pre>
-	 * <?php
-	 *
-	 * $events->attach(function(ICanBoogie\Operation\BeforeProcessEvent $event,
-	 * ICanBoogie\Module\Operation\SaveOperation $target) {
-	 *
-	 *     // …
-	 *
-	 * });
-	 * </pre>
-	 *
 	 * The hook will be attached to the `ICanBoogie\Module\Operation\SaveOperation::process:before` event.
 	 *
 	 * @param Closure|string $type_or_hook Event type or event hook.
@@ -155,7 +141,7 @@ class EventCollection implements IteratorAggregate
 		array_unshift($this->hooks[$type], $hook);
 
 		#
-		# If the event is a targeted event, we reset the skippable and consolidated hooks arrays.
+		# If the event has a sender, we reset the skippable and consolidated hooks arrays.
 		#
 
 		$this->skippable = [];
@@ -193,23 +179,23 @@ class EventCollection implements IteratorAggregate
 	}
 
 	/**
-	 * Attaches an event hook to a specific target.
+	 * Attaches an event hook to a specific sender.
 	 *
 	 * @template T of object
 	 *
-	 * @param T $target
+	 * @param T $sender
 	 * @phpstan-param (Closure(Event, T): void) $hook
 	 *
 	 * @throws ReflectionException
 	 */
-	public function attach_to(object $target, Closure $hook): Detach
+	public function attach_to(object $sender, Closure $hook): Detach
 	{
 		$type = EventHookReflection::from($hook)->type;
 
 		return $this->attach(
 			$type,
-			$this->shadow_original_hook($hook, function ($e, $t) use ($target, $hook) {
-				if ($t !== $target) {
+			$this->shadow_original_hook($hook, function ($e, $t) use ($sender, $hook) {
+				if ($t !== $sender) {
 					return;
 				}
 
@@ -284,7 +270,7 @@ class EventCollection implements IteratorAggregate
 	 */
 	public function emit(Event $event): Event
 	{
-		$target = $event->target;
+		$sender = $event->sender;
 		$type = $event->qualified_type;
 
 		if ($this->is_skippable($type)) {
@@ -301,13 +287,13 @@ class EventCollection implements IteratorAggregate
 			return $event;
 		}
 
-		$this->process_chain($event, $hooks, $type, $target);
+		$this->process_chain($event, $hooks, $type, $sender);
 
 		if ($event->stopped || !$event->__internal_chain) {
 			return $event;
 		}
 
-		$this->process_chain($event, $event->__internal_chain, $type, $target);
+		$this->process_chain($event, $event->__internal_chain, $type, $sender);
 
 		return $event;
 	}
@@ -319,13 +305,13 @@ class EventCollection implements IteratorAggregate
 	 *
 	 * @throws Throwable the exception of the event hook.
 	 */
-	private function process_chain(Event $event, iterable $chain, string $type, ?object $target): void
+	private function process_chain(Event $event, iterable $chain, string $type, ?object $sender): void
 	{
 		foreach ($chain as $hook) {
 			$started_at = microtime(true);
 
 			try {
-				$hook($event, $target);
+				$hook($event, $sender);
 			} finally {
 				EventProfiler::add_call($type, $this->resolve_original_hook($hook), $started_at);
 			}
@@ -401,8 +387,8 @@ class EventCollection implements IteratorAggregate
 	/**
 	 * Consolidate hooks of a same type.
 	 *
-	 * If the class of the event's target is provided, event hooks are filtered according to
-	 * the class and its hierarchy.
+	 * If the class of the event's sender is provided, event hooks are filtered according to the class and its
+	 * hierarchy.
 	 *
 	 * @param string $type The event type.
 	 *

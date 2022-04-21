@@ -11,7 +11,7 @@
 
 namespace Test\ICanBoogie\Sample;
 
-class SampleCallableWithoutTarget
+class SampleCallableWithoutSender
 {
 	public function __invoke(SampleEvent $event): void
 	{

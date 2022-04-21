@@ -6,6 +6,9 @@
 
 - The `Event` class is now abstract and requires extension.
 
+- "target" references have been renamed as "sender". For instance, the `Event::$target` property has
+  been renamed to `sender`.
+
 - Events are not longer emitted during instantiation, you need to use the `emit()` function for
   that. All code related to event reflexion to create non-firing events has been removed.
 
@@ -65,14 +68,14 @@
     ```php
     class ProcessEvent extends Event
     {
-        public function __construct(A $target, public array $values)
+        public function __construct(A $sender, public array $values)
         {
-            parent::__construct($target);
+            parent::__construct($sender);
         }
     }
     ```
 
-- Callables without targets are not supported for attachment:
+- Callables without senders are now supported for attachment:
 
     ```php
     $events->attach('count', function(CountEvent $event): void {

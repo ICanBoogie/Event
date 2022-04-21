@@ -18,10 +18,10 @@ class ProcessEvent extends Event
 {
     public array $values;
 
-    public function __construct(Processor $target, array &$values)
+    public function __construct(Processor $sender, array &$values)
     {
         $this->values = &$values;
 
-        parent::__construct($target);
+        parent::__construct($sender);
     }
 }

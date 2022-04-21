@@ -22,7 +22,7 @@ use ICanBoogie\EventCollection;
  *
  * use ICanBoogie\HTTP\Dispatcher;
  *
- * $detach = $events->attach(function(Dispatcher\CollectEvent $event, Dispatcher $target) {
+ * $detach = $events->attach(function(Dispatcher\CollectEvent $event, Dispatcher $sender) {
  *
  *     // …
  *
