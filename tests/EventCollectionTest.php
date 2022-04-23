@@ -11,6 +11,7 @@
 
 namespace Test\ICanBoogie;
 
+use ICanBoogie\Event\Config;
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
 use LogicException;
@@ -174,20 +175,20 @@ final class EventCollectionTest extends TestCase
 		$f3 = function () {
 		};
 
-		$events = new EventCollection([
+		$events = new EventCollection(new Config([
 
 			'one' => [ $f1 ],
 			'two' => [ $f2 ]
 
-		]);
+		]));
 
-		$events->attach_many([
+		$events->attach_many(new Config([
 
 			'one' => [ $f1, $f11 ],
 			'two' => [ $f21 ],
 			'three' => [ $f3 ]
 
-		]);
+		]));
 
 		$this->assertSame([
 

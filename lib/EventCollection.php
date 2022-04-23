@@ -13,6 +13,7 @@ namespace ICanBoogie;
 
 use ArrayIterator;
 use Closure;
+use ICanBoogie\Event\Config;
 use ICanBoogie\Event\Detach;
 use InvalidArgumentException;
 use IteratorAggregate;
@@ -94,14 +95,13 @@ class EventCollection implements IteratorAggregate
 	 */
 	private array $skippable = [];
 
-	/**
-	 * @param array $definitions Event hooks grouped by type.
-	 */
-	public function __construct(array $definitions = [])
+	public function __construct(Config $config = null)
 	{
 		$this->original_hooks = new SplObjectStorage();
 
-		$this->attach_many($definitions);
+		if ($config) {
+			$this->attach_many($config);
+		}
 	}
 
 	/**
@@ -158,14 +158,12 @@ class EventCollection implements IteratorAggregate
 	 * Attaches many event hooks at once.
 	 *
 	 * **Note**: The event hooks must be grouped by event type.
-	 *
-	 * @param array $definitions
 	 */
-	public function attach_many(array $definitions): void
+	public function attach_many(Config $config): void
 	{
 		$hooks = &$this->hooks;
-		$intersect = array_intersect_key($definitions, $hooks);
-		$hooks += array_diff_key($definitions, $hooks);
+		$intersect = array_intersect_key($config->listeners, $hooks);
+		$hooks += array_diff_key($config->listeners, $hooks);
 
 		foreach ($intersect as $type => $type_hooks) {
 			$hooks[$type] = array_merge($hooks[$type], $type_hooks);
@@ -321,10 +319,6 @@ class EventCollection implements IteratorAggregate
 			}
 		}
 	}
-
-
-
-
 
 
 	/**
