@@ -11,6 +11,7 @@
 
 namespace Test\ICanBoogie;
 
+use Error;
 use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +34,15 @@ final class EventTest extends TestCase
 		$this->events = new EventCollection();
 
 		EventCollectionProvider::define(fn() => $this->events);
+	}
+
+	public function test_uninitialized_sender(): void
+	{
+		$event = new SampleEvent();
+
+		$this->expectException(Error::class);
+		$this->expectExceptionMessageMatches("/sender must not be accessed before initialization/");
+		$this->assertNull($event->sender);
 	}
 
 	public function test_for(): void

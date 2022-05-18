@@ -268,7 +268,7 @@ class EventCollection implements IteratorAggregate
 	 */
 	public function emit(Event $event): Event
 	{
-		$sender = $event->sender;
+		$sender = $event->sender ?? null;
 		$type = $event->qualified_type;
 
 		if ($this->is_skippable($type)) {

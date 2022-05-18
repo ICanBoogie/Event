@@ -50,8 +50,10 @@ abstract class Event
 
 	/**
 	 * The object the event is dispatched on.
+	 *
+	 * **Note:** The property is only initialized if the event is constructed with a sender.
 	 */
-	public readonly ?object $sender;
+	public readonly object $sender;
 
 	/**
 	 * Event unqualified type e.g. `MyEvent`.
@@ -86,9 +88,14 @@ abstract class Event
 			trigger_error("The 'payload' parameter is no longer supported, better write an event class.", E_USER_DEPRECATED);
 		}
 
-		$this->sender = $sender;
 		$this->unqualified_type = $this::class;
-		$this->qualified_type = $sender ? static::for($sender) : $this->unqualified_type;
+
+		if ($sender) {
+			$this->sender = $sender;
+			$this->qualified_type = static::for($sender);
+		} else {
+			$this->qualified_type = $this->unqualified_type; // @phpstan-ignore-line
+		}
 	}
 
 	/**
