@@ -20,19 +20,19 @@ use Throwable;
  */
 function get_events(): EventCollection
 {
-	$provider = EventCollectionProvider::defined();
+    $provider = EventCollectionProvider::defined();
 
-	if (!$provider) {
-		$provider = function () {
-			static $events;
+    if (!$provider) {
+        $provider = function () {
+            static $events;
 
-			return $events ??= new EventCollection;
-		};
+            return $events ??= new EventCollection();
+        };
 
-		EventCollectionProvider::define($provider);
-	}
+        EventCollectionProvider::define($provider);
+    }
 
-	return $provider();
+    return $provider();
 }
 
 /**
@@ -46,5 +46,5 @@ function get_events(): EventCollection
  */
 function emit(Event $event): Event
 {
-	return get_events()->emit($event);
+    return get_events()->emit($event);
 }

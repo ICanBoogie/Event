@@ -1,10 +1,9 @@
 # Event
 
 [![Release](https://img.shields.io/packagist/v/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
-[![Build Status](https://img.shields.io/github/workflow/status/ICanBoogie/Event/test)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Atest)
 [![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/master.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
 [![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
-[![Packagist](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
+[![Downloads](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
 The **icanboogie/event** allows you to provide hooks which other developers can attach to, to be
 notified when certain events occur inside the application and take action.
@@ -430,11 +429,26 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 
 
-## Testing
+## Continuous Integration
 
-Run `make test-container` to create and log into the test container, then run `make test` to run the
-test suite. Alternatively, run `make test-coverage` to run the test suite with test coverage. Open
-`build/coverage/index.html` to see the breakdown of the code coverage.
+The project is continuously tested by [GitHub actions](https://github.com/ICanBoogie/Event/actions).
+
+[![Tests](https://github.com/ICanBoogie/Event/workflows/test/badge.svg?branch=master)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Atest)
+[![Static Analysis](https://github.com/ICanBoogie/Event/workflows/static-analysis/badge.svg?branch=master)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Astatic-analysis)
+[![Code Style](https://github.com/ICanBoogie/Event/workflows/code-style/badge.svg?branch=master)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Acode-style)
+
+
+
+## Code of Conduct
+
+This project adheres to a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in
+this project and its community, you are expected to uphold this code.
+
+
+
+## Contributing
+
+Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 
 

@@ -15,8 +15,7 @@ use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
 class SampleCallableWithSender
 {
-	public function __invoke(BeforeActionEvent $event, SampleSender $sender): void
-	{
-
-	}
+    public function __invoke(BeforeActionEvent $event, SampleSender $sender): void
+    {
+    }
 }

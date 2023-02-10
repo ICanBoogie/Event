@@ -20,49 +20,49 @@ use Test\ICanBoogie\SetStateHelper;
 
 final class ConfigBuilderTest extends TestCase
 {
-	private Config $config;
+    private Config $config;
 
-	static public function sample_listener_without_target(SampleEvent $event)
-	{
-	}
+    public static function sample_listener_without_target(SampleEvent $event)
+    {
+    }
 
-	static public function sample_listener_with_target(SampleSender\ActionEvent $event, SampleSender $sender)
-	{
-	}
+    public static function sample_listener_with_target(SampleSender\ActionEvent $event, SampleSender $sender)
+    {
+    }
 
-	protected function setUp(): void
-	{
-		parent::setUp();
+    protected function setUp(): void
+    {
+        parent::setUp();
 
-		$this->config = (new ConfigBuilder())
-			->attach(SampleEvent::class, [ self::class, 'sample_listener_without_target' ])
-			->attach_to(
-				SampleSender::class,
-				SampleSender\ActionEvent::class,
-				[ self::class, 'sample_listener_with_target' ]
-			)
-			->build();
-	}
+        $this->config = (new ConfigBuilder())
+            ->attach(SampleEvent::class, [ self::class, 'sample_listener_without_target' ])
+            ->attach_to(
+                SampleSender::class,
+                SampleSender\ActionEvent::class,
+                [ self::class, 'sample_listener_with_target' ]
+            )
+            ->build();
+    }
 
-	public function test_build(): void
-	{
-		$this->assertEquals(
-			new Config([
+    public function test_build(): void
+    {
+        $this->assertEquals(
+            new Config([
 
-				SampleEvent::class => [
-					[ self::class, 'sample_listener_without_target' ]
-				],
-				SampleSender\ActionEvent::for(SampleSender::class) => [
-					[ self::class, 'sample_listener_with_target' ]
-				]
+                SampleEvent::class => [
+                    [ self::class, 'sample_listener_without_target' ]
+                ],
+                SampleSender\ActionEvent::for(SampleSender::class) => [
+                    [ self::class, 'sample_listener_with_target' ]
+                ]
 
-			]),
-			$this->config
-		);
-	}
+            ]),
+            $this->config
+        );
+    }
 
-	public function test_export(): void
-	{
-		$this->assertEquals($this->config, SetStateHelper::export_import($this->config));
-	}
+    public function test_export(): void
+    {
+        $this->assertEquals($this->config, SetStateHelper::export_import($this->config));
+    }
 }

@@ -11,52 +11,48 @@
 
 namespace ICanBoogie;
 
+use function microtime;
+
 /**
  * Profiling information about events.
  */
 final class EventProfiler
 {
-	/**
-	 * Unused event types.
-	 *
-	 * ```php
-	 * list($time, $type) = $value;
-	 * ````
-	 *
-	 * @var array
-	 */
-	static public $unused = [];
+    /**
+     * Unused event types.
+     *
+     * ```php
+     * [ $time, $type ] = $value;
+     * ````
+     *
+     * @var array<array{ float, string }>
+     */
+    public static array $unused = [];
 
-	/**
-	 * Event hooks calls.
-	 *
-	 * ```php
-	 * list($time, $type, $hook, $started_at);
-	 * ```
-	 *
-	 * @var array
-	 */
-	static public $calls = [];
+    /**
+     * Adds an unused event type.
+     */
+    public static function add_unused(string $type): void
+    {
+        self::$unused[] = [ microtime(true), $type ];
+    }
 
-	/**
-	 * Adds an unused event type.
-	 *
-	 * @param string $type
-	 */
-	static public function add_unused(string $type): void
-	{
-		self::$unused[] = [ \microtime(true), $type ];
-	}
+    /**
+     * Event hooks calls.
+     *
+     * ```php
+     * [ $time, $type, $hook, $started_at ] = $value;
+     * ```
+     *
+     * @var array<array{ float, string, callable, float }>
+     */
+    public static array $calls = [];
 
-	/**
-	 * Adds an event hook call.
-	 *
-	 * @param string $type
-	 * @param callable $hook
-	 * @param float $started_at
-	 */
-	static public function add_call(string $type, callable $hook, float $started_at)
-	{
-		self::$calls[] = [ \microtime(true), $type, $hook, $started_at ];
-	}
+    /**
+     * Adds an event hook call.
+     */
+    public static function add_call(string $type, callable $hook, float $started_at): void
+    {
+        self::$calls[] = [ microtime(true), $type, $hook, $started_at ];
+    }
 }

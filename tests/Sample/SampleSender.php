@@ -13,5 +13,4 @@ namespace Test\ICanBoogie\Sample;
 
 class SampleSender
 {
-
 }

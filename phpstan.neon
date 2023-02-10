@@ -2,5 +2,3 @@ parameters:
   level: max
   paths:
     - lib
-  ignoreErrors:
-    - '#Method get_* is unused#'

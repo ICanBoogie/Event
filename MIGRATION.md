@@ -2,7 +2,15 @@
 
 ## v4.x to v6.0
 
-### Breaking changes
+### New Requirements
+
+- PHP 8.1+
+
+### New features
+
+None
+
+### Backward Incompatible Changes
 
 - The `Event` class is now abstract and requires extension.
 
@@ -91,3 +99,11 @@
 
 - Dropped `Event::$used` and `Event::$used_by` properties. The information is still available in the
   profiler.
+
+### Deprecated Features
+
+None
+
+### Other Changes
+
+None

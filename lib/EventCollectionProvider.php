@@ -11,64 +11,59 @@
 
 namespace ICanBoogie;
 
+use LogicException;
+
 /**
  * Provides an {@link EventCollection} instance.
  */
 class EventCollectionProvider
 {
-	/**
-	 * @var callable {@link EventCollection} provider
-	 */
-	static private $provider;
+    /**
+     * @var callable|null {@link EventCollection} provider
+     */
+    private static $provider;
 
-	/**
-	 * Defines the {@link EventCollection} provider.
-	 *
-	 * @param callable $provider
-	 *
-	 * @return callable The previous provider, or `null` if none was defined.
-	 */
-	static public function define(callable $provider): ?callable
-	{
-		$previous = self::$provider;
+    /**
+     * Defines the {@link EventCollection} provider.
+     *
+     * @return ?callable
+     *     The previous provider, or `null` if none was defined.
+     */
+    public static function define(callable $provider): ?callable
+    {
+        $previous = self::$provider;
 
-		self::$provider = $provider;
+        self::$provider = $provider;
 
-		return $previous;
-	}
+        return $previous;
+    }
 
-	/**
-	 * Returns the current provider.
-	 *
-	 * @return callable|null
-	 */
-	static public function defined(): ?callable
-	{
-		return self::$provider;
-	}
+    /**
+     * Returns the current provider.
+     */
+    public static function defined(): ?callable
+    {
+        return self::$provider;
+    }
 
-	/**
-	 * Undefine the provider.
-	 */
-	static public function undefine(): void
-	{
-		self::$provider = null;
-	}
+    /**
+     * Undefine the provider.
+     */
+    public static function undefine(): void
+    {
+        self::$provider = null;
+    }
 
-	/**
-	 * Returns a {@link EventCollection} instance using the provider.
-	 *
-	 * @return EventCollection
-	 */
-	static public function provide(): EventCollection
-	{
-		$provider = self::$provider;
+    /**
+     * Returns a {@link EventCollection} instance using the provider.
+     */
+    public static function provide(): EventCollection
+    {
+        $provider = self::$provider
+            ?? throw new LogicException(
+                "No provider is defined yet. Please define one with `EventCollectionProvider::define(\$provider)`."
+            );
 
-		if (!$provider)
-		{
-			throw new \LogicException("No provider is defined yet. Please define one with `EventCollectionProvider::define(\$provider)`.");
-		}
-
-		return $provider();
-	}
+        return $provider();
+    }
 }

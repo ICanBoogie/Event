@@ -37,18 +37,18 @@ use ICanBoogie\EventCollection;
  */
 final class Detach
 {
-	public function __construct(
-		private readonly EventCollection $events,
-		private readonly string $type,
-		private readonly Closure $hook
-	) {
-	}
+    public function __construct(
+        private readonly EventCollection $events,
+        private readonly string $type,
+        private readonly Closure $hook
+    ) {
+    }
 
-	/**
-	 * Detaches the event hook from the events.
-	 */
-	public function __invoke(): void
-	{
-		$this->events->detach($this->type, $this->hook);
-	}
+    /**
+     * Detaches the event hook from the events.
+     */
+    public function __invoke(): void
+    {
+        $this->events->detach($this->type, $this->hook);
+    }
 }

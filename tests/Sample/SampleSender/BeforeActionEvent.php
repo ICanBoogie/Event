@@ -16,8 +16,8 @@ use Test\ICanBoogie\Sample\SampleSender;
 
 class BeforeActionEvent extends Event
 {
-	public function __construct(SampleSender $sender)
-	{
-		parent::__construct($sender);
-	}
+    public function __construct(SampleSender $sender)
+    {
+        parent::__construct($sender);
+    }
 }

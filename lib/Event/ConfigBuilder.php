@@ -15,40 +15,40 @@ use ICanBoogie\Event;
 
 final class ConfigBuilder
 {
-	/**
-	 * @var array<string, callable[]>
-	 */
-	private array $listeners = [];
+    /**
+     * @var array<string, callable[]>
+     */
+    private array $listeners = [];
 
-	public function build(): Config
-	{
-		return new Config($this->listeners);
-	}
+    public function build(): Config
+    {
+        return new Config($this->listeners);
+    }
 
-	/**
-	 * @param class-string<Event> $event_class
-	 * @param callable $listener
-	 *
-	 * @return $this
-	 */
-	public function attach(string $event_class, callable $listener): self
-	{
-		$this->listeners[$event_class][] = $listener;
+    /**
+     * @param class-string<Event> $event_class
+     * @param callable $listener
+     *
+     * @return $this
+     */
+    public function attach(string $event_class, callable $listener): self
+    {
+        $this->listeners[$event_class][] = $listener;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * @param class-string $sender_class
-	 * @param class-string<Event> $event_class
-	 * @param callable $listener
-	 *
-	 * @return $this
-	 */
-	public function attach_to(string $sender_class, string $event_class, callable $listener): self
-	{
-		$this->listeners[$event_class::for($sender_class)][] = $listener;
+    /**
+     * @param class-string $sender_class
+     * @param class-string<Event> $event_class
+     * @param callable $listener
+     *
+     * @return $this
+     */
+    public function attach_to(string $sender_class, string $event_class, callable $listener): self
+    {
+        $this->listeners[$event_class::for($sender_class)][] = $listener;
 
-		return $this;
-	}
+        return $this;
+    }
 }

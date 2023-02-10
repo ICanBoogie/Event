@@ -41,178 +41,176 @@ use function strpos;
  */
 final class EventHookReflection
 {
-	/**
-	 * @var array<string, EventHookReflection>
-	 *     Where _key_ is a hook key.
-	 */
-	static private array $instances = [];
+    /**
+     * @var array<string, EventHookReflection>
+     *     Where _key_ is a hook key.
+     */
+    private static array $instances = [];
 
-	/**
-	 * Creates instance from an event hook.
-	 *
-	 * @throws InvalidArgumentException if `$hook` is not a valid event hook.
-	 * @throws ReflectionException
-	 */
-	static public function from(callable $hook): self
-	{
-		self::assert_valid($hook);
+    /**
+     * Creates instance from an event hook.
+     *
+     * @throws InvalidArgumentException if `$hook` is not a valid event hook.
+     * @throws ReflectionException
+     */
+    public static function from(callable $hook): self
+    {
+        self::assert_valid($hook);
 
-		$key = self::make_key($hook);
+        $key = self::make_key($hook);
 
-		return self::$instances[$key] ??= new self(self::resolve_reflection($hook));
-	}
+        return self::$instances[$key] ??= new self(self::resolve_reflection($hook));
+    }
 
-	/**
-	 * Makes key from event hook.
-	 *
-	 * @throws ReflectionException
-	 */
-	static private function make_key(callable $hook): string
-	{
-		if (is_array($hook)) {
-			return implode('#', $hook);
-		}
+    /**
+     * Makes key from event hook.
+     *
+     * @throws ReflectionException
+     */
+    private static function make_key(callable $hook): string
+    {
+        if (is_array($hook)) {
+            return implode('#', $hook);
+        }
 
-		if ($hook instanceof Closure) {
-			$reflection = new ReflectionFunction($hook);
+        if ($hook instanceof Closure) {
+            $reflection = new ReflectionFunction($hook);
 
-			return $reflection->getFileName() . '#' . $reflection->getStartLine() . '#' . $reflection->getEndLine();
-		}
+            return $reflection->getFileName() . '#' . $reflection->getStartLine() . '#' . $reflection->getEndLine();
+        }
 
-		if (is_object($hook)) {
-			/* @var $hook object */
+        if (is_object($hook)) {
+            return spl_object_hash($hook);
+        }
 
-			return spl_object_hash($hook);
-		}
+        assert(is_string($hook));
 
-		/* @var $hook string */
+        return $hook;
+    }
 
-		return $hook;
-	}
+    /**
+     * Asserts that the event hook is valid.
+     *
+     * @throws InvalidArgumentException if `$hook` is not a valid event hook.
+     */
+    public static function assert_valid(mixed $hook): void
+    {
+        is_callable($hook) or throw new InvalidArgumentException(
+            format("The event hook must be a callable, %type given: :hook", [
+                'type' => get_debug_type($hook),
+                'hook' => $hook
+            ])
+        );
+    }
 
-	/**
-	 * Asserts that the event hook is valid.
-	 *
-	 * @throws InvalidArgumentException if `$hook` is not a valid event hook.
-	 */
-	static public function assert_valid(callable $hook): void
-	{
-		is_callable($hook) or throw new InvalidArgumentException(
-			format
-			(
-				"The event hook must be a callable, %type given: :hook", [
+    /**
+     * Asserts that the number of parameters is valid.
+     *
+     * @param ReflectionParameter[] $parameters
+     */
+    public static function assert_valid_parameters_number(array $parameters): void
+    {
+        $n = count($parameters);
 
-					'type' => get_debug_type($hook),
-					'hook' => $hook
+        if ($n < 1) {
+            throw new LogicException("Expecting at least 1 parameter got none.");
+        }
 
-				]
-			)
-		);
-	}
+        if ($n > 2) {
+            throw new LogicException("Expecting at most 2 parameters got $n.");
+        }
+    }
 
-	/**
-	 * Asserts that the number of parameters is valid.
-	 *
-	 * @param ReflectionParameter[] $parameters
-	 */
-	static public function assert_valid_parameters_number(iterable $parameters): void
-	{
-		$n = count($parameters);
+    /**
+     * Resolves hook reflection.
+     *
+     * @throws ReflectionException
+     */
+    private static function resolve_reflection(callable $hook): ReflectionFunctionAbstract
+    {
+        if (is_object($hook)) {
+            return new ReflectionMethod($hook, '__invoke');
+        }
 
-		if ($n < 1) {
-			throw new LogicException("Expecting at least 1 parameter got none.");
-		}
+        if (is_array($hook)) {
+            return new ReflectionMethod($hook[0], $hook[1]);
+        }
 
-		if ($n > 2) {
-			throw new LogicException("Expecting at most 2 parameters got $n.");
-		}
-	}
+        if (is_string($hook) && strpos($hook, '::')) {
+            [ $class, $method ] = explode('::', $hook);
 
-	/**
-	 * Resolves hook reflection.
-	 *
-	 * @throws ReflectionException
-	 */
-	static private function resolve_reflection(callable $hook): ReflectionFunctionAbstract
-	{
-		if (is_object($hook)) {
-			return new ReflectionMethod($hook, '__invoke');
-		}
+            return new ReflectionMethod($class, $method);
+        }
 
-		if (is_array($hook)) {
-			return new ReflectionMethod($hook[0], $hook[1]);
-		}
+        assert(is_string($hook) || $hook instanceof Closure);
 
-		if (is_string($hook) && strpos($hook, '::')) {
-			[ $class, $method ] = explode('::', $hook);
+        return new ReflectionFunction($hook);
+    }
 
-			return new ReflectionMethod($class, $method);
-		}
+    /**
+     * Returns the class of a parameter reflection.
+     *
+     * Contrary of the {@link ReflectionParameter::getClass()} method, the class does not need to
+     * be available to be successfully retrieved.
+     *
+     * @return class-string
+     */
+    private static function resolve_parameter_class(ReflectionParameter $param): string
+    {
+        if (!preg_match('/([\w\\\]+)\s\$/', $param, $matches)) {
+            throw new LogicException("The parameter `$param->name` is not typed.");
+        }
 
-		return new ReflectionFunction($hook);
-	}
+        /** @phpstan-ignore-next-line  */
+        return $matches[1]
+            ?? throw new LogicException("Unable to resolve class from parameters `$param->name");
+    }
 
-	/**
-	 * Returns the class of a parameter reflection.
-	 *
-	 * Contrary of the {@link ReflectionParameter::getClass()} method, the class does not need to
-	 * be available to be successfully retrieved.
-	 *
-	 * @return class-string
-	 */
-	static private function resolve_parameter_class(ReflectionParameter $param): string
-	{
-		if (!preg_match('/([\w\\\]+)\s\$/', $param, $matches)) {
-			throw new LogicException("The parameter `$param->name` is not typed.");
-		}
+    private ReflectionFunctionAbstract $reflection;
 
-		return $matches[1]
-			?? throw new LogicException("Unable to resolve class from parameters `$param->name");
-	}
+    /**
+     * @var string The event type resolved from the event hook parameters.
+     */
+    public readonly string $type;
 
-	private ReflectionFunctionAbstract $reflection;
+    private function __construct(ReflectionFunctionAbstract $reflection)
+    {
+        $this->reflection = $reflection;
+        $this->type = $this->resolve_type();
+    }
 
-	/**
-	 * @var string The event type resolved from the event hook parameters.
-	 */
-	public readonly string $type;
+    /**
+     * Returns the event type resolved from the event hook parameters.
+     */
+    private function resolve_type(): string
+    {
+        $parameters = $this->reflection->getParameters();
 
-	private function __construct(ReflectionFunctionAbstract $reflection)
-	{
-		$this->reflection = $reflection;
-		$this->type = $this->resolve_type();
-	}
+        self::assert_valid_parameters_number($parameters);
 
-	/**
-	 * Returns the event type resolved from the event hook parameters.
-	 */
-	private function resolve_type(): string
-	{
-		$parameters = $this->reflection->getParameters();
+        [ $event_param, $sender_param ] = $parameters + [ 1 => null ];
 
-		self::assert_valid_parameters_number($parameters);
+        assert($event_param instanceof ReflectionParameter);
 
-		[ $event_param, $sender_param ] = $parameters + [ 1 => null ];
+        try {
+            $event_class = self::resolve_parameter_class($event_param);
+        } catch (LogicException $e) {
+            throw new LogicException(
+                "The parameter `$event_param->name` must be an instance of `ICanBoogie\Event`.",
+                previous: $e
+            );
+        }
 
-		try {
-			$event_class = self::resolve_parameter_class($event_param);
-		} catch (LogicException $e) {
-			throw new LogicException(
-				"The parameter `$event_param->name` must be an instance of `ICanBoogie\Event`.",
-				previous: $e
-			);
-		}
+        assert(is_subclass_of($event_class, Event::class));
 
-		assert(is_subclass_of($event_class, Event::class, true));
+        if (!$sender_param) {
+            return $event_class;
+        }
 
-		if (!$sender_param) {
-			return $event_class;
-		}
+        $sender_class = self::resolve_parameter_class($sender_param);
 
-		$sender_class = self::resolve_parameter_class($sender_param);
+        /** @var Event $event_class */
 
-		/** @var Event $event_class */
-
-		return $event_class::for($sender_class);
-	}
+        return $event_class::for($sender_class);
+    }
 }
