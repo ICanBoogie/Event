@@ -20,7 +20,10 @@
 		"source": "https://github.com/ICanBoogie/Event"
 	},
 	"config": {
-		"sort-packages": true
+		"sort-packages": true,
+		"allow-plugins": {
+			"olvlvl/composer-attribute-collector": true
+		}
 	},
 	"minimum-stability": "dev",
 	"prefer-stable": true,
@@ -30,6 +33,8 @@
 		"icanboogie/inflector": "^1.3|^2.0"
 	},
 	"require-dev": {
+		"icanboogie/service": "dev-master",
+		"olvlvl/composer-attribute-collector": "^2.0",
 		"phpstan/phpstan": "^1.5",
 		"phpunit/phpunit": "^9.5"
 	},
@@ -44,6 +49,16 @@
 	"autoload-dev": {
 		"psr-4": {
 			"Test\\ICanBoogie\\": "tests"
-		}
-	}
+		},
+        "files": [
+            "vendor/attributes.php"
+        ]
+	},
+    "extra": {
+        "composer-attribute-collector": {
+            "include": [
+                "tests"
+            ]
+        }
+    }
 }
