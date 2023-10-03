@@ -85,11 +85,11 @@ final class ConfigBuilder
             /** @var class-string<Event> $event_class */
 
             match (count($parameters)) {
-                1 => $this->attach($event_class, $listener),
+                1 => $this->attach($event_class, $listener), // @phpstan-ignore-line
                 2 => $this->attach_to(
                     self::ensure_class($parameters[1]->getType()),
                     $event_class,
-                    $listener
+                    $listener // @phpstan-ignore-line
                 ),
                 default => throw new LogicException("Too many parameters for $target->class::$target->name")
             };

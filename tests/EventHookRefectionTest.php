@@ -54,7 +54,7 @@ final class EventHookRefectionTest extends TestCase
         );
     }
 
-    public function provide_event_hooks_with_sender(): array
+    public static function provide_event_hooks_with_sender(): array
     {
         return [
 
@@ -81,7 +81,7 @@ final class EventHookRefectionTest extends TestCase
         );
     }
 
-    public function provide_event_hooks_without_sender(): array
+    public static function provide_event_hooks_without_sender(): array
     {
         return [
 

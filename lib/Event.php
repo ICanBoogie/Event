@@ -53,7 +53,7 @@ abstract class Event
      *
      * **Note:** The property is only initialized if the event is constructed with a sender.
      */
-    public readonly object $sender;
+    public readonly object $sender; // @phpstan-ignore-line
 
     /**
      * Event unqualified type e.g. `MyEvent`.
@@ -101,7 +101,7 @@ abstract class Event
             $this->sender = $sender;
             $this->qualified_type = static::for($sender);
         } else {
-            $this->qualified_type = $this->unqualified_type; // @phpstan-ignore-line
+            $this->qualified_type = $this->unqualified_type;
         }
     }
 
