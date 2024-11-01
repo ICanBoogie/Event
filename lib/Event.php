@@ -79,7 +79,7 @@ abstract class Event
     /**
      * @param object|null $sender The sender of the event.
      */
-    public function __construct(object $sender = null)
+    public function __construct(?object $sender = null)
     {
         if (func_num_args() > 1) {
             trigger_error(

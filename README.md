@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/packagist/v/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 [![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/master.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
-[![Code Coverage](https://img.shields.io/coveralls/ICanBoogie/Event/master.svg)](https://coveralls.io/r/ICanBoogie/Event)
+[![Code Coverage](https://coveralls.io/repos/github/ICanBoogie/Event/badge.svg?branch=6.0)](https://coveralls.io/r/ICanBoogie/Event?branch=6.0)
 [![Downloads](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
 The **icanboogie/event** allows you to provide hooks which other developers can attach to, to be
@@ -67,13 +67,13 @@ that event hooks are _inherited_.
 ## Getting started
 
 To be emitted, events need an event collection, which holds event hooks. Because a new event
-collection is created for you when required, you don't need to set up one yourself. Still you might
+collection is created for you when required, you don't need to set one up yourself. Still, you might
 want to do so if you have a bunch of event hooks that you need to attach while creating the event
-collection. To do so, you need to define a _provider_ that will return your event collection when
+collection. To do so, you need to define a _provider_ that returns your event collection when
 required.
 
-The following example demonstrates how to setup a provider that instantiates an event collection
-with event hooks provided by an application configuration:
+The following example demonstrates how to set up a provider that instantiates an event collection
+with event hooks provided by an app configuration:
 
 ```php
 <?php
@@ -84,9 +84,9 @@ namespace ICanBoogie;
 
 EventCollectionProvider::define(function() use ($app) {
 
-	static $collection;
+    static $collection;
 
-	return $collection ??= new EventCollection($app->configs['event']);
+    return $collection ??= new EventCollection($app->configs['event']);
 
 });
 
@@ -103,7 +103,7 @@ $events = get_events();
 
 ## Typed events
 
-All events are instance of the [Event][] class, and because it is abstract it needs to be extended.
+Events are subclasses of the [Event][] class.
 
 The following code demonstrates how a `ProcessEvent` class may be defined:
 
@@ -119,21 +119,21 @@ use ICanBoogie\Operation;
 
 class ProcessEvent extends Event
 {
-	/**
-	 * Reference to the response result property.
-	 */
-	public mixed $result;
+    /**
+     * Reference to the response result property.
+     */
+    public mixed $result;
 
-	public function __construct(
-	    Operation $target,
-	    public readonly Request $request,
-	    public readonly Response $response,
-	    mixed &$result
+    public function __construct(
+        Operation $target,
+        public readonly Request $request,
+        public readonly Response $response,
+        mixed &$result
     ) {
-		$this->result = &$result;
+        $this->result = &$result;
 
-		parent::__construct($target);
-	}
+        parent::__construct($target);
+    }
 }
 ```
 
@@ -180,7 +180,7 @@ emit($event);
 ## Attaching event hooks
 
 Event hooks are attached using the `attach()` method of an event collection. The `attach()` method
-is smart enough to create the event type from the parameters type. This works with any callable:
+is smart enough to create the event type from the parameter types. This works with any callable:
 closure, invokable objects, static class methods, functions.
 
 The following example demonstrates how a closure may be attached to a `BeforeProcessEvent` event.
@@ -192,7 +192,7 @@ namespace ICanBoogie
 
 $detach = $events->attach(function(Operation\BeforeProcessEvent $event, Operation $target) {
 
-	// …
+    // …
 
 });
 
@@ -200,7 +200,7 @@ $detach = $events->attach(function(Operation\BeforeProcessEvent $event, Operatio
 
 $detach = $events->attach(function(Operation\BeforeProcessEvent $event) {
 
-	// …
+    // …
 
 });
 
@@ -216,17 +216,17 @@ namespace ICanBoogie
 
 class ValidateOperation
 {
-	private $rules;
+    private $rules;
 
-	public function __construct(array $rules)
-	{
-		$this->rules = $rules;
-	}
+    public function __construct(array $rules)
+    {
+        $this->rules = $rules;
+    }
 
-	public function __invoke(Operation\BeforeProcessEvent $event, Operation $target)
-	{
-		// …
-	}
+    public function __invoke(Operation\BeforeProcessEvent $event, Operation $target)
+    {
+        // …
+    }
 }
 
 // …
@@ -259,7 +259,7 @@ use ICanBoogie\Routing\Controller;
 
 $detach = $events->attach_to($controller, function(Controller\ActionEvent $event, Controller $target) {
 
-	echo "invoked!";
+    echo "invoked!";
 
 });
 
@@ -277,9 +277,9 @@ $detach(); // You can detach if you no longer want to listen.
 
 
 
-### Attaching a _one time_ event hook
+### Attaching a _one-time_ event hook
 
-The `once()` method attaches event hooks that are automatically detached after they have been used.
+The `once()` method attaches an event hook that is automatically detached after it's been used.
 
 ```php
 <?php
@@ -292,7 +292,7 @@ $n = 0;
 
 $events->once(MyEvent $event, function() use(&$n) {
 
-	$n++;
+    $n++;
 
 });
 
@@ -332,34 +332,34 @@ namespace ICanBoogie;
 
 class CountEvent extends Event
 {
-	public function __construct(
-	    public string $count = "0"
+    public function __construct(
+        public string $count = "0"
     ) {
-		parent::__construct();
-	}
+        parent::__construct();
+    }
 }
 
 /* @var $events EventCollection */
 
 $events->attach(function(CountEvent $event): void {
 
-	$event->count .= "2";
+    $event->count .= "2";
 
 });
 
 $events->attach(function(CountEvent $event): void {
 
-	$event->count .= "1";
+    $event->count .= "1";
 
 });
 
-$events->attach('count', function(CountEvent $event): void {
+$events->attach(function(CountEvent $event): void {
 
-	$event->chain(function(CountEvent $event) {
+    $event->chain(function(CountEvent $event) {
 
-		$event->count .= "3";
+        $event->count .= "3";
 
-	});
+    });
 });
 
 $event = emit(new CountEvent(0));
@@ -382,8 +382,8 @@ use ICanBoogie\Operation;
 
 function on_event(Operation\ProcessEvent $event, Operation $operation): void
 {
-	$event->rc = true;
-	$event->stop();
+    $event->rc = true;
+    $event->stop();
 }
 ```
 
@@ -403,12 +403,12 @@ use ICanBoogie\EventProfiler;
 
 foreach (EventProfiler::$unused as list($time, $type))
 {
-	// …
+    // …
 }
 
 foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 {
-	// …
+    // …
 }
 ```
 
@@ -433,9 +433,9 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 The project is continuously tested by [GitHub actions](https://github.com/ICanBoogie/Event/actions).
 
-[![Tests](https://github.com/ICanBoogie/Event/workflows/test/badge.svg?branch=master)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Atest)
-[![Static Analysis](https://github.com/ICanBoogie/Event/workflows/static-analysis/badge.svg?branch=master)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Astatic-analysis)
-[![Code Style](https://github.com/ICanBoogie/Event/workflows/code-style/badge.svg?branch=master)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Acode-style)
+[![Tests](https://github.com/ICanBoogie/Event/workflows/test/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Atest)
+[![Static Analysis](https://github.com/ICanBoogie/Event/workflows/static-analysis/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Astatic-analysis)
+[![Code Style](https://github.com/ICanBoogie/Event/workflows/code-style/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Acode-style)
 
 
 

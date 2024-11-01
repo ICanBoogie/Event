@@ -107,7 +107,7 @@ class EventCollection implements IteratorAggregate
      */
     private array $skippable = [];
 
-    public function __construct(Config $config = null)
+    public function __construct(?Config $config = null)
     {
         $this->original_hooks = new SplObjectStorage();
 
@@ -143,7 +143,7 @@ class EventCollection implements IteratorAggregate
      *
      * @throws ReflectionException
      */
-    public function attach(Closure|string $type_or_hook, Closure $hook = null): Detach
+    public function attach(Closure|string $type_or_hook, ?Closure $hook = null): Detach
     {
         [ $type, $hook ] = self::resolve_type_and_hook($type_or_hook, $hook);
 
@@ -225,7 +225,7 @@ class EventCollection implements IteratorAggregate
      *
      * @throws ReflectionException
      */
-    public function once(Closure|string $type_or_hook, Closure $hook = null): Detach
+    public function once(Closure|string $type_or_hook, ?Closure $hook = null): Detach
     {
         [ $type, $hook ] = self::resolve_type_and_hook($type_or_hook, $hook);
 
