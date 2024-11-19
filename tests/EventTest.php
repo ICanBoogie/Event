@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Test\ICanBoogie;
 
 use Error;
@@ -42,7 +33,7 @@ final class EventTest extends TestCase
 
         $this->expectException(Error::class);
         $this->expectExceptionMessageMatches("/sender must not be accessed before initialization/");
-        $this->assertNull($event->sender);
+        $this->assertNull($event->sender); // @phpstan-ignore-line
     }
 
     public function test_for(): void
@@ -92,7 +83,7 @@ final class EventTest extends TestCase
         });
 
         /*
-         * We add "three" to the values of A instances before they are processed.
+         * We add "three" to the values before they're processed.
          */
         $this->events->attach(function (BeforeProcessEvent $event, Processor $sender) {
             $event->values['three'] = 3;

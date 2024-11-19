@@ -1,30 +1,21 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ICanBoogie;
 
 use LogicException;
 
 /**
- * Provides an {@link EventCollection} instance.
+ * Provides an {@see EventCollection} instance.
  */
 class EventCollectionProvider
 {
     /**
-     * @var callable|null {@link EventCollection} provider
+     * @var callable|null {@see EventCollection} provider
      */
     private static $provider;
 
     /**
-     * Defines the {@link EventCollection} provider.
+     * Defines the {@see EventCollection} provider.
      *
      * @return ?callable
      *     The previous provider, or `null` if none was defined.
@@ -55,7 +46,7 @@ class EventCollectionProvider
     }
 
     /**
-     * Returns a {@link EventCollection} instance using the provider.
+     * Returns a {@see EventCollection} instance using the provider.
      */
     public static function provide(): EventCollection
     {

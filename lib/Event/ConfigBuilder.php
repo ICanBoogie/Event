@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ICanBoogie\Event;
 
 use ICanBoogie\Event;
@@ -62,7 +53,7 @@ final class ConfigBuilder
 
     public function use_attributes(): self
     {
-        $targets = Attributes::findTargetMethods(Listen::class);
+        $targets = Attributes::findTargetMethods(Listener::class);
 
         foreach ($targets as $target) {
             $method = new ReflectionMethod($target->class, $target->name);
@@ -75,7 +66,7 @@ final class ConfigBuilder
                     throw new LogicException("Only invokable classes can be attached");
                 }
 
-                /* @var callable $listener **/
+                /* @var callable $listener * */
                 $listener = ref($target->attribute->ref ?? $target->class);
             }
 
@@ -89,7 +80,7 @@ final class ConfigBuilder
                 2 => $this->attach_to(
                     self::ensure_class($parameters[1]->getType()),
                     $event_class,
-                    $listener // @phpstan-ignore-line
+                    $listener, // @phpstan-ignore-line
                 ),
                 default => throw new LogicException("Too many parameters for $target->class::$target->name")
             };
@@ -104,12 +95,12 @@ final class ConfigBuilder
     private static function ensure_extends_event(?ReflectionType $type): string
     {
         $type instanceof ReflectionNamedType
-            or throw new LogicException("Expected named type, got: $type");
+        or throw new LogicException("Expected named type, got: $type");
 
         $type = $type->getName();
 
         is_a($type, Event::class, true)
-            or throw new LogicException("$type does not extend " . Event::class);
+        or throw new LogicException("$type does not extend " . Event::class);
 
         return $type;
     }
@@ -120,12 +111,12 @@ final class ConfigBuilder
     private static function ensure_class(?ReflectionType $type): string
     {
         $type instanceof ReflectionNamedType
-            or throw new LogicException("Expected named type, got: $type");
+        or throw new LogicException("Expected named type, got: $type");
 
         $type = $type->getName();
 
-        class_exists($type, true)
-            or throw new LogicException("$type is not a loadable class");
+        class_exists($type)
+        or throw new LogicException("$type is not a loadable class");
 
         return $type;
     }

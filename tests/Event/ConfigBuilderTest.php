@@ -1,19 +1,10 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Test\ICanBoogie\Event;
 
 use ICanBoogie\Event\Config;
 use ICanBoogie\Event\ConfigBuilder;
-use ICanBoogie\Event\Listen;
+use ICanBoogie\Event\Listener;
 use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\Acme\ListenerServiceWithoutSender;
 use Test\ICanBoogie\Acme\ListenerServiceWithSender;
@@ -27,13 +18,13 @@ final class ConfigBuilderTest extends TestCase
 {
     private Config $config;
 
-    #[Listen]
-    public static function sample_listener_without_target(SampleEvent $event)
+    #[Listener]
+    public static function sample_listener_without_target(SampleEvent $event): void
     {
     }
 
-    #[Listen]
-    public static function sample_listener_with_target(SampleSender\ActionEvent $event, SampleSender $sender)
+    #[Listener]
+    public static function sample_listener_with_target(SampleSender\ActionEvent $event, SampleSender $sender): void
     {
     }
 
@@ -46,7 +37,7 @@ final class ConfigBuilderTest extends TestCase
             ->attach_to(
                 SampleSender::class,
                 SampleSender\ActionEvent::class,
-                [ self::class, 'sample_listener_with_target' ]
+                [ self::class, 'sample_listener_with_target' ],
             )
             ->build();
     }
@@ -56,11 +47,11 @@ final class ConfigBuilderTest extends TestCase
         $sut = $this->config;
         $expected = new Config([
             SampleEvent::class => [
-                [ self::class, 'sample_listener_without_target' ]
+                [ self::class, 'sample_listener_without_target' ],
             ],
             SampleSender\ActionEvent::for(SampleSender::class) => [
-                [ self::class, 'sample_listener_with_target' ]
-            ]
+                [ self::class, 'sample_listener_with_target' ],
+            ],
         ]);
 
         $this->assertEquals($expected, $sut);
@@ -80,11 +71,11 @@ final class ConfigBuilderTest extends TestCase
                 ref(ListenerServiceWithoutSender::class),
             ],
             SampleEvent::class => [
-                [ self::class, 'sample_listener_without_target' ]
+                [ self::class, 'sample_listener_without_target' ],
             ],
             SampleSender\ActionEvent::for(SampleSender::class) => [
-                [ self::class, 'sample_listener_with_target' ]
-            ]
+                [ self::class, 'sample_listener_with_target' ],
+            ],
         ]);
 
         $this->assertEquals($expected, $actual);

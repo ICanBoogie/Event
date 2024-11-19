@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ICanBoogie;
 
 use Closure;
@@ -48,7 +39,7 @@ final class EventHookReflection
     private static array $instances = [];
 
     /**
-     * Creates instance from an event hook.
+     * Creates a {@see EventHookReflection} from an event hook.
      *
      * @throws InvalidArgumentException if `$hook` is not a valid event hook.
      * @throws ReflectionException
@@ -133,6 +124,7 @@ final class EventHookReflection
         }
 
         if (is_array($hook)) {
+            /** @var array{ class-string, string } $hook */
             return new ReflectionMethod($hook[0], $hook[1]);
         }
 
@@ -150,7 +142,7 @@ final class EventHookReflection
     /**
      * Returns the class of a parameter reflection.
      *
-     * Contrary of the {@link ReflectionParameter::getClass()} method, the class does not need to
+     * Contrary of the {@see ReflectionParameter::getClass()} method, the class doesn't need to
      * be available to be successfully retrieved.
      *
      * @return class-string
@@ -158,7 +150,7 @@ final class EventHookReflection
     private static function resolve_parameter_class(ReflectionParameter $param): string
     {
         if (!preg_match('/([\w\\\]+)\s\$/', $param, $matches)) {
-            throw new LogicException("The parameter `$param->name` is not typed.");
+            throw new LogicException("The parameter `$param->name` is not typed");
         }
 
         /** @phpstan-ignore-next-line  */
@@ -196,20 +188,19 @@ final class EventHookReflection
             $event_class = self::resolve_parameter_class($event_param);
         } catch (LogicException $e) {
             throw new LogicException(
-                "The parameter `$event_param->name` must be an instance of `ICanBoogie\Event`.",
+                "The parameter `$event_param->name` must be an instance of ICanBoogie\Event",
                 previous: $e
             );
         }
 
         assert(is_subclass_of($event_class, Event::class));
+        /** @var class-string<Event> $event_class */
 
         if (!$sender_param) {
             return $event_class;
         }
 
         $sender_class = self::resolve_parameter_class($sender_param);
-
-        /** @var Event $event_class */
 
         return $event_class::for($sender_class);
     }

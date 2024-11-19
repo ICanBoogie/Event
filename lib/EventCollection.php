@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ICanBoogie;
 
 use ArrayIterator;
@@ -136,9 +127,9 @@ class EventCollection implements IteratorAggregate
     /**
      * Attaches an event hook.
      *
-     * @param Closure|string $type_or_hook
+     * @param (Closure(Event, ?object): void)|(Closure(Event): void)|string $type_or_hook
      *     Event type or event hook.
-     * @param (Closure(Event, ?object): void)|null $hook
+     * @param (Closure(Event, ?object): void)|(Closure(Event): void)|null $hook
      *     The event hook, or nothing if $type is the event hook.
      *
      * @throws ReflectionException
@@ -333,7 +324,6 @@ class EventCollection implements IteratorAggregate
         }
     }
 
-
     /**
      * Marks an event as skippable.
      *
@@ -345,11 +335,9 @@ class EventCollection implements IteratorAggregate
     }
 
     /**
-     * Returns whether or not an event has been marked as skippable.
+     * Returns whether an event has been marked as skippable.
      *
      * @param string $type The event type.
-     *
-     * @return bool `true` if the event can be skipped, `false` otherwise.
      */
     public function is_skippable(string $type): bool
     {
@@ -386,7 +374,7 @@ class EventCollection implements IteratorAggregate
     }
 
     /**
-     * Consolidate hooks of a same type.
+     * Consolidate hooks of the same type.
      *
      * If the class of the event's sender is provided, event hooks are filtered according to the class and its
      * hierarchy.
@@ -412,14 +400,7 @@ class EventCollection implements IteratorAggregate
         return $hooks;
     }
 
-    /**
-     * Resolves original hook.
-     *
-     * @param callable $hook
-     *
-     * @return callable
-     */
-    public function resolve_original_hook(callable $hook): callable
+    private function resolve_original_hook(callable $hook): callable
     {
         if (!is_object($hook) || empty($this->original_hooks[$hook])) {
             return $hook;

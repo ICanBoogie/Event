@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace ICanBoogie;
 
 use ICanBoogie\Accessor\AccessorTrait;
@@ -23,21 +14,20 @@ use const E_USER_DEPRECATED;
 /**
  * An event.
  *
- * @property-read bool $stopped `true` when the event was stopped, `false` otherwise.
+ * @property-read bool $stopped
+ *     Whether the even propagation has been stopped.
+ *     {@see self::get_stopped()}
  */
 abstract class Event
 {
-    /**
-     * @uses get_stopped
-     */
     use AccessorTrait;
 
     /**
      * @param object|class-string $sender
      *
      * @return string
-     *     A qualified event type made of the sender class and the unqualified event type.
-     *     e.g. "Exception::recover"
+     *     A qualified event type made of the sender class and the unqualified event type;
+     *     for example, "Exception::recover"
      */
     public static function for(string|object $sender): string
     {
@@ -49,32 +39,21 @@ abstract class Event
     }
 
     /**
-     * The object the event is dispatched on.
+     * The sender of the event.
      *
-     * **Note:** The property is only initialized if the event is constructed with a sender.
+     * **Note**: The property is only initialized if the event is constructed with a sender.
      */
     public readonly object $sender; // @phpstan-ignore-line
 
     /**
-     * Event unqualified type e.g. `MyEvent`.
+     * Event unqualified type; for example, `MyEvent`.
      */
     public readonly string $unqualified_type;
 
     /**
-     * Event qualified type. e.g. `Exception::MyEvent`
+     * Event qualified type; for example, `Exception::MyEvent`.
      */
     public readonly string $qualified_type;
-
-    /**
-     * `true` when the event was stopped, `false` otherwise.
-     */
-    private bool $stopped = false;
-
-    /** @phpstan-ignore-next-line */
-    private function get_stopped(): bool
-    {
-        return $this->stopped;
-    }
 
     /**
      * @param object|null $sender The sender of the event.
@@ -84,14 +63,14 @@ abstract class Event
         if (func_num_args() > 1) {
             trigger_error(
                 "The 'type' parameter is no longer supported, the event class is used instead.",
-                E_USER_DEPRECATED
+                E_USER_DEPRECATED,
             );
         }
 
         if (func_num_args() > 2) {
             trigger_error(
                 "The 'payload' parameter is no longer supported, better write an event class.",
-                E_USER_DEPRECATED
+                E_USER_DEPRECATED,
             );
         }
 
@@ -105,10 +84,17 @@ abstract class Event
         }
     }
 
+    private bool $stopped = false;
+
+    private function get_stopped(): bool
+    {
+        return $this->stopped;
+    }
+
     /**
-     * Stops the hooks chain.
+     * Stops the hook chain.
      *
-     * After the `stop()` method is called the hooks chain is broken and no other hook is called.
+     * After the `stop()` method is called, the hook chain is broken and no other hook is called.
      */
     public function stop(): void
     {

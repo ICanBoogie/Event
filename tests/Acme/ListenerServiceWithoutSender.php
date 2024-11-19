@@ -2,12 +2,12 @@
 
 namespace Test\ICanBoogie\Acme;
 
-use ICanBoogie\Event\Listen;
+use ICanBoogie\Event\Listener;
 use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
 class ListenerServiceWithoutSender
 {
-    #[Listen]
+    #[Listener]
     public function __invoke(BeforeActionEvent $event): void
     {
     }

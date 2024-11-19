@@ -5,7 +5,7 @@ namespace ICanBoogie\Event;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_METHOD)]
-class Listen
+class Listener
 {
     /**
      * @param non-empty-string|null $ref

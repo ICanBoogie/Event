@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Test\ICanBoogie;
 
 use ICanBoogie\EventHookReflection;
@@ -27,11 +18,11 @@ final class EventHookRefectionTest extends TestCase
     /**
      * @dataProvider provide_event_hooks_with_sender
      */
-    public function test_valid(mixed $hook)
+    public function test_valid(mixed $hook): void
     {
         EventHookReflection::assert_valid($hook);
 
-        $this->assertTrue(true);
+        $this->assertTrue(true); // @phpstan-ignore-line
     }
 
     public function test_from(): void
@@ -46,11 +37,11 @@ final class EventHookRefectionTest extends TestCase
     /**
      * @dataProvider provide_event_hooks_with_sender
      */
-    public function test_type_with_sender(mixed $hook): void
+    public function test_type_with_sender(callable $hook): void
     {
         $this->assertEquals(
             BeforeActionEvent::for(SampleSender::class),
-            EventHookReflection::from($hook)->type
+            EventHookReflection::from($hook)->type,
         );
     }
 
@@ -63,9 +54,9 @@ final class EventHookRefectionTest extends TestCase
             [ [ SampleHooks::class, 'with_sender' ] ],
             [
                 function (BeforeActionEvent $event, SampleSender $sender) {
-                }
+                },
             ],
-            [ new SampleCallableWithSender() ]
+            [ new SampleCallableWithSender() ],
 
         ];
     }
@@ -73,11 +64,11 @@ final class EventHookRefectionTest extends TestCase
     /**
      * @dataProvider provide_event_hooks_without_sender
      */
-    public function test_type_without_sender(mixed $hook): void
+    public function test_type_without_sender(callable $hook): void
     {
         $this->assertEquals(
             SampleEvent::class,
-            EventHookReflection::from($hook)->type
+            EventHookReflection::from($hook)->type,
         );
     }
 
@@ -90,9 +81,9 @@ final class EventHookRefectionTest extends TestCase
             [ [ SampleHooks::class, 'without_sender' ] ],
             [
                 function (SampleEvent $event) {
-                }
+                },
             ],
-            [ new SampleCallableWithoutSender() ]
+            [ new SampleCallableWithoutSender() ],
 
         ];
     }
@@ -100,38 +91,32 @@ final class EventHookRefectionTest extends TestCase
     public function test_invalid_parameters(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage("The parameter `a` must be an instance of `ICanBoogie\\Event`.");
-        $this->assertNull(
-            EventHookReflection::from(function ($a, SampleSender $b) {
-            })
-        );
+        $this->expectExceptionMessage("The parameter `a` must be an instance of ICanBoogie\\Event");
+        EventHookReflection::from(function ($a, SampleSender $b) {
+        });
     }
 
     public function test_too_few_parameters(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage("Expecting at least 1 parameter got none.");
-        $this->assertNull(
-            EventHookReflection::from(function () {
-            })
-        );
+        EventHookReflection::from(function () {
+        });
     }
 
     public function test_too_few_many_parameters(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage("Expecting at most 2 parameters got 3.");
-        $this->assertNull(
-            EventHookReflection::from(function ($a, $b, $c) {
-            })
-        );
+        EventHookReflection::from(function ($a, $b, $c) {
+        });
     }
 }
 
-function hook_with_sender(BeforeActionEvent $event, SampleSender $sender)
+function hook_with_sender(BeforeActionEvent $event, SampleSender $sender): void
 {
 }
 
-function hook_without_sender(SampleEvent $event)
+function hook_without_sender(SampleEvent $event): void
 {
 }

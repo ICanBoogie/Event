@@ -1,7 +1,6 @@
 # Event
 
 [![Release](https://img.shields.io/packagist/v/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
-[![Code Quality](https://img.shields.io/scrutinizer/g/ICanBoogie/Event/master.svg)](https://scrutinizer-ci.com/g/ICanBoogie/Event)
 [![Code Coverage](https://coveralls.io/repos/github/ICanBoogie/Event/badge.svg?branch=6.0)](https://coveralls.io/r/ICanBoogie/Event?branch=6.0)
 [![Downloads](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
@@ -16,7 +15,7 @@ rescue an exception.
 
 #### Installation
 
-```bash
+```shell
 composer require icanboogie/event
 ```
 
@@ -433,28 +432,22 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 The project is continuously tested by [GitHub actions](https://github.com/ICanBoogie/Event/actions).
 
-[![Tests](https://github.com/ICanBoogie/Event/workflows/test/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Atest)
-[![Static Analysis](https://github.com/ICanBoogie/Event/workflows/static-analysis/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Astatic-analysis)
-[![Code Style](https://github.com/ICanBoogie/Event/workflows/code-style/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions?query=workflow%3Acode-style)
+[![Tests](https://github.com/ICanBoogie/Event/actions/workflows/test.yml/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions/workflows/test.yml)
+[![Static Analysis](https://github.com/ICanBoogie/Event/actions/workflows/static-analysis.yml/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions/workflows/static-analysis.yml)
+[![Code Style](https://github.com/ICanBoogie/Event/actions/workflows/code-style.yml/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions/workflows/code-style.yml)
 
 
 
 ## Code of Conduct
 
 This project adheres to a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in
-this project and its community, you are expected to uphold this code.
+this project and its community, you're expected to uphold this code.
 
 
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-
-
-## License
-
-**icanboogie/event** is released under the [BSD-3-Clause](LICENSE).
+See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 
 

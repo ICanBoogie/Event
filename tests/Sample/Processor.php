@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of the ICanBoogie package.
- *
- * (c) Olivier Laviale <olivier.laviale@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Test\ICanBoogie\Sample;
 
 use Exception;
@@ -20,6 +11,11 @@ use function ICanBoogie\emit;
 
 class Processor
 {
+    /**
+     * @param mixed[] $values
+     *
+     * @return mixed[]
+     */
     public function __invoke(array $values): array
     {
         if (!$this->validate($values)) {
@@ -31,6 +27,9 @@ class Processor
         return $this->process($values);
     }
 
+    /**
+     * @param mixed[] $values
+     */
     protected function validate(array $values): bool
     {
         $valid = false;
@@ -40,6 +39,11 @@ class Processor
         return $valid;
     }
 
+    /**
+     * @param mixed[] $values
+     *
+     * @return mixed[]
+     */
     protected function process(array $values): array
     {
         emit(new ProcessEvent($this, $values));
