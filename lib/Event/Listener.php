@@ -5,7 +5,7 @@ namespace ICanBoogie\Event;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_METHOD)]
-class Listener
+final readonly class Listener
 {
     /**
      * @param non-empty-string|null $ref
@@ -13,7 +13,7 @@ class Listener
      *     If the method is non-static, defaults to the class.
      */
     public function __construct(
-        public readonly ?string $ref = null,
+        public ?string $ref = null,
     ) {
     }
 }

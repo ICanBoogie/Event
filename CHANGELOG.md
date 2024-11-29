@@ -1,4 +1,29 @@
-# Migration
+# CHANGELOG
+
+## v7.0
+
+### New Requirements
+
+PHP 8.4+
+
+### New features
+
+None
+
+### Deprecated Features
+
+None
+
+### Backward Incompatible Changes
+
+- `Event` dropped `AccessorTrait` in favor of property hooks.
+- The packages `icanboogie/accessor` and `icanboogie/common` are no longer used.
+
+### Other changes
+
+None
+
+
 
 ## v4.x to v6.0
 

@@ -2,7 +2,7 @@
 
 namespace ICanBoogie\Event;
 
-final class Config
+final readonly class Config
 {
     /**
      * @param array{ 'listeners': array<string, callable[]> } $an_array
@@ -18,7 +18,7 @@ final class Config
      * @param array<string, callable[]> $listeners
      */
     public function __construct(
-        public readonly array $listeners
+        public array $listeners
     ) {
     }
 }

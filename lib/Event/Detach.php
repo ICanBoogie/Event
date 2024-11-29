@@ -26,12 +26,12 @@ use ICanBoogie\EventCollection;
  *
  * @internal
  */
-final class Detach
+final readonly class Detach
 {
     public function __construct(
-        private readonly EventCollection $events,
-        private readonly string $type,
-        private readonly Closure $hook
+        private EventCollection $events,
+        private string $type,
+        private Closure $hook
     ) {
     }
 

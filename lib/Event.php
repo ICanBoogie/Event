@@ -2,8 +2,6 @@
 
 namespace ICanBoogie;
 
-use ICanBoogie\Accessor\AccessorTrait;
-
 use function func_num_args;
 use function get_called_class;
 use function is_object;
@@ -13,15 +11,9 @@ use const E_USER_DEPRECATED;
 
 /**
  * An event.
- *
- * @property-read bool $stopped
- *     Whether the even propagation has been stopped.
- *     {@see self::get_stopped()}
  */
 abstract class Event
 {
-    use AccessorTrait;
-
     /**
      * @param object|class-string $sender
      *
@@ -84,12 +76,10 @@ abstract class Event
         }
     }
 
-    private bool $stopped = false;
-
-    private function get_stopped(): bool
-    {
-        return $this->stopped;
-    }
+    /**
+     * Whether the even propagation has been stopped.
+     */
+    private(set) bool $stopped = false;
 
     /**
      * Stops the hook chain.

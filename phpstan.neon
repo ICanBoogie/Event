@@ -4,7 +4,5 @@ parameters:
   paths:
     - lib
   ignoreErrors:
-    # accessors are often defined as private and may look unused.
-    - message: "/::get_.+ is unused./"
     - message: "/::provide_.+ iterable type array/"
       reportUnmatched: false

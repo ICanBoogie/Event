@@ -86,11 +86,9 @@ final class EventHookReflection
      */
     public static function assert_valid(mixed $hook): void
     {
-        is_callable($hook) or throw new InvalidArgumentException(
-            format("The event hook must be a callable, %type given: :hook", [
-                'type' => get_debug_type($hook),
-                'hook' => $hook
-            ])
+        is_callable($hook)
+        or throw new InvalidArgumentException(
+            "The event hook must be a callable, given: " . get_debug_type($hook),
         );
     }
 
@@ -153,7 +151,7 @@ final class EventHookReflection
             throw new LogicException("The parameter `$param->name` is not typed");
         }
 
-        /** @phpstan-ignore-next-line  */
+        /** @phpstan-ignore-next-line */
         return $matches[1]
             ?? throw new LogicException("Unable to resolve class from parameters `$param->name");
     }
@@ -189,7 +187,7 @@ final class EventHookReflection
         } catch (LogicException $e) {
             throw new LogicException(
                 "The parameter `$event_param->name` must be an instance of ICanBoogie\Event",
-                previous: $e
+                previous: $e,
             );
         }
 
