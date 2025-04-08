@@ -4,6 +4,7 @@ namespace Test\ICanBoogie;
 
 use ICanBoogie\EventHookReflection;
 use LogicException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\Sample\SampleCallableWithoutSender;
 use Test\ICanBoogie\Sample\SampleCallableWithSender;
@@ -15,9 +16,7 @@ use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
 final class EventHookRefectionTest extends TestCase
 {
-    /**
-     * @dataProvider provide_event_hooks_with_sender
-     */
+    #[DataProvider('provide_event_hooks_with_sender')]
     public function test_valid(mixed $hook): void
     {
         EventHookReflection::assert_valid($hook);
@@ -34,9 +33,7 @@ final class EventHookRefectionTest extends TestCase
         $this->assertSame($reflection, EventHookReflection::from($hook));
     }
 
-    /**
-     * @dataProvider provide_event_hooks_with_sender
-     */
+    #[DataProvider('provide_event_hooks_with_sender')]
     public function test_type_with_sender(callable $hook): void
     {
         $this->assertEquals(
@@ -61,9 +58,7 @@ final class EventHookRefectionTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provide_event_hooks_without_sender
-     */
+    #[DataProvider('provide_event_hooks_without_sender')]
     public function test_type_without_sender(callable $hook): void
     {
         $this->assertEquals(

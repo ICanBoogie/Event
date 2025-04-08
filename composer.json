@@ -34,7 +34,7 @@
     "icanboogie/service": "dev-master",
     "olvlvl/composer-attribute-collector": "^2.0",
     "phpstan/phpstan": "^2.0",
-    "phpunit/phpunit": "^10.3"
+    "phpunit/phpunit": "^12.1"
   },
   "autoload": {
     "psr-4": {
