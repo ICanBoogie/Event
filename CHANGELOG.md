@@ -17,6 +17,7 @@ None
 ### Backward Incompatible Changes
 
 - `Event` dropped `AccessorTrait` in favor of property hooks.
+- `EventProfiler` uses `UnusedRecord` and `CallRecord` instead of simple arrays.
 - The packages `icanboogie/accessor` and `icanboogie/common` are no longer used.
 
 ### Other changes
