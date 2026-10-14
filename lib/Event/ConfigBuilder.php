@@ -13,6 +13,22 @@ use function class_exists;
 use function interface_exists;
 use function ICanBoogie\Service\ref;
 
+/**
+ * Builds a {@see Config} of event listeners.
+ *
+ * Listeners can be attached explicitly with {@see attach()} and {@see attach_to()}, or discovered
+ * with {@see use_attributes()}. Listeners are callables, to reference a service use
+ * `ICanBoogie\Service\ref()`. The resulting {@see Config} can be given to the `EventCollection`
+ * constructor or to `attach_many()`.
+ *
+ * ```php
+ * $config = (new ConfigBuilder())
+ *     ->attach(MyEvent::class, $listener)
+ *     ->attach_to(RuntimeException::class, RecoverEvent::class, $listener)
+ *     ->use_attributes()
+ *     ->build();
+ * ```
+ */
 final class ConfigBuilder
 {
     /**
@@ -52,6 +68,15 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * Attaches the methods marked with the {@see Listener} attribute.
+     *
+     * @return $this
+     *
+     * @throws LogicException if a non-static method is not `__invoke()`, a method has more than two parameters,
+     * or the parameter types are not suitable (the first must be an {@see Event}, the second a loadable class or
+     * interface).
+     */
     public function use_attributes(): self
     {
         $targets = Attributes::findTargetMethods(Listener::class);

@@ -10,7 +10,21 @@ use function trigger_error;
 use const E_USER_DEPRECATED;
 
 /**
- * An event.
+ * Base class of events.
+ *
+ * Events are classes extending `Event`; the class is the event type. An event may be constructed
+ * with a sender, an object the event is about, in which case listeners can be attached to the
+ * sender's class, its parent classes, or the interfaces it implements. Listeners are called in
+ * order until the event is stopped with {@see stop()}. Once the chain has been traversed without
+ * being stopped, the hooks added with {@see chain()} are called.
+ *
+ * ```php
+ * final class SaveEvent extends Event
+ * {
+ * }
+ *
+ * emit(new SaveEvent($node));
+ * ```
  */
 abstract class Event
 {
@@ -79,7 +93,7 @@ abstract class Event
     }
 
     /**
-     * Whether the even propagation has been stopped.
+     * Whether the event propagation has been stopped.
      */
     public private(set) bool $stopped = false;
 
