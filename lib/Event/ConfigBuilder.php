@@ -15,7 +15,7 @@ use function ICanBoogie\Service\ref;
 final class ConfigBuilder
 {
     /**
-     * @var array<string, callable[]>
+     * @var array<non-empty-string, callable[]>
      */
     private array $listeners = [];
 

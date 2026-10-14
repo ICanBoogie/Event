@@ -15,7 +15,6 @@ use function assert;
 use function count;
 use function explode;
 use function get_debug_type;
-use function implode;
 use function is_array;
 use function is_callable;
 use function is_object;
@@ -61,7 +60,9 @@ final class EventHookReflection
     private static function make_key(callable $hook): string
     {
         if (is_array($hook)) {
-            return implode('#', $hook);
+            [ $target, $method ] = $hook;
+
+            return (is_object($target) ? spl_object_hash($target) : $target) . '#' . $method;
         }
 
         if ($hook instanceof Closure) {
@@ -122,7 +123,6 @@ final class EventHookReflection
         }
 
         if (is_array($hook)) {
-            /** @var array{ class-string, string } $hook */
             return new ReflectionMethod($hook[0], $hook[1]);
         }
 
@@ -159,7 +159,7 @@ final class EventHookReflection
     private ReflectionFunctionAbstract $reflection;
 
     /**
-     * @var string The event type resolved from the event hook parameters.
+     * @var non-empty-string The event type resolved from the event hook parameters.
      */
     public readonly string $type;
 
@@ -171,6 +171,8 @@ final class EventHookReflection
 
     /**
      * Returns the event type resolved from the event hook parameters.
+     *
+     * @return non-empty-string
      */
     private function resolve_type(): string
     {

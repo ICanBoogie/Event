@@ -17,7 +17,7 @@ abstract class Event
     /**
      * @param object|class-string $sender
      *
-     * @return string
+     * @return non-empty-string
      *     A qualified event type made of the sender class and the unqualified event type;
      *     for example, "Exception::recover"
      */
@@ -44,6 +44,8 @@ abstract class Event
 
     /**
      * Event qualified type; for example, `Exception::MyEvent`.
+     *
+     * @var non-empty-string
      */
     public readonly string $qualified_type;
 
@@ -79,7 +81,7 @@ abstract class Event
     /**
      * Whether the even propagation has been stopped.
      */
-    private(set) bool $stopped = false;
+    public private(set) bool $stopped = false;
 
     /**
      * Stops the hook chain.

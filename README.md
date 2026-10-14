@@ -1,7 +1,7 @@
 # Event
 
 [![Release](https://img.shields.io/packagist/v/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
-[![Code Coverage](https://coveralls.io/repos/github/ICanBoogie/Event/badge.svg?branch=6.0)](https://coveralls.io/r/ICanBoogie/Event?branch=6.0)
+[![Code Coverage](https://coveralls.io/repos/github/ICanBoogie/Event/badge.svg?branch=7.0)](https://coveralls.io/r/ICanBoogie/Event?branch=7.0)
 [![Downloads](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
 The **icanboogie/event** allows you to provide hooks which other developers can attach to, to be
@@ -432,9 +432,9 @@ foreach (EventProfiler::$calls as list($time, $type, $hook, $started_at))
 
 The project is continuously tested by [GitHub actions](https://github.com/ICanBoogie/Event/actions).
 
-[![Tests](https://github.com/ICanBoogie/Event/actions/workflows/test.yml/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions/workflows/test.yml)
-[![Static Analysis](https://github.com/ICanBoogie/Event/actions/workflows/static-analysis.yml/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions/workflows/static-analysis.yml)
-[![Code Style](https://github.com/ICanBoogie/Event/actions/workflows/code-style.yml/badge.svg?branch=6.0)](https://github.com/ICanBoogie/Event/actions/workflows/code-style.yml)
+[![Tests](https://github.com/ICanBoogie/Event/actions/workflows/test.yml/badge.svg?branch=7.0)](https://github.com/ICanBoogie/Event/actions/workflows/test.yml)
+[![Static Analysis](https://github.com/ICanBoogie/Event/actions/workflows/static-analysis.yml/badge.svg?branch=7.0)](https://github.com/ICanBoogie/Event/actions/workflows/static-analysis.yml)
+[![Code Style](https://github.com/ICanBoogie/Event/actions/workflows/code-style.yml/badge.svg?branch=7.0)](https://github.com/ICanBoogie/Event/actions/workflows/code-style.yml)
 
 
 

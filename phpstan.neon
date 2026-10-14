@@ -1,8 +1,15 @@
 # $schema: https://phpstan.olvlvl.com/schema.json
+includes:
+  - phpstan-baseline.neon
+
 parameters:
-  level: 9
+  level: max
+  phpVersion: 80400
   paths:
     - lib
+    - tests
+  excludePaths:
+    - tests/sandbox/*
   ignoreErrors:
     - message: "/::provide_.+ iterable type array/"
       reportUnmatched: false

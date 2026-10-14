@@ -1,0 +1,43 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$provider of static method ICanBoogie\\EventCollectionProvider\:\:define\(\) expects callable\(\)\: ICanBoogie\\EventCollection, Closure\(\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/EventCollectionProviderTest.php
+
+		-
+			message: '#^Parameter \#1 \$provider of static method ICanBoogie\\EventCollectionProvider\:\:define\(\) expects callable\(\)\: ICanBoogie\\EventCollection, Closure\(\)\: void given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/EventCollectionProviderTest.php
+
+		-
+			message: '#^Access to an undefined property ICanBoogie\\Event\:\:\$values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/EventTest.php
+
+		-
+			message: '#^Binary operation "\*\=" between mixed and 10 results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: tests/EventTest.php
+
+		-
+			message: '#^Binary operation "\+\=" between mixed and 10 results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: tests/EventTest.php
+
+		-
+			message: '#^Cannot access offset ''four'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/EventTest.php
+
+		-
+			message: '#^Method Test\\ICanBoogie\\SetStateHelper\:\:export_import\(\) should return T of object but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/SetStateHelper.php

@@ -28,6 +28,9 @@ use ICanBoogie\EventCollection;
  */
 final readonly class Detach
 {
+    /**
+     * @param non-empty-string $type
+     */
     public function __construct(
         private EventCollection $events,
         private string $type,

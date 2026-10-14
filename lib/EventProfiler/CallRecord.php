@@ -12,7 +12,7 @@ final readonly class CallRecord
      *     The time when the event was emitted, in microsecond.
      * @param float $duration
      *     The duration of the hook execution.
-     * @param string $type
+     * @param non-empty-string $type
      *     The type of the event.
      * @param callable $hook
      *     The callable that handled the event.

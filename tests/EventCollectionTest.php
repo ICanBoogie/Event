@@ -80,7 +80,7 @@ final class EventCollectionTest extends TestCase
         $n = 0;
         $sender = new SampleSender();
 
-        $detach = $this->events->attach(function (BeforeActionEvent $event, SampleSender $sender) use (&$n) {
+        $detach = $this->events->attach(function (BeforeActionEvent $event, SampleSender $sender) use (&$n): void {
             $n++;
         });
         emit(new BeforeActionEvent($sender));

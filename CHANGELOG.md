@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v7.0
+## v7.0.0
 
 ### New Requirements
 
@@ -22,7 +22,7 @@ None
 
 ### Other changes
 
-None
+- Require `composer/pcre` ^3.2 and `symfony/finder` ^7.0 for development, to avoid the PHP 8.4 deprecations of the older versions that `composer/class-map-generator` allows.
 
 
 
@@ -132,4 +132,4 @@ None
 
 ### Other Changes
 
-None
+- Fixed an `Error` when an event hook is defined as `[ $object, 'method' ]`, the object was converted to a string to build the hook's key.

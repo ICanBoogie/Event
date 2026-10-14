@@ -20,10 +20,13 @@
     "source": "https://github.com/ICanBoogie/Event"
   },
   "config": {
-    "sort-packages": true,
     "allow-plugins": {
       "olvlvl/composer-attribute-collector": true
-    }
+    },
+    "platform": {
+      "php": "8.4.1"
+    },
+    "sort-packages": true
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
@@ -31,10 +34,12 @@
     "php": ">=8.4"
   },
   "require-dev": {
+    "composer/pcre": "^3.2",
     "icanboogie/service": "dev-master",
-    "olvlvl/composer-attribute-collector": "^2.0",
-    "phpstan/phpstan": "^2.0",
-    "phpunit/phpunit": "^12.1"
+    "olvlvl/composer-attribute-collector": "^3.0",
+    "phpstan/phpstan": "^2.3",
+    "phpunit/phpunit": "^13.4",
+    "symfony/finder": "^7.0"
   },
   "autoload": {
     "psr-4": {

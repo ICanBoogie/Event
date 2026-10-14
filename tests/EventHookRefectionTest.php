@@ -16,6 +16,20 @@ use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
 final class EventHookRefectionTest extends TestCase
 {
+    public function test_from_object_method(): void
+    {
+        $hooks = new class () {
+            public function on_action(ActionEvent $event, SampleSender $sender): void
+            {
+            }
+        };
+
+        $reflection = EventHookReflection::from([ $hooks, 'on_action' ]);
+
+        $this->assertSame(SampleSender::class . '::' . ActionEvent::class, $reflection->type);
+        $this->assertSame($reflection, EventHookReflection::from([ $hooks, 'on_action' ]));
+    }
+
     #[DataProvider('provide_event_hooks_with_sender')]
     public function test_valid(mixed $hook): void
     {

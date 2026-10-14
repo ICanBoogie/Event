@@ -10,14 +10,16 @@ use LogicException;
 class EventCollectionProvider
 {
     /**
-     * @var callable|null {@see EventCollection} provider
+     * @var (callable(): EventCollection)|null {@see EventCollection} provider
      */
     private static $provider;
 
     /**
      * Defines the {@see EventCollection} provider.
      *
-     * @return ?callable
+     * @param callable(): EventCollection $provider
+     *
+     * @return (callable(): EventCollection)|null
      *     The previous provider, or `null` if none was defined.
      */
     public static function define(callable $provider): ?callable
@@ -31,6 +33,8 @@ class EventCollectionProvider
 
     /**
      * Returns the current provider.
+     *
+     * @return (callable(): EventCollection)|null
      */
     public static function defined(): ?callable
     {

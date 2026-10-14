@@ -1,14 +1,16 @@
 <?xml version="1.0"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-         beStrictAboutCoverageMetadata="true"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.4/phpunit.xsd"
          beStrictAboutOutputDuringTests="true"
          bootstrap="vendor/autoload.php"
          colors="true"
          displayDetailsOnTestsThatTriggerDeprecations="true"
          displayDetailsOnTestsThatTriggerNotices="true"
          displayDetailsOnTestsThatTriggerWarnings="true"
-         executionOrder="depends,defects"
+         displayDetailsOnPhpunitDeprecations="true"
+         displayDetailsOnPhpunitNotices="true"
+         displayDetailsOnIncompleteTests="true"
+         executionOrder="defects"
 >
     <testsuites>
         <testsuite name="icanboogie/event">

@@ -4,6 +4,7 @@ namespace ICanBoogie;
 
 use ArrayIterator;
 use Closure;
+use Generator;
 use ICanBoogie\Event\Config;
 use ICanBoogie\Event\Detach;
 use IteratorAggregate;
@@ -33,17 +34,21 @@ use function strpos;
 /**
  * Events collected from the "hooks" config or attached by the user.
  *
- * @implements IteratorAggregate<string, callable[]>
+ * @implements IteratorAggregate<non-empty-string, (callable(Event, ?object): void)[]>
  */
 class EventCollection implements IteratorAggregate
 {
     /**
      * Resolves type and hook.
      *
-     * @param (callable(Event, ?object): void)|string $type_or_hook
-     * @param (callable(Event, ?object): void)|null $hook
+     * Hooks are accepted whatever the event they are meant for, hence `never` for their parameters. They
+     * are returned as called by the collection: with any event and sender, but they only ever receive the
+     * ones they were attached for, which is the type resolved here.
      *
-     * @return array{ string, (callable(Event, ?object): void) } Returns the type and hook.
+     * @param (callable(never, never): void)|(callable(never): void)|non-empty-string $type_or_hook
+     * @param (callable(never, never): void)|(callable(never): void)|null $hook
+     *
+     * @return array{ non-empty-string, (callable(Event, ?object): void) } Returns the type and hook.
      *
      * @throws ReflectionException
      */
@@ -66,13 +71,14 @@ class EventCollection implements IteratorAggregate
 
         assert(is_string($type));
 
+        // @phpstan-ignore return.type (see the description of the method)
         return [ $type, $hook ];
     }
 
     /**
      * Event hooks by type.
      *
-     * @var array<string, (callable(Event, ?object): void)[]>
+     * @var array<non-empty-string, (callable(Event, ?object): void)[]>
      *     Where _key_ is an event type and _value_ an array of callables.
      */
     private array $hooks = [];
@@ -109,10 +115,12 @@ class EventCollection implements IteratorAggregate
 
     /**
      * Returns an iterator for event hooks.
+     *
+     * @return Generator<non-empty-string, (callable(Event, ?object): void)[]>
      */
-    public function getIterator(): Traversable
+    public function getIterator(): Generator
     {
-        return new ArrayIterator($this->hooks);
+        yield from $this->hooks;
     }
 
     /**
@@ -127,9 +135,12 @@ class EventCollection implements IteratorAggregate
     /**
      * Attaches an event hook.
      *
-     * @param (Closure(Event, ?object): void)|(Closure(Event): void)|string $type_or_hook
+     * @template TEvent of Event
+     * @template TSender of ?object
+     *
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|non-empty-string $type_or_hook
      *     Event type or event hook.
-     * @param (Closure(Event, ?object): void)|(Closure(Event): void)|null $hook
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|null $hook
      *     The event hook, or nothing if $type is the event hook.
      *
      * @throws ReflectionException
@@ -182,11 +193,11 @@ class EventCollection implements IteratorAggregate
     /**
      * Attaches an event hook to a specific sender.
      *
-     * @template T of object
+     * @template TEvent of Event
+     * @template TSender of object
      *
-     * @phpstan-param T $sender
-     *
-     * @param (Closure(Event, T): void) $hook
+     * @param TSender $sender
+     * @param Closure(TEvent, TSender): void $hook
      *
      * @throws ReflectionException
      */
@@ -201,6 +212,7 @@ class EventCollection implements IteratorAggregate
                     return;
                 }
 
+                // @phpstan-ignore argument.type (the type of the hook is the type of the event it is attached to)
                 $hook($e, $s);
             })
         );
@@ -209,9 +221,12 @@ class EventCollection implements IteratorAggregate
     /**
      * Attaches an event hook that is detached once used.
      *
-     * @param (Closure(Event, ?object): void)|string $type_or_hook
+     * @template TEvent of Event
+     * @template TSender of ?object
+     *
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|non-empty-string $type_or_hook
      *     Event type or event hook.
-     * @param (Closure(Event, ?object): void)|null $hook
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|null $hook
      *     The event hook, or nothing if $type is the event hook.
      *
      * @throws ReflectionException
@@ -236,7 +251,7 @@ class EventCollection implements IteratorAggregate
     /**
      * Detaches an event hook.
      *
-     * @param string $type The name of the event.
+     * @param non-empty-string $type The name of the event.
      * @param callable $hook The event hook.
      *
      * @throws LogicException when the event hook is not attached to the event name.
@@ -306,6 +321,7 @@ class EventCollection implements IteratorAggregate
      * Process an event chain.
      *
      * @param (callable(Event, ?object): void)[] $chain
+     * @param non-empty-string $type
      */
     private function process_chain(Event $event, iterable $chain, string $type, ?object $sender): void
     {
@@ -379,7 +395,7 @@ class EventCollection implements IteratorAggregate
      * If the class of the event's sender is provided, event hooks are filtered according to the class and its
      * hierarchy.
      *
-     * @return array<string, (callable(Event, ?object): void)>
+     * @return (callable(Event, ?object): void)[]
      */
     private function consolidate_hooks(string $type): array
     {

@@ -20,6 +20,8 @@ final class EventProfiler
 
     /**
      * Adds an unused event type.
+     *
+     * @param non-empty-string $type
      */
     public static function add_unused(string $type): void
     {
@@ -48,6 +50,8 @@ final class EventProfiler
 
     /**
      * Adds an event hook call.
+     *
+     * @param non-empty-string $type
      */
     public static function add_call(string $type, callable $hook, float $started_at): void
     {

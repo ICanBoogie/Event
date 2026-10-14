@@ -13,7 +13,8 @@ function get_events(): EventCollection
 
     if (!$provider) {
         $provider = function () {
-            static $events;
+            /** @var EventCollection|null $events */
+            static $events = null;
 
             return $events ??= new EventCollection();
         };

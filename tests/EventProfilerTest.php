@@ -33,13 +33,13 @@ final class EventProfilerTest extends TestCase
     {
         $now = microtime(true);
         EventProfiler::reset_calls();
-        usleep( 200);
+        usleep(200);
         EventProfiler::add_call(
             $type1 = BeforeActionEvent::for(SampleSender::class),
             $hook1 = fn() => null,
             $now,
         );
-        usleep( 400);
+        usleep(400);
         EventProfiler::add_call(
             $type2 = ActionEvent::for(SampleSender::class),
             $hook2 = fn() => null,
