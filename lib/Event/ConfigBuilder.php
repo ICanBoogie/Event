@@ -10,6 +10,7 @@ use ReflectionNamedType;
 use ReflectionType;
 
 use function class_exists;
+use function interface_exists;
 use function ICanBoogie\Service\ref;
 
 final class ConfigBuilder
@@ -115,8 +116,8 @@ final class ConfigBuilder
 
         $type = $type->getName();
 
-        class_exists($type)
-        or throw new LogicException("$type is not a loadable class");
+        class_exists($type) || interface_exists($type)
+        or throw new LogicException("$type is not a loadable class or interface");
 
         return $type;
     }

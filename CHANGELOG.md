@@ -8,7 +8,8 @@ PHP 8.4+
 
 ### New features
 
-None
+- Hooks can be attached to the interfaces implemented by the sender of an event, e.g. `Throwable`. They are called
+  after the hooks attached to the sender's class and parent classes.
 
 ### Deprecated Features
 
@@ -16,12 +17,14 @@ None
 
 ### Backward Incompatible Changes
 
+- Hooks attached to a bare event type, e.g. `attach(fn(MyEvent $event) …)`, are now also called for events emitted with a sender, after the hooks attached to the sender. They used to never match, silently.
 - `Event` dropped `AccessorTrait` in favor of property hooks.
 - `EventProfiler` uses `UnusedRecord` and `CallRecord` instead of simple arrays.
 - The packages `icanboogie/accessor` and `icanboogie/common` are no longer used.
 
 ### Other changes
 
+- Documentation: the README describes `ConfigBuilder`, `#[Listener]`, the sender/class-hierarchy matching rules, and the current `EventProfiler` API.
 - Require `composer/pcre` ^3.2 and `symfony/finder` ^7.0 for development, to avoid the PHP 8.4 deprecations of the older versions that `composer/class-map-generator` allows.
 
 

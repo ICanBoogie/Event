@@ -23,6 +23,7 @@ use function array_unique;
 use function array_unshift;
 use function array_values;
 use function assert;
+use function class_implements;
 use function count;
 use function explode;
 use function get_parent_class;
@@ -154,16 +155,9 @@ class EventCollection implements IteratorAggregate
         $this->hooks[$type] ??= [];
         array_unshift($this->hooks[$type], $hook);
 
-        #
-        # If the event has a sender, we reset the skippable and consolidated hooks arrays.
-        #
-
-        $this->skippable = [];
-
-        if (str_contains($type, '::')) {
-            // Reset consolidated hooks
-            $this->consolidated_hooks = [];
-        }
+        // Hooks attached to a bare type also apply to the events with a sender, hence the consolidated hooks
+        // are revoked whatever the type.
+        $this->revoke_traces();
 
         return new Detach($this, $type, $hook);
     }
@@ -271,9 +265,7 @@ class EventCollection implements IteratorAggregate
             unset($hooks[$type]);
         }
 
-        if (strpos($type, '::')) {
-            $this->consolidated_hooks = [];
-        }
+        $this->consolidated_hooks = [];
     }
 
     /**
@@ -393,15 +385,18 @@ class EventCollection implements IteratorAggregate
      * Consolidate hooks of the same type.
      *
      * If the class of the event's sender is provided, event hooks are filtered according to the class and its
-     * hierarchy.
+     * hierarchy: hooks attached to the class come first, followed by the hooks attached to its parent classes, the
+     * hooks attached to the interfaces it implements, e.g. `Throwable`, and finally the hooks attached to the bare
+     * event type, which are called whatever the sender.
      *
      * @return (callable(Event, ?object): void)[]
      */
     private function consolidate_hooks(string $type): array
     {
-        [ $class, $type ] = explode('::', $type);
+        [ $sender_class, $type ] = explode('::', $type);
 
         $hooks = [];
+        $class = $sender_class;
 
         while ($class) {
             $k = $class . '::' . $type;
@@ -411,6 +406,18 @@ class EventCollection implements IteratorAggregate
             }
 
             $class = get_parent_class($class);
+        }
+
+        foreach (class_implements($sender_class) ?: [] as $interface) {
+            $k = $interface . '::' . $type;
+
+            if (isset($this->hooks[$k])) {
+                $hooks = array_merge($hooks, $this->hooks[$k]);
+            }
+        }
+
+        if (isset($this->hooks[$type])) {
+            $hooks = array_merge($hooks, $this->hooks[$type]);
         }
 
         return $hooks;

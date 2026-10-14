@@ -7,11 +7,17 @@ use ICanBoogie\EventCollection;
 use ICanBoogie\EventCollectionProvider;
 use LogicException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Test\ICanBoogie\Sample\SampleEvent;
+use Test\ICanBoogie\Sample\SampleInterfaceSender;
 use Test\ICanBoogie\Sample\SampleSender;
+use Test\ICanBoogie\Sample\SampleSenderInterface;
+use Test\ICanBoogie\Sample\ThrownEvent;
 use Test\ICanBoogie\Sample\SampleSender\ActionEvent;
 use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
+use Throwable;
 use Traversable;
+use TypeError;
 
 use function ICanBoogie\emit;
 
@@ -128,6 +134,95 @@ final class EventCollectionTest extends TestCase
         emit(new ActionEvent($sender1));
 
         $this->assertEquals(1, $invoked_count);
+    }
+
+    public function test_hooks_attached_to_sender_interface(): void
+    {
+        $invoked = [];
+
+        $this->events->attach(
+            ActionEvent::for(SampleSenderInterface::class),
+            function (ActionEvent $event) use (&$invoked): void {
+                $invoked[] = 'interface';
+            }
+        );
+        $this->events->attach(
+            ActionEvent::for(SampleSender::class),
+            function (ActionEvent $event) use (&$invoked): void {
+                $invoked[] = 'parent';
+            }
+        );
+        $this->events->attach(
+            ActionEvent::for(SampleInterfaceSender::class),
+            function (ActionEvent $event) use (&$invoked): void {
+                $invoked[] = 'class';
+            }
+        );
+
+        emit(new ActionEvent(new SampleInterfaceSender()));
+
+        $this->assertSame([ 'class', 'parent', 'interface' ], $invoked);
+
+        $invoked = [];
+
+        emit(new ActionEvent(new SampleSender()));
+
+        $this->assertSame([ 'parent' ], $invoked);
+    }
+
+    public function test_hooks_attached_to_bare_type_catch_events_whatever_the_sender(): void
+    {
+        $invoked = [];
+
+        $this->events->attach(function (ActionEvent $event) use (&$invoked): void {
+            $invoked[] = 'bare';
+        });
+        $this->events->attach(
+            ActionEvent::for(SampleSender::class),
+            function (ActionEvent $event) use (&$invoked): void {
+                $invoked[] = 'sender';
+            }
+        );
+
+        emit(new ActionEvent(new SampleSender()));
+        emit(new ActionEvent(new SampleInterfaceSender()));
+
+        $this->assertSame([ 'sender', 'bare', 'sender', 'bare' ], $invoked);
+    }
+
+    public function test_bare_hook_attached_after_emit_is_used_for_events_with_sender(): void
+    {
+        $invoked = 0;
+
+        emit(new ActionEvent(new SampleSender()));
+
+        $detach = $this->events->attach(function (ActionEvent $event) use (&$invoked): void {
+            $invoked++;
+        });
+
+        emit(new ActionEvent(new SampleSender()));
+        $detach();
+        emit(new ActionEvent(new SampleSender()));
+
+        $this->assertSame(1, $invoked);
+    }
+
+    public function test_hooks_attached_to_throwable_catch_errors_and_exceptions(): void
+    {
+        $invoked = [];
+
+        $this->events->attach(
+            ThrownEvent::for(Throwable::class),
+            function (ThrownEvent $event) use (&$invoked): void {
+                $invoked[] = $event->sender::class;
+            }
+        );
+
+        foreach ([ new RuntimeException(), new TypeError() ] as $exception) {
+            emit(new ThrownEvent($exception));
+        }
+
+        $this->assertSame([ RuntimeException::class, TypeError::class ], $invoked);
     }
 
     public function test_once(): void
