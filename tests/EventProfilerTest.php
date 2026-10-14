@@ -36,13 +36,13 @@ final class EventProfilerTest extends TestCase
         usleep(200);
         EventProfiler::add_call(
             $type1 = BeforeActionEvent::for(SampleSender::class),
-            $hook1 = fn() => null,
+            $listener1 = fn() => null,
             $now,
         );
         usleep(400);
         EventProfiler::add_call(
             $type2 = ActionEvent::for(SampleSender::class),
-            $hook2 = fn() => null,
+            $listener2 = fn() => null,
             $now,
         );
 
@@ -53,10 +53,10 @@ final class EventProfilerTest extends TestCase
         $this->assertEquals($type1, $actual[0]->type);
         $this->assertEquals($now, $actual[0]->time);
         $this->assertGreaterThanOrEqual(0, $actual[0]->duration);
-        $this->assertEquals($hook1, $actual[0]->hook);
+        $this->assertEquals($listener1, $actual[0]->listener);
         $this->assertEquals($type2, $actual[1]->type);
         $this->assertEquals($now, $actual[1]->time);
-        $this->assertEquals($hook2, $actual[1]->hook);
+        $this->assertEquals($listener2, $actual[1]->listener);
         $this->assertGreaterThanOrEqual(0, $actual[1]->duration);
         $this->assertGreaterThanOrEqual($actual[0]->duration, $actual[1]->duration);
     }

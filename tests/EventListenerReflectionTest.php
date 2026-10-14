@@ -2,67 +2,67 @@
 
 namespace Test\ICanBoogie;
 
-use ICanBoogie\EventHookReflection;
+use ICanBoogie\ListenerReflection;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Test\ICanBoogie\Sample\SampleCallableWithoutSender;
 use Test\ICanBoogie\Sample\SampleCallableWithSender;
 use Test\ICanBoogie\Sample\SampleEvent;
-use Test\ICanBoogie\Sample\SampleHooks;
+use Test\ICanBoogie\Sample\SampleListeners;
 use Test\ICanBoogie\Sample\SampleSender;
 use Test\ICanBoogie\Sample\SampleSender\ActionEvent;
 use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
-final class EventHookRefectionTest extends TestCase
+final class EventListenerReflectionTest extends TestCase
 {
     public function test_from_object_method(): void
     {
-        $hooks = new class () {
+        $listeners = new class () {
             public function on_action(ActionEvent $event, SampleSender $sender): void
             {
             }
         };
 
-        $reflection = EventHookReflection::from([ $hooks, 'on_action' ]);
+        $reflection = ListenerReflection::from([ $listeners, 'on_action' ]);
 
         $this->assertSame(SampleSender::class . '::' . ActionEvent::class, $reflection->type);
-        $this->assertSame($reflection, EventHookReflection::from([ $hooks, 'on_action' ]));
+        $this->assertSame($reflection, ListenerReflection::from([ $listeners, 'on_action' ]));
     }
 
-    #[DataProvider('provide_event_hooks_with_sender')]
-    public function test_valid(mixed $hook): void
+    #[DataProvider('provide_event_listeners_with_sender')]
+    public function test_valid(mixed $listener): void
     {
-        EventHookReflection::assert_valid($hook);
+        ListenerReflection::assert_valid($listener);
 
         $this->assertTrue(true); // @phpstan-ignore-line
     }
 
     public function test_from(): void
     {
-        $hook = function (ActionEvent $event, SampleSender $sender) {
+        $listener = function (ActionEvent $event, SampleSender $sender) {
         };
 
-        $reflection = EventHookReflection::from($hook);
-        $this->assertSame($reflection, EventHookReflection::from($hook));
+        $reflection = ListenerReflection::from($listener);
+        $this->assertSame($reflection, ListenerReflection::from($listener));
     }
 
-    #[DataProvider('provide_event_hooks_with_sender')]
-    public function test_type_with_sender(callable $hook): void
+    #[DataProvider('provide_event_listeners_with_sender')]
+    public function test_type_with_sender(callable $listener): void
     {
         $this->assertEquals(
             BeforeActionEvent::for(SampleSender::class),
-            EventHookReflection::from($hook)->type,
+            ListenerReflection::from($listener)->type,
         );
     }
 
-    public static function provide_event_hooks_with_sender(): array
+    public static function provide_event_listeners_with_sender(): array
     {
         return [
 
-            [ hook_with_sender(...) ],
-            [ SampleHooks::class . '::with_sender' ],
-            [ [ SampleHooks::class, 'with_sender' ] ],
+            [ listener_with_sender(...) ],
+            [ SampleListeners::class . '::with_sender' ],
+            [ [ SampleListeners::class, 'with_sender' ] ],
             [
                 function (BeforeActionEvent $event, SampleSender $sender) {
                 },
@@ -72,22 +72,22 @@ final class EventHookRefectionTest extends TestCase
         ];
     }
 
-    #[DataProvider('provide_event_hooks_without_sender')]
-    public function test_type_without_sender(callable $hook): void
+    #[DataProvider('provide_event_listeners_without_sender')]
+    public function test_type_without_sender(callable $listener): void
     {
         $this->assertEquals(
             SampleEvent::class,
-            EventHookReflection::from($hook)->type,
+            ListenerReflection::from($listener)->type,
         );
     }
 
-    public static function provide_event_hooks_without_sender(): array
+    public static function provide_event_listeners_without_sender(): array
     {
         return [
 
-            [ hook_without_sender(...) ],
-            [ SampleHooks::class . '::without_sender' ],
-            [ [ SampleHooks::class, 'without_sender' ] ],
+            [ listener_without_sender(...) ],
+            [ SampleListeners::class . '::without_sender' ],
+            [ [ SampleListeners::class, 'without_sender' ] ],
             [
                 function (SampleEvent $event) {
                 },
@@ -101,7 +101,7 @@ final class EventHookRefectionTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage("The parameter `a` must be an instance of ICanBoogie\\Event");
-        EventHookReflection::from(function ($a, SampleSender $b) {
+        ListenerReflection::from(function ($a, SampleSender $b) {
         });
     }
 
@@ -109,7 +109,7 @@ final class EventHookRefectionTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage("Expecting at least 1 parameter got none.");
-        EventHookReflection::from(function () {
+        ListenerReflection::from(function () {
         });
     }
 
@@ -117,15 +117,15 @@ final class EventHookRefectionTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage("Expecting at most 2 parameters got 3.");
-        EventHookReflection::from(function ($a, $b, $c) {
+        ListenerReflection::from(function ($a, $b, $c) {
         });
     }
 }
 
-function hook_with_sender(BeforeActionEvent $event, SampleSender $sender): void
+function listener_with_sender(BeforeActionEvent $event, SampleSender $sender): void
 {
 }
 
-function hook_without_sender(SampleEvent $event): void
+function listener_without_sender(SampleEvent $event): void
 {
 }

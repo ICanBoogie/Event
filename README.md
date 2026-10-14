@@ -4,7 +4,7 @@
 [![Code Coverage](https://coveralls.io/repos/github/ICanBoogie/Event/badge.svg?branch=7.0)](https://coveralls.io/r/ICanBoogie/Event?branch=7.0)
 [![Downloads](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
-The **icanboogie/event** allows you to provide hooks which other developers can attach to, to be
+The **icanboogie/event** allows you to provide listeners which other developers can attach to, to be
 notified when certain events occur inside the application and take action.
 
 Inside [ICanBoogie][], events are often used to alter initial parameters, take action before/after
@@ -26,9 +26,9 @@ composer require icanboogie/event
 * Easily implementable.
 * Events are typed.
 * Events usually have a sender object, but simpler event types can also be emitted.
-* Event hooks are attached to classes rather than objects, and they are inherited.
-* Event hooks can be attached using the `#[Listener]` attribute or a configuration builder.
-* Event hooks can be attached to a _finish chain_ that is executed after the event hooks chain.
+* Event listeners are attached to classes rather than objects, and they are inherited.
+* Event listeners can be attached using the `#[Listener]` attribute or a configuration builder.
+* Event listeners can be attached to a _finish chain_ that is executed after the event listeners chain.
 * Execution of the event chain can be stopped.
 
 
@@ -38,9 +38,9 @@ composer require icanboogie/event
 ## A twist on the Observer pattern
 
 The pattern used by the API is similar to the [Observer pattern](http://en.wikipedia.org/wiki/Observer_pattern),
-although instead of attaching event hooks to objects they are attached to their class. When an
+although instead of attaching event listeners to objects they are attached to their class. When an
 event is fired by a sender object, the hierarchy of its class is used to filter event
-hooks.
+listeners.
 
 Consider the following class hierarchy:
 
@@ -51,19 +51,19 @@ Consider the following class hierarchy:
                 └─ Icybee\Modules\News\Operation\SaveOperation
 
 
-When a `ProcessEvent` is emitted with a `…\News\Operation\SaveOperation` instance, all event hooks
-attached to the classes for this event are called, starting from the event hooks attached to the
+When a `ProcessEvent` is emitted with a `…\News\Operation\SaveOperation` instance, all event listeners
+attached to the classes for this event are called, starting from the event listeners attached to the
 instance class (`…\News\Operation\SaveOperation`) all the way up to those attached to its root
 class.
 
-Thus, event hooks attached to the `…\Node\Operation\SaveOperation` class are called when a
+Thus, event listeners attached to the `…\Node\Operation\SaveOperation` class are called when a
 `ProcessEvent` event is fired with `…\News\Operation\SaveOperation` instance. One could consider
-that event hooks are _inherited_.
+that event listeners are _inherited_.
 
 > [!NOTE]
-> Hooks attached to the sender's class come first, then those attached to its parent classes
+> Listeners attached to the sender's class come first, then those attached to its parent classes
 > (`get_parent_class()`), and finally those attached to the interfaces it implements
-> (`class_implements()`), so a hook can be attached to an interface such as `Throwable`.
+> (`class_implements()`), so a listener can be attached to an interface such as `Throwable`.
 > See [Events with a sender](#events-with-a-sender).
 
 
@@ -72,14 +72,14 @@ that event hooks are _inherited_.
 
 ## Getting started
 
-To be emitted, events need an event collection, which holds event hooks. Because a new event
+To be emitted, events need an event collection, which holds event listeners. Because a new event
 collection is created for you when required, you don't need to set one up yourself. Still, you might
-want to do so if you have a bunch of event hooks that you need to attach while creating the event
+want to do so if you have a bunch of event listeners that you need to attach while creating the event
 collection. To do so, you need to define a _provider_ that returns your event collection when
 required.
 
 The following example demonstrates how to set up a provider that instantiates an event collection
-with event hooks provided by an app configuration:
+with event listeners provided by an app configuration:
 
 ```php
 <?php
@@ -189,14 +189,14 @@ emit($event);
 
 
 
-## Attaching event hooks
+## Attaching event listeners
 
-Event hooks are attached using the `attach()` method of an event collection. The `attach()` method
+Event listeners are attached using the `attach()` method of an event collection. The `attach()` method
 is smart enough to create the event type from the parameter types.
 
-* A hook with a single parameter (`fn(MyEvent $event)`) is attached to the **bare** event type,
-  `MyEvent`. It is called for every `MyEvent`, whatever the sender, after the hooks attached to the sender.
-* A hook with two parameters (`fn(MyEvent $event, Sender $sender)`) is attached to the qualified type
+* A listener with a single parameter (`fn(MyEvent $event)`) is attached to the **bare** event type,
+  `MyEvent`. It is called for every `MyEvent`, whatever the sender, after the listeners attached to the sender.
+* A listener with two parameters (`fn(MyEvent $event, Sender $sender)`) is attached to the qualified type
   `Sender::MyEvent`. It is called for events emitted with a sender of that class, or one of its subclasses.
 
 The following example demonstrates how a closure may be attached to a `BeforeProcessEvent` event.
@@ -257,9 +257,9 @@ $events->attach(new ValidateOperation($rules));
 
 
 
-### Attaching an event hook to a specific sender
+### Attaching an event listener to a specific sender
 
-Using the `attach_to()` method, an event hook can be attached to a specific sender instance, and is
+Using the `attach_to()` method, an event listener can be attached to a specific sender instance, and is
 only invoked for that sender.
 
 ```php
@@ -293,9 +293,9 @@ $detach(); // You can detach if you no longer want to listen.
 
 
 
-### Attaching a _one-time_ event hook
+### Attaching a _one-time_ event listener
 
-The `once()` method attaches an event hook that is automatically detached after it's been used.
+The `once()` method attaches an event listener that is automatically detached after it's been used.
 
 ```php
 <?php
@@ -323,9 +323,9 @@ echo $n;   // 1
 
 
 
-### Attaching event hooks using a config
+### Attaching event listeners using a config
 
-Event hooks can be declared in an `ICanBoogie\Event\Config`, created with `ConfigBuilder`, and given
+Event listeners can be declared in an `ICanBoogie\Event\Config`, created with `ConfigBuilder`, and given
 to the `EventCollection` constructor or to `attach_many()`.
 
 ```php
@@ -389,12 +389,12 @@ final class OnProcess
 
 
 
-### Attaching event hooks to the _finish chain_
+### Attaching event listeners to the _finish chain_
 
 The _finish chain_ is executed after the event chain was traversed without being stopped.
 
-The following example demonstrates how an event hook may be attached to the _finish chain_ of
-the `count` event to obtain the string "0123". If the third event hook was defined like the
+The following example demonstrates how an event listener may be attached to the _finish chain_ of
+the `count` event to obtain the string "0123". If the third event listener was defined like the
 others we would obtain "0312".
 
 ```php
@@ -443,9 +443,9 @@ echo $event->count; // 0123
 
 
 
-## Breaking an event hook chain
+## Breaking an event listener chain
 
-The processing of an event hook chain can be broken by an event hook using the `stop()` method:
+The processing of an event listener chain can be broken by an event listener using the `stop()` method:
 
 ```php
 <?php
@@ -486,14 +486,14 @@ emit(new MyEvent(new RuntimeException()));
 ```
 
 This event is emitted with the type `RuntimeException::MyEvent` (sender class, then event class), not
-`MyEvent`. A one-parameter hook, `fn(MyEvent $event)`, or `ConfigBuilder::attach(MyEvent::class, …)`,
+`MyEvent`. A one-parameter listener, `fn(MyEvent $event)`, or `ConfigBuilder::attach(MyEvent::class, …)`,
 is attached to the bare `MyEvent` and catches every `MyEvent`, whatever its sender. To only catch the events of
-a given sender, use a two-parameter hook, `fn(MyEvent $event, RuntimeException $sender)`, `attach_to()`, or
+a given sender, use a two-parameter listener, `fn(MyEvent $event, RuntimeException $sender)`, `attach_to()`, or
 `ConfigBuilder::attach_to()`.
 
 ### Matching the sender's class or interfaces
 
-Hooks are matched against the sender's class, its parent classes, then its interfaces.
+Listeners are matched against the sender's class, its parent classes, then its interfaces.
 `ConfigBuilder::attach_to()` requires a loadable class or interface. Exceptions and errors have two
 class roots (`Exception` and `Error`), but both implement `Throwable`, which catches them all:
 
@@ -506,8 +506,8 @@ $builder->attach_to(Throwable::class, RecoverEvent::class, $listener);
 ### Checking the wiring
 
 A unit test of the listener proves nothing about registration. Emit the event with a real sender,
-then compare `$event->qualified_type` with `$events->get_hooks($event->qualified_type)`, or look at
-`EventProfiler::iter_unused()`, which lists the types that were emitted with no hook.
+then compare `$event->qualified_type` with `$events->get_listeners($event->qualified_type)`, or look at
+`EventProfiler::iter_unused()`, which lists the types that were emitted with no listener.
 
 Events without a sender are simpler to use: consider whether your event really needs one.
 
@@ -516,7 +516,7 @@ Events without a sender are simpler to use: consider whether your event really n
 ## Profiling events
 
 The [EventProfiler][] class is used to collect timing information about unused events and event
-hook calls. All time information is measured in floating microtime.
+listener calls. All time information is measured in floating microtime.
 
 ```php
 <?php
@@ -530,14 +530,14 @@ foreach (EventProfiler::iter_unused() as $record)    // UnusedRecord
 
 foreach (EventProfiler::iter_calls() as $record)     // CallRecord
 {
-    echo "$record->type took $record->duration, handled by " . get_debug_type($record->hook);
+    echo "$record->type took $record->duration, handled by " . get_debug_type($record->listener);
 }
 
 EventProfiler::reset_unused();
 EventProfiler::reset_calls();
 ```
 
-An _unused_ event is an emitted event with no attached hooks. If a hook you expected isn't called,
+An _unused_ event is an emitted event with no attached listeners. If a listener you expected isn't called,
 check that its event type shows up there.
 
 

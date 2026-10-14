@@ -48,11 +48,11 @@ final class EventCollectionTest extends TestCase
     public function test_detach_without_sender(): void
     {
         $n = 0;
-        $hook = function (SampleEvent $event) use (&$n) {
+        $listener = function (SampleEvent $event) use (&$n) {
             $n++;
         };
 
-        $detach = $this->events->attach(SampleEvent::class, $hook);
+        $detach = $this->events->attach(SampleEvent::class, $listener);
         emit(new SampleEvent());
 
         $detach();
@@ -81,7 +81,7 @@ final class EventCollectionTest extends TestCase
         $this->assertEquals(1, $n);
     }
 
-    public function test_detach_with_auto_hook(): void
+    public function test_detach_with_auto_listener(): void
     {
         $n = 0;
         $sender = new SampleSender();
@@ -97,7 +97,7 @@ final class EventCollectionTest extends TestCase
         $this->assertEquals(1, $n);
     }
 
-    public function test_detach_unattached_hook(): void
+    public function test_detach_unattached_listener(): void
     {
         $this->expectException(LogicException::class);
         $this->events->detach(
@@ -108,7 +108,7 @@ final class EventCollectionTest extends TestCase
     }
 
     /**
-     * @depends test_detach_with_auto_hook
+     * @depends test_detach_with_auto_listener
      */
     public function test_attach_to(): void
     {
@@ -136,7 +136,7 @@ final class EventCollectionTest extends TestCase
         $this->assertEquals(1, $invoked_count);
     }
 
-    public function test_hooks_attached_to_sender_interface(): void
+    public function test_listeners_attached_to_sender_interface(): void
     {
         $invoked = [];
 
@@ -170,7 +170,7 @@ final class EventCollectionTest extends TestCase
         $this->assertSame([ 'parent' ], $invoked);
     }
 
-    public function test_hooks_attached_to_bare_type_catch_events_whatever_the_sender(): void
+    public function test_listeners_attached_to_bare_type_catch_events_whatever_the_sender(): void
     {
         $invoked = [];
 
@@ -190,7 +190,7 @@ final class EventCollectionTest extends TestCase
         $this->assertSame([ 'sender', 'bare', 'sender', 'bare' ], $invoked);
     }
 
-    public function test_bare_hook_attached_after_emit_is_used_for_events_with_sender(): void
+    public function test_bare_listener_attached_after_emit_is_used_for_events_with_sender(): void
     {
         $invoked = 0;
 
@@ -207,7 +207,7 @@ final class EventCollectionTest extends TestCase
         $this->assertSame(1, $invoked);
     }
 
-    public function test_hooks_attached_to_throwable_catch_errors_and_exceptions(): void
+    public function test_listeners_attached_to_throwable_catch_errors_and_exceptions(): void
     {
         $invoked = [];
 

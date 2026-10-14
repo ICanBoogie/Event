@@ -73,10 +73,10 @@ final class EventTest extends TestCase
     /**
      * The big test, with reflection and chains.
      */
-    public function testEventHooks(): void
+    public function testEventListeners(): void
     {
         /*
-         * The A::validate() method would return false if the following hook wasn't called.
+         * The A::validate() method would return false if the following listener wasn't called.
          */
         $this->events->attach(function (ValidateEvent $event, Processor $sender) {
             $event->valid = true;
@@ -90,10 +90,10 @@ final class EventTest extends TestCase
         });
 
         /*
-         * This hook is called before any hook set on the A class, because we want "four" to be
-         * after "three", which is added by the hook above, we use the _chain_ feature of the event.
+         * This listener is called before any listener set on the A class, because we want "four" to be
+         * after "three", which is added by the listener above, we use the _chain_ feature of the event.
          *
-         * Hooks pushed by the chain() method are executed after the even chain was processed.
+         * Listeners pushed by the chain() method are executed after the even chain was processed.
          */
         $this->events->attach(function (BeforeProcessEvent $event, ProcessorExtension $sender) {
             $event->chain(function ($event) {
@@ -114,7 +114,7 @@ final class EventTest extends TestCase
          * We want processed values to be mutiplied by 10 for B instances, because 10 is already added to
          * values of A instances we need to stop the event from propagating.
          *
-         * The stop() method of the event breaks the event chain, so our hook will be the last
+         * The stop() method of the event breaks the event chain, so our listener will be the last
          * called in the chain.
          */
         $this->events->attach(function (ProcessEvent $event, ProcessorExtension $sender) {

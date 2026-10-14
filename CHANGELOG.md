@@ -8,8 +8,8 @@ PHP 8.4+
 
 ### New features
 
-- Hooks can be attached to the interfaces implemented by the sender of an event, e.g. `Throwable`. They are called
-  after the hooks attached to the sender's class and parent classes.
+- Listeners can be attached to the interfaces implemented by the sender of an event, e.g. `Throwable`. They are called
+  after the listeners attached to the sender's class and parent classes.
 
 ### Deprecated Features
 
@@ -17,7 +17,8 @@ None
 
 ### Backward Incompatible Changes
 
-- Hooks attached to a bare event type, e.g. `attach(fn(MyEvent $event) …)`, are now also called for events emitted with a sender, after the hooks attached to the sender. They used to never match, silently.
+- Listeners attached to a bare event type, e.g. `attach(fn(MyEvent $event) …)`, are now also called for events emitted with a sender, after the listeners attached to the sender. They used to never match, silently.
+- "Hook" is now consistently named "listener": `EventHookReflection` is now `ListenerReflection`, `EventCollection::get_hooks()` is now `get_listeners()`, and `CallRecord::$hook` is now `$listener`.
 - `Event` dropped `AccessorTrait` in favor of property hooks.
 - `EventProfiler` uses `UnusedRecord` and `CallRecord` instead of simple arrays.
 - The packages `icanboogie/accessor` and `icanboogie/common` are no longer used.
@@ -135,4 +136,4 @@ None
 
 ### Other Changes
 
-- Fixed an `Error` when an event hook is defined as `[ $object, 'method' ]`, the object was converted to a string to build the hook's key.
+- Fixed an `Error` when an event listener is defined as `[ $object, 'method' ]`, the object was converted to a string to build the listener's key.

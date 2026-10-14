@@ -33,69 +33,69 @@ use function microtime;
 use function strpos;
 
 /**
- * Events collected from the "hooks" config or attached by the user.
+ * Events collected from the "listeners" config or attached by the user.
  *
  * @implements IteratorAggregate<non-empty-string, (callable(Event, ?object): void)[]>
  */
 class EventCollection implements IteratorAggregate
 {
     /**
-     * Resolves type and hook.
+     * Resolves type and listener.
      *
-     * Hooks are accepted whatever the event they are meant for, hence `never` for their parameters. They
+     * Listeners are accepted whatever the event they are meant for, hence `never` for their parameters. They
      * are returned as called by the collection: with any event and sender, but they only ever receive the
      * ones they were attached for, which is the type resolved here.
      *
-     * @param (callable(never, never): void)|(callable(never): void)|non-empty-string $type_or_hook
-     * @param (callable(never, never): void)|(callable(never): void)|null $hook
+     * @param (callable(never, never): void)|(callable(never): void)|non-empty-string $type_or_listener
+     * @param (callable(never, never): void)|(callable(never): void)|null $listener
      *
-     * @return array{ non-empty-string, (callable(Event, ?object): void) } Returns the type and hook.
+     * @return array{ non-empty-string, (callable(Event, ?object): void) } Returns the type and listener.
      *
      * @throws ReflectionException
      */
-    private static function resolve_type_and_hook(string|callable $type_or_hook, ?callable $hook): array
+    private static function resolve_type_and_listener(string|callable $type_or_listener, ?callable $listener): array
     {
-        if ($hook === null) {
+        if ($listener === null) {
             $type = null;
-            $hook = $type_or_hook;
+            $listener = $type_or_listener;
         } else {
-            $type = $type_or_hook;
+            $type = $type_or_listener;
         }
 
-        EventHookReflection::assert_valid($hook);
+        ListenerReflection::assert_valid($listener);
 
-        assert(is_callable($hook));
+        assert(is_callable($listener));
 
         if ($type === null) {
-            $type = EventHookReflection::from($hook)->type;
+            $type = ListenerReflection::from($listener)->type;
         }
 
         assert(is_string($type));
 
         // @phpstan-ignore return.type (see the description of the method)
-        return [ $type, $hook ];
+        return [ $type, $listener ];
     }
 
     /**
-     * Event hooks by type.
+     * Event listeners by type.
      *
      * @var array<non-empty-string, (callable(Event, ?object): void)[]>
      *     Where _key_ is an event type and _value_ an array of callables.
      */
-    private array $hooks = [];
+    private array $listeners = [];
 
     /**
-     * Event hooks by class and type.
+     * Event listeners by class and type.
      *
      * @var array<string, (callable(Event, ?object): void)[]>
      *     Where _key_ is an event type and _value_ an array of callables.
      */
-    private array $consolidated_hooks = [];
+    private array $consolidated_listeners = [];
 
     /**
      * @var SplObjectStorage<Closure, callable>
      */
-    private SplObjectStorage $original_hooks;
+    private SplObjectStorage $original_listeners;
 
     /**
      * Skippable events.
@@ -107,7 +107,7 @@ class EventCollection implements IteratorAggregate
 
     public function __construct(?Config $config = null)
     {
-        $this->original_hooks = new SplObjectStorage();
+        $this->original_listeners = new SplObjectStorage();
 
         if ($config) {
             $this->attach_many($config);
@@ -115,124 +115,124 @@ class EventCollection implements IteratorAggregate
     }
 
     /**
-     * Returns an iterator for event hooks.
+     * Returns an iterator for event listeners.
      *
      * @return Generator<non-empty-string, (callable(Event, ?object): void)[]>
      */
     public function getIterator(): Generator
     {
-        yield from $this->hooks;
+        yield from $this->listeners;
     }
 
     /**
-     * Revokes consolidated hooks and skippable types.
+     * Revokes consolidated listeners and skippable types.
      */
     private function revoke_traces(): void
     {
-        $this->consolidated_hooks = [];
+        $this->consolidated_listeners = [];
         $this->skippable = [];
     }
 
     /**
-     * Attaches an event hook.
+     * Attaches an event listener.
      *
      * @template TEvent of Event
      * @template TSender of ?object
      *
-     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|non-empty-string $type_or_hook
-     *     Event type or event hook.
-     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|null $hook
-     *     The event hook, or nothing if $type is the event hook.
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|non-empty-string $type_or_listener
+     *     Event type or event listener.
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|null $listener
+     *     The event listener, or nothing if $type is the event listener.
      *
      * @throws ReflectionException
      */
-    public function attach(Closure|string $type_or_hook, ?Closure $hook = null): Detach
+    public function attach(Closure|string $type_or_listener, ?Closure $listener = null): Detach
     {
-        [ $type, $hook ] = self::resolve_type_and_hook($type_or_hook, $hook);
+        [ $type, $listener ] = self::resolve_type_and_listener($type_or_listener, $listener);
 
-        assert($hook instanceof Closure);
+        assert($listener instanceof Closure);
 
-        $this->hooks[$type] ??= [];
-        array_unshift($this->hooks[$type], $hook);
+        $this->listeners[$type] ??= [];
+        array_unshift($this->listeners[$type], $listener);
 
-        // Hooks attached to a bare type also apply to the events with a sender, hence the consolidated hooks
+        // Listeners attached to a bare type also apply to the events with a sender, hence the consolidated listeners
         // are revoked whatever the type.
         $this->revoke_traces();
 
-        return new Detach($this, $type, $hook);
+        return new Detach($this, $type, $listener);
     }
 
     /**
-     * Attaches many event hooks at once.
+     * Attaches many event listeners at once.
      *
-     * **Note**: The event hooks must be grouped by event type.
+     * **Note**: The event listeners must be grouped by event type.
      */
     public function attach_many(Config $config): void
     {
-        $hooks = &$this->hooks;
-        $intersect = array_intersect_key($config->listeners, $hooks);
-        $hooks += array_diff_key($config->listeners, $hooks);
+        $listeners = &$this->listeners;
+        $intersect = array_intersect_key($config->listeners, $listeners);
+        $listeners += array_diff_key($config->listeners, $listeners);
 
-        foreach ($intersect as $type => $type_hooks) {
-            $hooks[$type] = array_merge($hooks[$type], $type_hooks);
+        foreach ($intersect as $type => $type_listeners) {
+            $listeners[$type] = array_merge($listeners[$type], $type_listeners);
         }
 
-        $hooks = array_map(function ($callables) {
+        $listeners = array_map(function ($callables) {
             return array_values(array_unique($callables, SORT_REGULAR));
-        }, $hooks);
+        }, $listeners);
 
         $this->revoke_traces();
     }
 
     /**
-     * Attaches an event hook to a specific sender.
+     * Attaches an event listener to a specific sender.
      *
      * @template TEvent of Event
      * @template TSender of object
      *
      * @param TSender $sender
-     * @param Closure(TEvent, TSender): void $hook
+     * @param Closure(TEvent, TSender): void $listener
      *
      * @throws ReflectionException
      */
-    public function attach_to(object $sender, Closure $hook): Detach
+    public function attach_to(object $sender, Closure $listener): Detach
     {
-        $type = EventHookReflection::from($hook)->type;
+        $type = ListenerReflection::from($listener)->type;
 
         return $this->attach(
             $type,
-            $this->shadow_original_hook($hook, static function (Event $e, ?object $s) use ($sender, $hook): void {
+            $this->shadow_original_listener($listener, static function (Event $e, ?object $s) use ($sender, $listener): void {
                 if ($s !== $sender) {
                     return;
                 }
 
-                // @phpstan-ignore argument.type (the type of the hook is the type of the event it is attached to)
-                $hook($e, $s);
+                // @phpstan-ignore argument.type (the type of the listener is the type of the event it is attached to)
+                $listener($e, $s);
             })
         );
     }
 
     /**
-     * Attaches an event hook that is detached once used.
+     * Attaches an event listener that is detached once used.
      *
      * @template TEvent of Event
      * @template TSender of ?object
      *
-     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|non-empty-string $type_or_hook
-     *     Event type or event hook.
-     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|null $hook
-     *     The event hook, or nothing if $type is the event hook.
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|non-empty-string $type_or_listener
+     *     Event type or event listener.
+     * @param (Closure(TEvent, TSender): void)|(Closure(TEvent): void)|null $listener
+     *     The event listener, or nothing if $type is the event listener.
      *
      * @throws ReflectionException
      */
-    public function once(Closure|string $type_or_hook, ?Closure $hook = null): Detach
+    public function once(Closure|string $type_or_listener, ?Closure $listener = null): Detach
     {
-        [ $type, $hook ] = self::resolve_type_and_hook($type_or_hook, $hook);
+        [ $type, $listener ] = self::resolve_type_and_listener($type_or_listener, $listener);
 
         $detach = $this->attach(
             $type,
-            $this->shadow_original_hook($hook, static function (Event $e, ?object $s) use ($hook, &$detach): void {
-                $hook($e, $s);
+            $this->shadow_original_listener($listener, static function (Event $e, ?object $s) use ($listener, &$detach): void {
+                $listener($e, $s);
 
                 /** @phpstan-ignore-next-line */
                 $detach();
@@ -243,29 +243,29 @@ class EventCollection implements IteratorAggregate
     }
 
     /**
-     * Detaches an event hook.
+     * Detaches an event listener.
      *
      * @param non-empty-string $type The name of the event.
-     * @param callable $hook The event hook.
+     * @param callable $listener The event listener.
      *
-     * @throws LogicException when the event hook is not attached to the event name.
+     * @throws LogicException when the event listener is not attached to the event name.
      */
-    public function detach(string $type, callable $hook): void
+    public function detach(string $type, callable $listener): void
     {
-        $hooks = &$this->hooks;
-        $key = $this->search_hook($type, $hook);
+        $listeners = &$this->listeners;
+        $key = $this->search_listener($type, $listener);
 
         if ($key === false) {
-            throw new LogicException("The specified event hook is not attached to `$type`.");
+            throw new LogicException("The specified event listener is not attached to `$type`.");
         }
 
-        unset($hooks[$type][$key]);
+        unset($listeners[$type][$key]);
 
-        if (!count($hooks[$type])) {
-            unset($hooks[$type]);
+        if (!count($listeners[$type])) {
+            unset($listeners[$type]);
         }
 
-        $this->consolidated_hooks = [];
+        $this->consolidated_listeners = [];
     }
 
     /**
@@ -288,9 +288,9 @@ class EventCollection implements IteratorAggregate
             return $event;
         }
 
-        $hooks = $this->get_hooks($type);
+        $listeners = $this->get_listeners($type);
 
-        if (!$hooks) {
+        if (!$listeners) {
             EventProfiler::add_unused($type);
 
             $this->skip($type);
@@ -298,7 +298,7 @@ class EventCollection implements IteratorAggregate
             return $event;
         }
 
-        $this->process_chain($event, $hooks, $type, $sender);
+        $this->process_chain($event, $listeners, $type, $sender);
 
         if ($event->stopped || !$event->internal_chain) {
             return $event;
@@ -317,13 +317,13 @@ class EventCollection implements IteratorAggregate
      */
     private function process_chain(Event $event, iterable $chain, string $type, ?object $sender): void
     {
-        foreach ($chain as $hook) {
+        foreach ($chain as $listener) {
             $started_at = microtime(true);
 
             try {
-                $hook($event, $sender);
+                $listener($event, $sender);
             } finally {
-                EventProfiler::add_call($type, $this->resolve_original_hook($hook), $started_at);
+                EventProfiler::add_call($type, $this->resolve_original_listener($listener), $started_at);
             }
 
             if ($event->stopped) {
@@ -353,56 +353,56 @@ class EventCollection implements IteratorAggregate
     }
 
     /**
-     * Returns the event hooks attached to the specified event type.
+     * Returns the event listeners attached to the specified event type.
      *
      * @return array<(callable(Event, object|null): void)>
      */
-    public function get_hooks(string $type): array
+    public function get_listeners(string $type): array
     {
         if (!strpos($type, '::')) {
-            return $this->hooks[$type] ?? [];
+            return $this->listeners[$type] ?? [];
         }
 
-        if (isset($this->consolidated_hooks[$type])) {
-            return $this->consolidated_hooks[$type];
+        if (isset($this->consolidated_listeners[$type])) {
+            return $this->consolidated_listeners[$type];
         }
 
-        return $this->consolidated_hooks[$type] = $this->consolidate_hooks($type);
+        return $this->consolidated_listeners[$type] = $this->consolidate_listeners($type);
     }
 
     /**
-     * Searches an event hook.
+     * Searches an event listener.
      */
-    private function search_hook(string $type, callable $hook): string|false
+    private function search_listener(string $type, callable $listener): string|false
     {
-        $hooks = $this->hooks;
+        $listeners = $this->listeners;
 
         /** @phpstan-ignore-next-line */
-        return empty($hooks[$type]) ? false : array_search($hook, $hooks[$type], strict: true);
+        return empty($listeners[$type]) ? false : array_search($listener, $listeners[$type], strict: true);
     }
 
     /**
-     * Consolidate hooks of the same type.
+     * Consolidate listeners of the same type.
      *
-     * If the class of the event's sender is provided, event hooks are filtered according to the class and its
-     * hierarchy: hooks attached to the class come first, followed by the hooks attached to its parent classes, the
-     * hooks attached to the interfaces it implements, e.g. `Throwable`, and finally the hooks attached to the bare
+     * If the class of the event's sender is provided, event listeners are filtered according to the class and its
+     * hierarchy: listeners attached to the class come first, followed by the listeners attached to its parent classes, the
+     * listeners attached to the interfaces it implements, e.g. `Throwable`, and finally the listeners attached to the bare
      * event type, which are called whatever the sender.
      *
      * @return (callable(Event, ?object): void)[]
      */
-    private function consolidate_hooks(string $type): array
+    private function consolidate_listeners(string $type): array
     {
         [ $sender_class, $type ] = explode('::', $type);
 
-        $hooks = [];
+        $listeners = [];
         $class = $sender_class;
 
         while ($class) {
             $k = $class . '::' . $type;
 
-            if (isset($this->hooks[$k])) {
-                $hooks = array_merge($hooks, $this->hooks[$k]);
+            if (isset($this->listeners[$k])) {
+                $listeners = array_merge($listeners, $this->listeners[$k]);
             }
 
             $class = get_parent_class($class);
@@ -411,36 +411,36 @@ class EventCollection implements IteratorAggregate
         foreach (class_implements($sender_class) ?: [] as $interface) {
             $k = $interface . '::' . $type;
 
-            if (isset($this->hooks[$k])) {
-                $hooks = array_merge($hooks, $this->hooks[$k]);
+            if (isset($this->listeners[$k])) {
+                $listeners = array_merge($listeners, $this->listeners[$k]);
             }
         }
 
-        if (isset($this->hooks[$type])) {
-            $hooks = array_merge($hooks, $this->hooks[$type]);
+        if (isset($this->listeners[$type])) {
+            $listeners = array_merge($listeners, $this->listeners[$type]);
         }
 
-        return $hooks;
+        return $listeners;
     }
 
-    private function resolve_original_hook(callable $hook): callable
+    private function resolve_original_listener(callable $listener): callable
     {
-        if (!is_object($hook) || empty($this->original_hooks[$hook])) {
-            return $hook;
+        if (!is_object($listener) || empty($this->original_listeners[$listener])) {
+            return $listener;
         }
 
-        return $this->original_hooks[$hook];
+        return $this->original_listeners[$listener];
     }
 
     /**
-     * Adds a reference to the original hook.
+     * Adds a reference to the original listener.
      *
      * @return Closure
      *     Returns `$wrapper` back.
      */
-    private function shadow_original_hook(callable $hook, Closure $wrapper): Closure
+    private function shadow_original_listener(callable $listener, Closure $wrapper): Closure
     {
-        $this->original_hooks[$wrapper] = $hook;
+        $this->original_listeners[$wrapper] = $listener;
 
         return $wrapper;
     }

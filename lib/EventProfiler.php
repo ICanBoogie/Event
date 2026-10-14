@@ -42,20 +42,20 @@ final class EventProfiler
     }
 
     /**
-     * Event hooks calls.
+     * Event listeners calls.
      *
      * @var CallRecord[]
      */
     private static array $calls = [];
 
     /**
-     * Adds an event hook call.
+     * Adds an event listener call.
      *
      * @param non-empty-string $type
      */
-    public static function add_call(string $type, callable $hook, float $started_at): void
+    public static function add_call(string $type, callable $listener, float $started_at): void
     {
-        self::$calls[] = new CallRecord($started_at, microtime(true) - $started_at, $type, $hook);
+        self::$calls[] = new CallRecord($started_at, microtime(true) - $started_at, $type, $listener);
     }
 
     public static function reset_calls(): void

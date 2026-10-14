@@ -16,7 +16,7 @@ use const E_USER_DEPRECATED;
  * with a sender, an object the event is about, in which case listeners can be attached to the
  * sender's class, its parent classes, or the interfaces it implements. Listeners are called in
  * order until the event is stopped with {@see stop()}. Once the chain has been traversed without
- * being stopped, the hooks added with {@see chain()} are called.
+ * being stopped, the listeners added with {@see chain()} are called.
  *
  * ```php
  * final class SaveEvent extends Event
@@ -98,9 +98,9 @@ abstract class Event
     public private(set) bool $stopped = false;
 
     /**
-     * Stops the hook chain.
+     * Stops the listener chain.
      *
-     * After the `stop()` method is called, the hook chain is broken and no other hook is called.
+     * After the `stop()` method is called, the listener chain is broken and no other listener is called.
      */
     public function stop(): void
     {
@@ -108,7 +108,7 @@ abstract class Event
     }
 
     /**
-     * Chain of hooks to execute once the event has been fired.
+     * Chain of listeners to execute once the event has been fired.
      *
      * @var callable[]
      *
@@ -117,17 +117,17 @@ abstract class Event
     public array $internal_chain = [];
 
     /**
-     * Add an event hook to the finish chain.
+     * Add an event listener to the finish chain.
      *
      * The finish chain is executed after the event chain was traversed without being stopped.
      *
-     * @phpstan-param (callable(Event, ?object): void) $hook
+     * @phpstan-param (callable(Event, ?object): void) $listener
      *
      * @return $this
      */
-    public function chain(callable $hook): static
+    public function chain(callable $listener): static
     {
-        $this->internal_chain[] = $hook;
+        $this->internal_chain[] = $listener;
 
         return $this;
     }

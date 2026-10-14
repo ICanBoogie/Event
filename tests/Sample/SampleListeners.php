@@ -4,7 +4,7 @@ namespace Test\ICanBoogie\Sample;
 
 use Test\ICanBoogie\Sample\SampleSender\BeforeActionEvent;
 
-class SampleHooks
+class SampleListeners
 {
     public static function with_sender(BeforeActionEvent $event, SampleSender $sender): void
     {

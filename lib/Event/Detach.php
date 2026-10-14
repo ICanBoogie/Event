@@ -34,15 +34,15 @@ final readonly class Detach
     public function __construct(
         private EventCollection $events,
         private string $type,
-        private Closure $hook
+        private Closure $listener
     ) {
     }
 
     /**
-     * Detaches the event hook from the events.
+     * Detaches the event listener from the events.
      */
     public function __invoke(): void
     {
-        $this->events->detach($this->type, $this->hook);
+        $this->events->detach($this->type, $this->listener);
     }
 }

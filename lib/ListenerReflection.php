@@ -25,71 +25,71 @@ use function spl_object_hash;
 use function strpos;
 
 /**
- * Reflection of an event hook.
+ * Reflection of an event listener.
  *
  * @internal
  */
-final class EventHookReflection
+final class ListenerReflection
 {
     /**
-     * @var array<string, EventHookReflection>
-     *     Where _key_ is a hook key.
+     * @var array<string, ListenerReflection>
+     *     Where _key_ is a listener key.
      */
     private static array $instances = [];
 
     /**
-     * Creates a {@see EventHookReflection} from an event hook.
+     * Creates a {@see ListenerReflection} from an event listener.
      *
-     * @throws InvalidArgumentException if `$hook` is not a valid event hook.
+     * @throws InvalidArgumentException if `$listener` is not a valid event listener.
      * @throws ReflectionException
      */
-    public static function from(callable $hook): self
+    public static function from(callable $listener): self
     {
-        self::assert_valid($hook);
+        self::assert_valid($listener);
 
-        $key = self::make_key($hook);
+        $key = self::make_key($listener);
 
-        return self::$instances[$key] ??= new self(self::resolve_reflection($hook));
+        return self::$instances[$key] ??= new self(self::resolve_reflection($listener));
     }
 
     /**
-     * Makes key from event hook.
+     * Makes key from event listener.
      *
      * @throws ReflectionException
      */
-    private static function make_key(callable $hook): string
+    private static function make_key(callable $listener): string
     {
-        if (is_array($hook)) {
-            [ $target, $method ] = $hook;
+        if (is_array($listener)) {
+            [ $target, $method ] = $listener;
 
             return (is_object($target) ? spl_object_hash($target) : $target) . '#' . $method;
         }
 
-        if ($hook instanceof Closure) {
-            $reflection = new ReflectionFunction($hook);
+        if ($listener instanceof Closure) {
+            $reflection = new ReflectionFunction($listener);
 
             return $reflection->getFileName() . '#' . $reflection->getStartLine() . '#' . $reflection->getEndLine();
         }
 
-        if (is_object($hook)) {
-            return spl_object_hash($hook);
+        if (is_object($listener)) {
+            return spl_object_hash($listener);
         }
 
-        assert(is_string($hook));
+        assert(is_string($listener));
 
-        return $hook;
+        return $listener;
     }
 
     /**
-     * Asserts that the event hook is valid.
+     * Asserts that the event listener is valid.
      *
-     * @throws InvalidArgumentException if `$hook` is not a valid event hook.
+     * @throws InvalidArgumentException if `$listener` is not a valid event listener.
      */
-    public static function assert_valid(mixed $hook): void
+    public static function assert_valid(mixed $listener): void
     {
-        is_callable($hook)
+        is_callable($listener)
         or throw new InvalidArgumentException(
-            "The event hook must be a callable, given: " . get_debug_type($hook),
+            "The event listener must be a callable, given: " . get_debug_type($listener),
         );
     }
 
@@ -112,29 +112,29 @@ final class EventHookReflection
     }
 
     /**
-     * Resolves hook reflection.
+     * Resolves listener reflection.
      *
      * @throws ReflectionException
      */
-    private static function resolve_reflection(callable $hook): ReflectionFunctionAbstract
+    private static function resolve_reflection(callable $listener): ReflectionFunctionAbstract
     {
-        if (is_object($hook)) {
-            return new ReflectionMethod($hook, '__invoke');
+        if (is_object($listener)) {
+            return new ReflectionMethod($listener, '__invoke');
         }
 
-        if (is_array($hook)) {
-            return new ReflectionMethod($hook[0], $hook[1]);
+        if (is_array($listener)) {
+            return new ReflectionMethod($listener[0], $listener[1]);
         }
 
-        if (is_string($hook) && strpos($hook, '::')) {
-            [ $class, $method ] = explode('::', $hook);
+        if (is_string($listener) && strpos($listener, '::')) {
+            [ $class, $method ] = explode('::', $listener);
 
             return new ReflectionMethod($class, $method);
         }
 
-        assert(is_string($hook) || $hook instanceof Closure);
+        assert(is_string($listener) || $listener instanceof Closure);
 
-        return new ReflectionFunction($hook);
+        return new ReflectionFunction($listener);
     }
 
     /**
@@ -159,7 +159,7 @@ final class EventHookReflection
     private ReflectionFunctionAbstract $reflection;
 
     /**
-     * @var non-empty-string The event type resolved from the event hook parameters.
+     * @var non-empty-string The event type resolved from the event listener parameters.
      */
     public readonly string $type;
 
@@ -170,7 +170,7 @@ final class EventHookReflection
     }
 
     /**
-     * Returns the event type resolved from the event hook parameters.
+     * Returns the event type resolved from the event listener parameters.
      *
      * @return non-empty-string
      */
