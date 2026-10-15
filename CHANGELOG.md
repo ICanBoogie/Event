@@ -4,10 +4,13 @@
 
 ### New Requirements
 
-PHP 8.4+
+PHP 8.4+, `icanboogie/config`
 
 ### New features
 
+- `ConfigBuilder` implements `ICanBoogie\Config\Builder`, its fragments are named `event`.
+- `ConfigBuilder::enable_discovery()` and `disable_discovery()` control whether the methods marked with `#[Listener]` are
+  attached when the config is built, after the listeners attached explicitly.
 - Listeners can be attached to the interfaces implemented by the sender of an event, e.g. `Throwable`. They are called
   after the listeners attached to the sender's class and parent classes.
 
@@ -25,7 +28,7 @@ None
 
 ### Other changes
 
-- Documentation: the README describes `ConfigBuilder`, `#[Listener]`, the sender/class-hierarchy matching rules, and the current `EventProfiler` API.
+- Documentation: the README describes `ConfigBuilder`, `#[Listener]`, the sender/class-hierarchy matching rules, the order of the listeners, and the current `EventProfiler` API.
 - Require `composer/pcre` ^3.2 and `symfony/finder` ^7.0 for development, to avoid the PHP 8.4 deprecations of the older versions that `composer/class-map-generator` allows.
 
 

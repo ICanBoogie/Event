@@ -12,7 +12,7 @@ use Attribute;
  * attached as `[class, method]`; non-static methods must be `__invoke()` and are resolved as
  * services, see {@see self::$ref}.
  *
- * Marked methods are collected by {@see ConfigBuilder::use_attributes()}.
+ * Marked methods are collected by {@see ConfigBuilder::enable_discovery()}.
  */
 #[Attribute(Attribute::TARGET_METHOD)]
 final readonly class Listener

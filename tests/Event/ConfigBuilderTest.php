@@ -4,26 +4,24 @@ namespace Test\ICanBoogie\Event;
 
 use ICanBoogie\Event\Config;
 use ICanBoogie\Event\ConfigBuilder;
-use ICanBoogie\Event\Listener;
 use PHPUnit\Framework\TestCase;
-use Test\ICanBoogie\Acme\ListenerServiceWithoutSender;
-use Test\ICanBoogie\Acme\ListenerServiceWithSender;
 use Test\ICanBoogie\Sample\SampleEvent;
 use Test\ICanBoogie\Sample\SampleSender;
 use Test\ICanBoogie\SetStateHelper;
 
-use function ICanBoogie\Service\ref;
-
 final class ConfigBuilderTest extends TestCase
 {
+    public function test_fragment_filename(): void
+    {
+        $this->assertSame('event', ConfigBuilder::get_fragment_filename());
+    }
+
     private Config $config;
 
-    #[Listener]
     public static function sample_listener_without_target(SampleEvent $event): void
     {
     }
 
-    #[Listener]
     public static function sample_listener_with_target(SampleSender\ActionEvent $event, SampleSender $sender): void
     {
     }
@@ -32,7 +30,7 @@ final class ConfigBuilderTest extends TestCase
     {
         parent::setUp();
 
-        $this->config = (new ConfigBuilder())
+        $this->config = new ConfigBuilder()
             ->attach(SampleEvent::class, [ self::class, 'sample_listener_without_target' ])
             ->attach_to(
                 SampleSender::class,
@@ -55,30 +53,6 @@ final class ConfigBuilderTest extends TestCase
         ]);
 
         $this->assertEquals($expected, $sut);
-    }
-
-    public function test_use_attributes(): void
-    {
-        $actual = (new ConfigBuilder())
-            ->use_attributes()
-            ->build();
-
-        $expected = new Config([
-            SampleSender\BeforeActionEvent::for(SampleSender::class) => [
-                ref(ListenerServiceWithSender::class),
-            ],
-            SampleSender\BeforeActionEvent::class => [
-                ref(ListenerServiceWithoutSender::class),
-            ],
-            SampleEvent::class => [
-                [ self::class, 'sample_listener_without_target' ],
-            ],
-            SampleSender\ActionEvent::for(SampleSender::class) => [
-                [ self::class, 'sample_listener_with_target' ],
-            ],
-        ]);
-
-        $this->assertEquals($expected, $actual);
     }
 
     public function test_export(): void

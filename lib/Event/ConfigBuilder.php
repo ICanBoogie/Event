@@ -2,6 +2,7 @@
 
 namespace ICanBoogie\Event;
 
+use ICanBoogie\Config\Builder;
 use ICanBoogie\Event;
 use LogicException;
 use olvlvl\ComposerAttributeCollector\Attributes;
@@ -17,7 +18,7 @@ use function ICanBoogie\Service\ref;
  * Builds a {@see Config} of event listeners.
  *
  * Listeners can be attached explicitly with {@see attach()} and {@see attach_to()}, or discovered
- * with {@see use_attributes()}. Listeners are callables, to reference a service use
+ * with {@see enable_discovery()}. Listeners are callables, to reference a service use
  * `ICanBoogie\Service\ref()`. The resulting {@see Config} can be given to the `EventCollection`
  * constructor or to `attach_many()`.
  *
@@ -25,20 +26,41 @@ use function ICanBoogie\Service\ref;
  * $config = (new ConfigBuilder())
  *     ->attach(MyEvent::class, $listener)
  *     ->attach_to(RuntimeException::class, RecoverEvent::class, $listener)
- *     ->use_attributes()
+ *     ->enable_discovery()
  *     ->build();
  * ```
+ *
+ * @implements Builder<Config>
  */
-final class ConfigBuilder
+final class ConfigBuilder implements Builder
 {
+    public static function get_fragment_filename(): string
+    {
+        return 'event';
+    }
+
     /**
      * @var array<non-empty-string, callable[]>
      */
     private array $listeners = [];
 
+    private bool $discovery = false;
+
+    /**
+     * @throws LogicException if discovery is enabled and the listeners found are not valid, or the attribute
+     * collector is not available.
+     */
     public function build(): Config
     {
-        return new Config($this->listeners);
+        if (!$this->discovery) {
+            return new Config($this->listeners);
+        }
+
+        // Discovery works on a copy, so that building twice doesn't attach the discovered listeners twice.
+        $builder = clone $this;
+        $builder->discover_listeners();
+
+        return new Config($builder->listeners);
     }
 
     /**
@@ -69,16 +91,44 @@ final class ConfigBuilder
     }
 
     /**
-     * Attaches the methods marked with the {@see Listener} attribute.
+     * Enables the discovery of the methods marked with the {@see Listener} attribute, they are attached after the
+     * listeners attached explicitly, when {@see build()} is invoked.
+     *
+     * Discovery requires `olvlvl/composer-attribute-collector`.
      *
      * @return $this
-     *
-     * @throws LogicException if a non-static method is not `__invoke()`, a method has more than two parameters,
-     * or the parameter types are not suitable (the first must be an {@see Event}, the second a loadable class or
-     * interface).
      */
-    public function use_attributes(): self
+    public function enable_discovery(): self
     {
+        $this->discovery = true;
+
+        return $this;
+    }
+
+    /**
+     * Disables the discovery of the listeners, it is disabled by default.
+     *
+     * @return $this
+     */
+    public function disable_discovery(): self
+    {
+        $this->discovery = false;
+
+        return $this;
+    }
+
+    /**
+     * Attaches the methods marked with the {@see Listener} attribute.
+     *
+     * @throws LogicException if the attribute collector is not available, a non-static method is not `__invoke()`,
+     * a method has more than two parameters, or the parameter types are not suitable (the first must be an
+     * {@see Event}, the second a loadable class or interface).
+     */
+    private function discover_listeners(): void
+    {
+        class_exists(Attributes::class)
+        or throw new LogicException("Discovery requires `olvlvl/composer-attribute-collector`");
+
         $targets = Attributes::findTargetMethods(Listener::class);
 
         foreach ($targets as $target) {
@@ -111,8 +161,6 @@ final class ConfigBuilder
                 default => throw new LogicException("Too many parameters for $target->class::$target->name")
             };
         }
-
-        return $this;
     }
 
     /**

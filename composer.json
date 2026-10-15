@@ -31,7 +31,8 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.4"
+    "php": ">=8.4",
+    "icanboogie/config": "^7.0"
   },
   "require-dev": {
     "composer/pcre": "^3.2",
@@ -60,7 +61,7 @@
   "extra": {
     "composer-attribute-collector": {
       "include": [
-        "tests"
+        "tests/Discovery"
       ]
     }
   }

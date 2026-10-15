@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\ICanBoogie\Acme;
+namespace Test\ICanBoogie\Discovery;
 
 use ICanBoogie\Event\Listener;
 use Test\ICanBoogie\Sample\SampleSender;

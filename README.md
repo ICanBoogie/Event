@@ -4,8 +4,8 @@
 [![Code Coverage](https://coveralls.io/repos/github/ICanBoogie/Event/badge.svg?branch=7.0)](https://coveralls.io/r/ICanBoogie/Event?branch=7.0)
 [![Downloads](https://img.shields.io/packagist/dt/icanboogie/event.svg)](https://packagist.org/packages/icanboogie/event)
 
-The **icanboogie/event** allows you to provide listeners which other developers can attach to, to be
-notified when certain events occur inside the application and take action.
+The **icanboogie/event** package lets your code emit events, and lets other developers attach
+listeners to be notified when they occur and take action.
 
 Inside [ICanBoogie][], events are often used to alter initial parameters, take action before/after
 an operation is processed or when it fails, take action before/after a request is dispatched or to
@@ -23,13 +23,12 @@ composer require icanboogie/event
 
 ### Feature highlights
 
-* Easily implementable.
-* Events are typed.
-* Events usually have a sender object, but simpler event types can also be emitted.
-* Event listeners are attached to classes rather than objects, and they are inherited.
-* Event listeners can be attached using the `#[Listener]` attribute or a configuration builder.
-* Event listeners can be attached to a _finish chain_ that is executed after the event listeners chain.
-* Execution of the event chain can be stopped.
+- Events are typed.
+- Events usually have a sender object, but simpler event types can also be emitted.
+- Event listeners are attached to classes rather than objects, and they are inherited.
+- Event listeners can be attached at runtime, with a configuration builder, or discovered with the `#[Listener]` attribute.
+- Event listeners can be attached to a _finish chain_ that is executed after the event listeners chain.
+- Execution of the event chain can be stopped.
 
 
 
@@ -44,21 +43,17 @@ listeners.
 
 Consider the following class hierarchy:
 
-    ICanBoogie\Operation
-    └─ ICanBoogie\Module\Operation\SaveOperation
-        └─ Icybee\Modules\Node\Operation\SaveOperation
-            └─ Icybee\Modules\Content\Operation\SaveOperation
-                └─ Icybee\Modules\News\Operation\SaveOperation
+    App\Document
+    └─ App\Invoice
+        └─ App\RecurringInvoice
 
 
-When a `ProcessEvent` is emitted with a `…\News\Operation\SaveOperation` instance, all event listeners
-attached to the classes for this event are called, starting from the event listeners attached to the
-instance class (`…\News\Operation\SaveOperation`) all the way up to those attached to its root
-class.
+When a `SavedEvent` is emitted with a `RecurringInvoice` instance, all event listeners attached to
+the classes for this event are called, starting from the event listeners attached to the instance
+class (`RecurringInvoice`) all the way up to those attached to its root class (`Document`).
 
-Thus, event listeners attached to the `…\Node\Operation\SaveOperation` class are called when a
-`ProcessEvent` event is fired with `…\News\Operation\SaveOperation` instance. One could consider
-that event listeners are _inherited_.
+Thus, event listeners attached to the `Invoice` class are called when a `SavedEvent` is emitted with
+a `RecurringInvoice` instance. One could consider that event listeners are _inherited_.
 
 > [!NOTE]
 > Listeners attached to the sender's class come first, then those attached to its parent classes
@@ -72,14 +67,10 @@ that event listeners are _inherited_.
 
 ## Getting started
 
-To be emitted, events need an event collection, which holds event listeners. Because a new event
-collection is created for you when required, you don't need to set one up yourself. Still, you might
-want to do so if you have a bunch of event listeners that you need to attach while creating the event
-collection. To do so, you need to define a _provider_ that returns your event collection when
-required.
-
-The following example demonstrates how to set up a provider that instantiates an event collection
-with event listeners provided by an app configuration:
+Events are emitted with `emit()`, which uses the current _event collection_, the object that holds
+the listeners. A collection is created for you when required, so you can attach listeners and emit
+events right away. Define a _provider_ when you want the collection to start with listeners, for
+instance the ones of a [config](#attaching-event-listeners-using-a-config):
 
 ```php
 <?php
@@ -88,13 +79,13 @@ namespace ICanBoogie;
 
 use ICanBoogie\Event\Config;
 
-/* @var Application $app */
+/* @var Config $config */
 
-EventCollectionProvider::define(function() use ($app) {
+EventCollectionProvider::define(function() use ($config) {
 
     static $collection;
 
-    return $collection ??= new EventCollection($app->configs[Config::class]);
+    return $collection ??= new EventCollection($config);
 
 });
 
@@ -111,36 +102,40 @@ $events = get_events();
 
 ## Typed events
 
-Events are subclasses of the [Event][] class.
-
-The following code demonstrates how a `ProcessEvent` class may be defined:
+Events are subclasses of the [Event][] class. The simplest event has no sender and no data, its
+class is its type:
 
 ```php
 <?php
 
-namespace ICanBoogie\Operation;
+namespace App;
 
 use ICanBoogie\Event;
-use ICanBoogie\HTTP\Request;
-use ICanBoogie\HTTP\Response;
-use ICanBoogie\Operation;
 
-class ProcessEvent extends Event
+final class CacheClearedEvent extends Event
 {
-    /**
-     * Reference to the response result property.
-     */
-    public mixed $result;
+}
+```
 
+An event is about something, an object that is its _sender_, and carries data. The sender is passed
+to `parent::__construct()`. The following code demonstrates how a `SavedEvent` class may be defined,
+for the `Document` objects of an application:
+
+```php
+<?php
+
+namespace App\Document;
+
+use App\Document;
+use ICanBoogie\Event;
+
+final class SavedEvent extends Event
+{
     public function __construct(
-        Operation $target,
-        public readonly Request $request,
-        public readonly Response $response,
-        mixed &$result
+        Document $document,
+        public readonly bool $created,
     ) {
-        $this->result = &$result;
-
-        parent::__construct($target);
+        parent::__construct($document);
     }
 }
 ```
@@ -152,8 +147,8 @@ class ProcessEvent extends Event
 ### Event types
 
 If an event has a sender, its qualified type is obtained using the `for()` method and the sender
-class or object, e.g. `RuntimeException::ICanBoogie\HTTP\RecoverEvent`. If an event doesn't have a
-sender, the event type is the event class, e.g. `ICanBoogie\HTTP\RecoverEvent`.
+class or object, e.g. `App\Document::App\Document\SavedEvent`. If an event doesn't have a
+sender, the event type is the event class, e.g. `App\CacheClearedEvent`.
 
 The sender is the object passed to `parent::__construct()`. It is available as `$event->sender`,
 only when the event was constructed with one.
@@ -165,7 +160,8 @@ only when the event was constructed with one.
 ### Namespacing and naming
 
 Event classes should be defined in a namespace unique to their sender object. Events sent by
-`ICanBoogie\Operation` instances should be defined in the `ICanBoogie\Operation` namespace.
+`App\Document` instances should be defined in the `App\Document` namespace, e.g.
+`App\Document\SavedEvent`.
 
 
 
@@ -182,7 +178,7 @@ namespace ICanBoogie;
 
 /* @var Event $event */
 
-emit($event);
+emit($event); // returns $event, for chaining
 ```
 
 
@@ -191,30 +187,39 @@ emit($event);
 
 ## Attaching event listeners
 
-Event listeners are attached using the `attach()` method of an event collection. The `attach()` method
-is smart enough to create the event type from the parameter types.
+Event listeners are attached using the `attach()` method of an event collection. The `attach()`
+method is smart enough to create the event type from the parameter types.
 
-* A listener with a single parameter (`fn(MyEvent $event)`) is attached to the **bare** event type,
-  `MyEvent`. It is called for every `MyEvent`, whatever the sender, after the listeners attached to the sender.
-* A listener with two parameters (`fn(MyEvent $event, Sender $sender)`) is attached to the qualified type
-  `Sender::MyEvent`. It is called for events emitted with a sender of that class, or one of its subclasses.
+- A listener with a single parameter (`fn(MyEvent $event)`) is attached to the **bare** event type,
+  `MyEvent`. It is called for every `MyEvent`, whatever the sender, after the listeners attached
+  to the sender.
+- A listener with two parameters (`fn(MyEvent $event, Sender $sender)`) is attached to the qualified
+  type `Sender::MyEvent`. It is called for events emitted with a sender of that class, or one of
+  its subclasses.
 
-The following example demonstrates how a closure may be attached to a `BeforeProcessEvent` event.
+Listeners attached with `attach()` are called in reverse order: the last one attached is called
+first. Listeners of a config keep the order they were given.
+
+The following example demonstrates how a closure may be attached to a `SavedEvent` event.
 
 ```php
 <?php
 
-namespace ICanBoogie
+namespace App;
 
-$detach = $events->attach(function(Operation\BeforeProcessEvent $event, Operation $target) {
+use App\Document\SavedEvent;
+
+/* @var ICanBoogie\EventCollection $events */
+
+$detach = $events->attach(function(SavedEvent $event, Document $document) {
 
     // …
 
 });
 
-# or, if the event doesn't have a sender
+# or, to listen to the event whatever its sender
 
-$detach = $events->attach(function(Operation\BeforeProcessEvent $event) {
+$detach = $events->attach(function(SavedEvent $event) {
 
     // …
 
@@ -228,29 +233,29 @@ The following example demonstrates how an invokable object may be attached to th
 ```php
 <?php
 
-namespace ICanBoogie
+namespace App;
 
-class ValidateOperation
+use App\Document\SavedEvent;
+
+final class AuditTrail
 {
-    private $rules;
-
-    public function __construct(array $rules)
-    {
-        $this->rules = $rules;
+    public function __construct(
+        private readonly AuditLog $log,
+    ) {
     }
 
-    public function __invoke(Operation\BeforeProcessEvent $event, Operation $target)
+    public function __invoke(SavedEvent $event, Document $document): void
     {
-        // …
+        $this->log->record($document, $event->created ? 'created' : 'updated');
     }
 }
 
 // …
 
-/* @var $events EventCollection */
-/* @var $rules array<string, mixed> */
+/* @var ICanBoogie\EventCollection $events */
+/* @var AuditLog $log */
 
-$events->attach(new ValidateOperation($rules));
+$events->attach(new AuditTrail($log));
 ```
 
 
@@ -259,32 +264,31 @@ $events->attach(new ValidateOperation($rules));
 
 ### Attaching an event listener to a specific sender
 
-Using the `attach_to()` method, an event listener can be attached to a specific sender instance, and is
-only invoked for that sender.
+Using the `attach_to()` method, an event listener can be attached to a specific sender instance, and
+is only invoked for that sender.
 
 ```php
 <?php
 
-namespace ICanBoogie;
+namespace App;
 
-use ICanBoogie\Routing\Controller;
+use App\Document\SavedEvent;
 
-// …
+use function ICanBoogie\emit;
 
-/* @var $events EventCollection */
+/* @var ICanBoogie\EventCollection $events */
+/* @var Document $document */
 
-$detach = $events->attach_to($controller, function(Controller\ActionEvent $event, Controller $sender) {
+$detach = $events->attach_to($document, function(SavedEvent $event, Document $sender) {
 
     echo "invoked!";
 
 });
 
-$controller_clone = clone $controller;
+$document_clone = clone $document;
 
-emit(new Controller\ActionEvent($controller_clone, …));   // nothing happens, it's a clone
-emit(new Controller\ActionEvent($controller, …));         // echo "invoked!"
-
-// …
+emit(new SavedEvent($document_clone, created: false));   // nothing happens, it's a clone
+emit(new SavedEvent($document, created: false));         // echo "invoked!"
 
 $detach(); // You can detach if you no longer want to listen.
 ```
@@ -300,21 +304,23 @@ The `once()` method attaches an event listener that is automatically detached af
 ```php
 <?php
 
-namespace ICanBoogie;
+namespace App;
 
-/* @var $events EventCollection */
+use function ICanBoogie\emit;
+
+/* @var ICanBoogie\EventCollection $events */
 
 $n = 0;
 
-$events->once(MyEvent $event, function() use(&$n) {
+$events->once(function(CacheClearedEvent $event) use (&$n): void {
 
     $n++;
 
 });
 
-emit(new MyEvent());
-emit(new MyEvent());
-emit(new MyEvent());
+emit(new CacheClearedEvent());
+emit(new CacheClearedEvent());
+emit(new CacheClearedEvent());
 
 echo $n;   // 1
 ```
@@ -325,8 +331,9 @@ echo $n;   // 1
 
 ### Attaching event listeners using a config
 
-Event listeners can be declared in an `ICanBoogie\Event\Config`, created with `ConfigBuilder`, and given
-to the `EventCollection` constructor or to `attach_many()`.
+Event listeners can be declared in an `ICanBoogie\Event\Config`, created with `ConfigBuilder`, and
+given to the `EventCollection` constructor or to `attach_many()`. A `Config` can be exported with
+`var_export()`, to be cached as PHP code.
 
 ```php
 <?php
@@ -334,15 +341,17 @@ to the `EventCollection` constructor or to `attach_many()`.
 use ICanBoogie\Event\ConfigBuilder;
 use ICanBoogie\HTTP\RecoverEvent;
 
-$config = (new ConfigBuilder())
+$config = new ConfigBuilder()
     ->attach(MyEvent::class, $listener)                                     // event without sender
     ->attach_to(RuntimeException::class, RecoverEvent::class, $listener)    // event with sender, by sender class
-    ->use_attributes()                                                      // listeners found with #[Listener]
+    ->enable_discovery()                                                    // #[Listener] methods, found by build()
     ->build();
+
+$events = new EventCollection($config);
 ```
 
 When the package is bound to [ICanBoogie][] by [icanboogie/bind-event][], the config is built from
-the `event` config fragment (e.g. `app/all/config/event.php`), using a `ConfigBuilder` of the same API.
+the `event` config fragment (e.g. `app/all/config/event.php`), using the same `ConfigBuilder`.
 See the README of [icanboogie/bind-event][] for the fragment, services, and troubleshooting.
 
 > [!NOTE]
@@ -354,24 +363,32 @@ See the README of [icanboogie/bind-event][] for the fragment, services, and trou
 
 #### Using the `#[Listener]` attribute
 
-`use_attributes()` collects methods marked with `ICanBoogie\Event\Listener` (using
-[olvlvl/composer-attribute-collector][]).
+`enable_discovery()` makes `build()` look for the methods marked with `ICanBoogie\Event\Listener`,
+and attach them after the listeners attached explicitly. Nothing is collected until `build()` is
+invoked. `disable_discovery()` turns it off again, discovery is off by default.
+
+Discovery relies on [olvlvl/composer-attribute-collector][], which your application has to require.
+Load the `vendor/attributes.php` file it generates before building the config, see its
+documentation.
 
 ```php
 <?php
 
+namespace App;
+
+use App\Document\SavedEvent;
 use ICanBoogie\Event\Listener;
 
-final class OnProcess
+final class OnSaved
 {
     #[Listener]
-    public function __invoke(ProcessEvent $event): void
+    public function __invoke(SavedEvent $event): void
     {
         // …
     }
 
     #[Listener]
-    public static function on_save(SaveEvent $event, Node $sender): void
+    public static function on_invoice_saved(SavedEvent $event, Invoice $sender): void
     {
         // …
     }
@@ -384,6 +401,9 @@ final class OnProcess
   sender class or interface (given by the second parameter, which must be loadable).
 - There is one attribute per method, and a method names a single sender type. To listen to several
   unrelated senders, use `attach_to()` once per type on the config builder.
+- The config can't be built, and a `LogicException` is thrown, if the collector is not available, a
+  non-static method is not `__invoke()`, a method has more than two parameters, or the parameter types
+  are not suitable (the first must be an `Event`).
 
 
 
@@ -394,8 +414,9 @@ final class OnProcess
 The _finish chain_ is executed after the event chain was traversed without being stopped.
 
 The following example demonstrates how an event listener may be attached to the _finish chain_ of
-the `count` event to obtain the string "0123". If the third event listener was defined like the
-others we would obtain "0312".
+the `CountEvent` event to obtain the string "0123". Listeners attached with `attach()` are called in
+reverse order, so the third one is called first and registers `"3"` in the _finish chain_. If it was
+defined like the others we would obtain "0312".
 
 ```php
 <?php
@@ -434,7 +455,7 @@ $events->attach(function(CountEvent $event): void {
     });
 });
 
-$event = emit(new CountEvent(0));
+$event = emit(new CountEvent());
 
 echo $event->count; // 0123
 ```
@@ -445,17 +466,22 @@ echo $event->count; // 0123
 
 ## Breaking an event listener chain
 
-The processing of an event listener chain can be broken by an event listener using the `stop()` method:
+The processing of an event listener chain can be broken by an event listener using the `stop()`
+method. The listeners that follow in the chain are not called, nor are the listeners of the _finish
+chain_.
 
 ```php
 <?php
 
-use ICanBoogie\Operation;
+namespace App;
 
-function on_event(Operation\ProcessEvent $event, Operation $operation): void
+use App\Document\SavedEvent;
+
+function skip_drafts(SavedEvent $event, Document $document): void
 {
-    $event->rc = true;
-    $event->stop();
+    if ($document->is_draft) {
+        $event->stop();
+    }
 }
 ```
 
@@ -485,10 +511,11 @@ class MyEvent extends Event
 emit(new MyEvent(new RuntimeException()));
 ```
 
-This event is emitted with the type `RuntimeException::MyEvent` (sender class, then event class), not
-`MyEvent`. A one-parameter listener, `fn(MyEvent $event)`, or `ConfigBuilder::attach(MyEvent::class, …)`,
-is attached to the bare `MyEvent` and catches every `MyEvent`, whatever its sender. To only catch the events of
-a given sender, use a two-parameter listener, `fn(MyEvent $event, RuntimeException $sender)`, `attach_to()`, or
+This event is emitted with the type `RuntimeException::MyEvent` (sender class, then event class),
+not `MyEvent`. A one-parameter listener, `fn(MyEvent $event)`, or
+`ConfigBuilder::attach(MyEvent::class, …)`, is attached to the bare `MyEvent` and catches every
+`MyEvent`, whatever its sender. To only catch the events of a given sender, use a two-parameter
+listener, `fn(MyEvent $event, RuntimeException $sender)`, `attach_to()`, or
 `ConfigBuilder::attach_to()`.
 
 ### Matching the sender's class or interfaces
@@ -506,8 +533,8 @@ $builder->attach_to(Throwable::class, RecoverEvent::class, $listener);
 ### Checking the wiring
 
 A unit test of the listener proves nothing about registration. Emit the event with a real sender,
-then compare `$event->qualified_type` with `$events->get_listeners($event->qualified_type)`, or look at
-`EventProfiler::iter_unused()`, which lists the types that were emitted with no listener.
+then compare `$event->qualified_type` with `$events->get_listeners($event->qualified_type)`, or look
+at `EventProfiler::iter_unused()`, which lists the types that were emitted with no listener.
 
 Events without a sender are simpler to use: consider whether your event really needs one.
 
@@ -537,8 +564,8 @@ EventProfiler::reset_unused();
 EventProfiler::reset_calls();
 ```
 
-An _unused_ event is an emitted event with no attached listeners. If a listener you expected isn't called,
-check that its event type shows up there.
+An _unused_ event is an emitted event with no attached listeners. If a listener you expected isn't
+called, check that its event type shows up there.
 
 
 
